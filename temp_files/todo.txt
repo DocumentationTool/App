@@ -1,0 +1,6 @@
+Create node tree for user permissions
+
+Seperation between user groups and individual users a group takes less priority than a specific user permission
+
+Each Path and or file can have their own permissions defined
+
