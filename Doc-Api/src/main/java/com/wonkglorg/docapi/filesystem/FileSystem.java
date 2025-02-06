@@ -11,13 +11,31 @@ public interface FileSystem {
      */
     String getDocument(Path path);
 
+    /**
+     * Creates a new Document
+     * @param document the document to create
+     */
     void createDocument(Document document);
 
-    void deleteDocument(Document document);
+    /**
+     * Deletes a provided document
+     * @param document the document to delete
+     */
+    boolean deleteDocument(Document document);
 
-    void deleteDocument(Path path);
+    /**
+     * Deletes a document by the given qualified path
+     * @param path the path to delete it by
+     */
+    boolean deleteDocument(Path path);
 
-    void saveDocument(Document document);
+
+    /**
+     *
+     * @param document
+     * @return
+     */
+    boolean saveDocument(Document document);
 
 
 }

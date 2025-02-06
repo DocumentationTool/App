@@ -17,17 +17,17 @@ public class DefaultFileSystem implements FileSystem{
     }
 
     @Override
-    public void deleteDocument(Document document) {
-
+    public boolean deleteDocument(Document document) {
+        return false;
     }
 
     @Override
-    public void deleteDocument(Path path) {
-
+    public boolean deleteDocument(Path path) {
+        return false;
     }
 
     @Override
-    public void saveDocument(Document document) {
-
+    public boolean saveDocument(Document document) {
+        return false;
     }
 }

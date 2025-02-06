@@ -6,18 +6,29 @@ import com.wonkglorg.docapi.user.UserProfile;
 import org.springframework.stereotype.Component;
 
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
 public class FileDB {
 
+    private Connection connection;
+
+    public void createDB(){
+
+
+
+    }
+
     public Document getDocument(Path path) {
-        return new Document(path, "Test", "TestAuthor", LocalDateTime.MIN, LocalDateTime.MAX, "Content");
+        return new Document(path, "Test", DefaultProfile.createDefault(), LocalDateTime.MIN, LocalDateTime.MAX, DefaultProfile.createDefault(), "Content");
     }
 
     public UserProfile getUserProfile(String id) {
         return new DefaultProfile(id, List.of());
     }
+
+
 
 }

@@ -6,6 +6,7 @@ import java.nio.file.Path;
 
 public class GitFileSystem implements FileSystem {
 
+
     @Override
     public String getDocument(Path path) {
         return "";
@@ -17,17 +18,17 @@ public class GitFileSystem implements FileSystem {
     }
 
     @Override
-    public void deleteDocument(Document document) {
-
+    public boolean deleteDocument(Document document) {
+        return false;
     }
 
     @Override
-    public void deleteDocument(Path path) {
-
+    public boolean deleteDocument(Path path) {
+        return false;
     }
 
     @Override
-    public void saveDocument(Document document) {
-
+    public boolean saveDocument(Document document) {
+        return false;
     }
 }

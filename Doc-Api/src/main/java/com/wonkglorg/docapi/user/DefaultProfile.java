@@ -14,6 +14,10 @@ public class DefaultProfile implements UserProfile {
         this.permissionNodes = permissionNodes;
     }
 
+    public static DefaultProfile createDefault() {
+        return new DefaultProfile("TestProfile", List.of());
+    }
+
     @Override
     public String getUsername() {
         return userName;
@@ -22,5 +26,13 @@ public class DefaultProfile implements UserProfile {
     @Override
     public List<PermissionNode> permissions() {
         return permissionNodes;
+    }
+
+    @Override
+    public String toString() {
+        return "DefaultProfile{" +
+                "userName='" + userName + '\'' +
+                ", permissionNodes=" + permissionNodes +
+                '}';
     }
 }
