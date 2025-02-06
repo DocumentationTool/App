@@ -1,4 +1,4 @@
-package com.wonkglorg.doccore.user;
+package com.wonkglorg.docapi.permissions;
 
 public enum Permission {
     /**

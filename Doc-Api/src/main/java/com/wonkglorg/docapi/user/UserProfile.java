@@ -1,6 +1,7 @@
-package com.wonkglorg.doccore.user;
+package com.wonkglorg.docapi.user;
 
-import com.wonkglorg.user.PermissionNode;
+
+import com.wonkglorg.docapi.permissions.PermissionNode;
 
 import java.util.List;
 

@@ -1,4 +1,5 @@
-package com.wonkglorg.doccore.user;
+package com.wonkglorg.docapi.permissions;
+
 
 import java.util.List;
 
