@@ -20,3 +20,21 @@ Use JWT Authentication if:
 
 
 Standart Web Security Generating a JWS key
+
+
+
+
+How it Works
+
+    User Logs In (/auth/login)
+        The user sends their username & password.
+        If correct, they receive a JWT token in response.
+
+    JWT Token is Stored on Client
+        Frontend (React, Angular, etc.) stores the token (localStorage, cookies, etc.).
+        The client sends this token with every request in the Authorization header.
+
+    Spring Security Intercepts Requests
+        The JwtAuthenticationFilter checks if a valid token is present.
+        If valid, it sets authentication in SecurityContext.
+        Secured endpoints are accessible only to authenticated users.
