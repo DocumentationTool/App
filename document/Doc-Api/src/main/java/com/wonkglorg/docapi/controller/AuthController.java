@@ -1,18 +1,21 @@
 package com.wonkglorg.docapi.controller;
 
+import static com.wonkglorg.docapi.controller.Constants.AuthMappings.LOGIN;
+import static com.wonkglorg.docapi.controller.Constants.ControllerPaths.AUTH;
 import com.wonkglorg.docapi.exception.LoginFailedException;
+import com.wonkglorg.docapi.security.JwtUtil;
 import com.wonkglorg.docapi.security.UserAuthenticationManager;
 import com.wonkglorg.docapi.security.UserAuthenticationManager.AuthResponse;
 import com.wonkglorg.docapi.security.UserAuthenticationManager.LoginRequest;
-import com.wonkglorg.docapi.security.JwtUtil;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping(AUTH)
 public class AuthController{
 	
 	private final UserAuthenticationManager authManager;
@@ -21,7 +24,12 @@ public class AuthController{
 		this.authManager = authManager;
 	}
 	
-	@PostMapping("/login")
+	@GetMapping(LOGIN)
+	public ResponseEntity<String> login() {
+		return ResponseEntity.ok("Login");
+	}
+	
+	@PostMapping(LOGIN)
 	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
 		try{
 			authManager.authenticate(request.userId(), request.password());
@@ -32,4 +40,5 @@ public class AuthController{
 			return new ResponseEntity<>(new AuthResponse(null, e.getMessage()), e.getStatusCode());
 		}
 	}
+	
 }
