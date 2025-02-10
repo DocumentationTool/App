@@ -1,5 +1,6 @@
 description = "Core Functionality of the Application"
 
 dependencies {
-    implementation('')
+     //implementation ProjectDependencies.gson
+     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 }

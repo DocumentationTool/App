@@ -31,7 +31,11 @@ any specific dependency should be added in each individual modules build.gradle 
 
 dependencies {
     implementation(project(':Doc-Core'))
-    implementation Dependencies.SpringStarterWeb
-    implementation Dependencies.SpringStarter
-    testImplementation Dependencies.Junit
+    implementation ProjectDependencies.SpringStarterWeb
+    implementation ProjectDependencies.SpringStarter
+    testImplementation ProjectDependencies.Junit
 }
+
+
+---------Global Build Info------------
+All Globally available build values shuld be located in root/buildSrc
