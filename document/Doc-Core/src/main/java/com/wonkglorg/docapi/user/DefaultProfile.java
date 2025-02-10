@@ -26,8 +26,18 @@ public class DefaultProfile implements UserProfile {
     }
 
     @Override
+    public String getId() {
+        return "";
+    }
+
+    @Override
     public String getUsername() {
         return userName;
+    }
+
+    @Override
+    public String getPasswordHash() {
+        return "";
     }
 
     @Override

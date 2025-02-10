@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 //this is just the component reference, the actual db will be in core? might be stupid gotta test that
 @Component
@@ -24,8 +25,8 @@ public class FileDB {
         return new Document(path, "Test", DefaultProfile.createDefault(), LocalDateTime.MIN, LocalDateTime.MAX, DefaultProfile.createDefault(), "Content");
     }
 
-    public UserProfile getUserProfile(String id) {
-        return new DefaultProfile(id, List.of());
+    public Optional<UserProfile> getUserProfile(String id) {
+        return Optional.ofNullable(new DefaultProfile(id, List.of()));
     }
 
 

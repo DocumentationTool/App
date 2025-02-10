@@ -15,3 +15,8 @@ Use JWT Authentication if:
 
     You're building a REST API for a frontend (React, Angular, etc.).
     You need a stateless authentication system (easier to scale).
+
+
+
+
+Standart Web Security Generating a JWS key
