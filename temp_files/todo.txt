@@ -3,6 +3,8 @@ Spring backend.
 
 
 
+Configure gradle to first start spring and then angular frontend?
+
 ----------User Permissions----------
 Create Node Tree to set permissions on directory or file level
 

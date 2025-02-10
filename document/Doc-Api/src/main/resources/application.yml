@@ -1,0 +1,6 @@
+api:
+  cross-origin-port:
+    angular: "4200"
+    spring: "8080"
+
+
