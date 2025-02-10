@@ -1,0 +1,89 @@
+// Use DBML to define your database structure
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table Users {
+  userID String [primary key]
+  group_name String
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table Groups {
+  groupID String [primary key]
+  username String
+  role String
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table GroupUsers{
+  userID String [primary key]
+  groupID String [primary key]
+}
+
+Table Files {
+  fileID integer [primary key]
+  name String
+  folderID integer 
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table Folder  {
+ folderID integer [primary key]
+ folder_name String
+ path_to_folder String
+ created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table GroupPermissions {
+  permissionID integer [primary key]
+  groupID String
+  fileID integer
+  folderID integer
+  type String 
+}
+
+Table UserPermissions {
+  permissionID integer [primary key]
+  userID String
+  fileID integer
+  folderID integer
+  type String 
+}
+
+
+
+
+Table AuditLog {
+  logID integer [primary key]
+  userID String
+  action String  // Action type, e.g., 'grant', 'revoke'
+  permissionID integer
+  timestamp timestamp
+  affected_userID String
+  affected_groupID String
+}
+
+Ref: Users.userID < GroupUsers.userID
+Ref: Groups.groupID < GroupUsers.groupID
+
+Ref: Users.userID < UserPermissions.userID
+Ref: Groups.groupID < GroupPermissions.groupID
+
+Ref: Files.fileID < UserPermissions.fileID 
+Ref: Folder.folderID < UserPermissions.folderID
+
+Ref: Files.fileID < GroupPermissions.fileID 
+Ref: Folder.folderID < GroupPermissions.folderID
+
+Ref: Files.folderID > Folder.folderID 
