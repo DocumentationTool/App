@@ -1,7 +1,7 @@
 ----------General Info----------
 Spring backend.
 
-
+https://stackoverflow.com/questions/73353008/how-to-integrate-angular-in-spring-boot-using-gradle
 
 Configure gradle to first start spring and then angular frontend?
 
@@ -14,8 +14,6 @@ Permissions can be set on Group or User Level
 User always overwrites Group of specified
 
 When a permission is defined on a folder and underneath it a different permission is set for another folder or file the lower one takes priority
-
-
 
 
 ----------Storage----------
