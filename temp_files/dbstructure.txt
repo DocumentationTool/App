@@ -1,9 +1,16 @@
-// Use DBML to define your database structure
-// Docs: https://dbml.dbdiagram.io/docs
+Table Roles{
+roleID String [primary key]
+roleName String
+}
+
+Table UserRoles{
+  roleID String [primary key]
+  userID String [primary key]
+}
+
 
 Table Users {
   userID String [primary key]
-  group_name String
   created_at timestamp
   created_by String
   last_modified_at timestamp
@@ -12,8 +19,7 @@ Table Users {
 
 Table Groups {
   groupID String [primary key]
-  username String
-  role String
+    group_name String
   created_at timestamp
   created_by String
   last_modified_at timestamp
@@ -28,7 +34,7 @@ Table GroupUsers{
 Table Files {
   fileID integer [primary key]
   name String
-  folderID integer 
+  folderID integer
   created_at timestamp
   created_by String
   last_modified_at timestamp
@@ -50,7 +56,7 @@ Table GroupPermissions {
   groupID String
   fileID integer
   folderID integer
-  type String 
+  type String
 }
 
 Table UserPermissions {
@@ -58,7 +64,7 @@ Table UserPermissions {
   userID String
   fileID integer
   folderID integer
-  type String 
+  type String
 }
 
 
@@ -79,6 +85,9 @@ Table Permissions{
   weight int
 }
 
+Ref: Users.userID < UserRoles.userID
+Ref: Roles.roleID < UserRoles.roleID
+
 Ref: Users.userID < GroupUsers.userID
 Ref: Groups.groupID < GroupUsers.groupID
 
@@ -96,6 +105,7 @@ Ref: Permissions.permissionID < UserPermissions.type
 Ref: Permissions.permissionID < GroupPermissions.type
 
 Ref: Files.folderID > Folder.folderID
+
 
 
 

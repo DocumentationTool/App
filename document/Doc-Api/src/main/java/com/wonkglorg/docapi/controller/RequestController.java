@@ -2,7 +2,7 @@ package com.wonkglorg.docapi.controller;
 
 import com.wonkglorg.docapi.common.Document;
 import com.wonkglorg.docapi.db.FileDB;
-import com.wonkglorg.docapi.security.AuthenticationManager;
+import com.wonkglorg.docapi.security.UserAuthenticationManager;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +22,9 @@ import java.nio.file.Path;
 public class RequestController {
 
 	private final FileDB fileDB;
-	private final AuthenticationManager authManager;
+	private final UserAuthenticationManager authManager;
 
-	public RequestController(FileDB fileDB, AuthenticationManager authManager) {
+	public RequestController(FileDB fileDB, UserAuthenticationManager authManager) {
 		this.fileDB = fileDB;
 		this.authManager = authManager;
 	}
@@ -34,12 +34,12 @@ public class RequestController {
 	@PutMapping(value = "/user/add")
 	public ResponseEntity<UserProfile> addUser(@RequestParam("userID") String userId,
 			@RequestParam("passwordHash") String passwordHash) {
-
+		return ResponseEntity.ok(null);
 	}
 
 	@PutMapping(value = "/user/delete")
 	public ResponseEntity<UserProfile> deleteUser() {
-
+		return ResponseEntity.ok(null);
 	}
 
 	@GetMapping(value = "/document/{path}")
@@ -52,25 +52,13 @@ public class RequestController {
 			@RequestParam String password) {
 
 		authManager.authenticate(id, password);
-
-
-	}
-
-	@GetMapping(value = "/user/{id}")
-	public ResponseEntity<UserProfile> getUserProfile(@PathVariable String id) {
-		fileDB.getUserProfile(id);
-		return new ResponseEntity<>(userProfile, HttpStatus.OK);
+		
+		return ResponseEntity.ok(null);
 	}
 
 	@PutMapping("/user/update")
 	public ResponseEntity<UserProfile> updateUser(@RequestBody UserProfile userId) {
-
+		return ResponseEntity.ok(null);
 	}
-
-	@PutMapping(value = "/user/update")
-	public ResponseEntity<UserProfile> updateUser() {
-
-	}
-
-
+	
 }

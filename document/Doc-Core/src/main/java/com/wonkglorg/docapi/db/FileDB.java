@@ -26,7 +26,7 @@ public class FileDB {
 	}
 
 	public UserProfile getUserProfile(String id) {
-		return new DefaultProfile(id, List.of());
+		return new DefaultProfile(id, List.of(), List.of());
 	}
 
 
