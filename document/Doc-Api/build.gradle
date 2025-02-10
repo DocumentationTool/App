@@ -7,7 +7,7 @@ plugins {
 description = "Api Interface to access core data"
 
 dependencies {
-    implementation(project(':Doc-Core'))
+    implementation(project(':document:Doc-Core'))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter")
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
