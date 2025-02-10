@@ -8,9 +8,14 @@ import java.util.Optional;
 @Component
 public class AuthenticationManager {
 
-	public AuthenticationManager() {
+	public record AuthResponse(String token) {
 	}
 
+	public record LoginRequest(String userId, String password) {
+	}
+
+	public AuthenticationManager() {
+	}
 
 	/**
 	 * Authenticates the user
@@ -25,6 +30,7 @@ public class AuthenticationManager {
 
 	/**
 	 * Checks if the give userId is valid
+	 *
 	 * @param userId the user id to check
 	 * @return true if it exists false otherwise
 	 */

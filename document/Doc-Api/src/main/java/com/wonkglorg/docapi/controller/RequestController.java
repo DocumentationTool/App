@@ -2,6 +2,7 @@ package com.wonkglorg.docapi.controller;
 
 import com.wonkglorg.docapi.common.Document;
 import com.wonkglorg.docapi.db.FileDB;
+import com.wonkglorg.docapi.security.AuthenticationManager;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,11 @@ import java.nio.file.Path;
 public class RequestController {
 
 	private final FileDB fileDB;
+	private final AuthenticationManager authManager;
 
-	public RequestController(FileDB fileDB) {
+	public RequestController(FileDB fileDB, AuthenticationManager authManager) {
 		this.fileDB = fileDB;
+		this.authManager = authManager;
 	}
 
 	//todo how to authenticate users
@@ -46,13 +49,17 @@ public class RequestController {
 
 	@GetMapping("/user/{id}")
 	public ResponseEntity<UserProfile> getUser(@PathVariable("id") String id,
-			@RequestParam String passwordHash) {
+			@RequestParam String password) {
+
+		authManager.authenticate(id, password);
+
 
 	}
 
 	@GetMapping(value = "/user/{id}")
 	public ResponseEntity<UserProfile> getUserProfile(@PathVariable String id) {
-		return new ResponseEntity<>(fileDB.getUserProfile(id), HttpStatus.OK);
+		fileDB.getUserProfile(id);
+		return new ResponseEntity<>(userProfile, HttpStatus.OK);
 	}
 
 	@PutMapping("/user/update")
