@@ -1,0 +1,37 @@
+Adding new Dependency:
+
+All Project Dependencies are globaly defined in buildSrc/ProjectDependencies.Groovy
+
+Any new Dependency that is needed by 1 or more modules should be defined there, (or if an existing one exists used instead)
+
+This keeps all dependencies central and easy to update for all modules.
+
+
+
+Adding a new Module:
+
+create a new folder in root
+
+inside this folder should be a build.gradle file, as well as registering the module in the root/settings.gradle file as shown here:
+
+
+include('Doc-Api',"Doc-Core")
+
+Any module specified here will contain defaults:
+
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+
+
+any specific dependency should be added in each individual modules build.gradle file as seen here:
+
+
+dependencies {
+    implementation(project(':Doc-Core'))
+    implementation Dependencies.SpringStarterWeb
+    implementation Dependencies.SpringStarter
+    testImplementation Dependencies.Junit
+}

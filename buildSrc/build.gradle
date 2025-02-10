@@ -1,0 +1,12 @@
+description = "Defines all common build sources for the project modules."
+
+dependencies {
+    println("Adding Build-Common")
+}
+
+ext {
+    springBootStarter = "org.springframework.boot:spring-boot-starter"
+    springBootWeb = "org.springframework.boot:spring-boot-starter-web"
+    gson = "com.google.code.gson:gson:2.12.1"
+    junit = "org.junit.jupiter:junit-jupiter:5.9.1"
+}

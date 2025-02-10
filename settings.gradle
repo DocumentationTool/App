@@ -1,1 +1,3 @@
 rootProject.name = 'DocumentationTool'
+
+include('Doc-Api',"Doc-Core")

@@ -1,3 +1,39 @@
+----------General Info----------
+Spring backend.
+
+
+
+----------User Permissions----------
+Create Node Tree to set permissions on directory or file level
+
+
+Permissions can be set on Group or User Level
+
+User always overwrites Group of specified
+
+When a permission is defined on a folder and underneath it a different permission is set for another folder or file the lower one takes priority
+
+
+
+
+----------Storage----------
+File paths + permissions get stored in sqlite databases
+
+Files and folder structures get stored inside whichever storage medium was defined, github, file system, remote server (sharepoint, etc.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 Create node tree for user permissions
 
 Seperation between user groups and individual users a group takes less priority than a specific user permission

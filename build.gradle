@@ -1,0 +1,29 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.wonkglorg'
+version = '0.0.1'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+//applies to all submodules
+subprojects {
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+
+    }
+}

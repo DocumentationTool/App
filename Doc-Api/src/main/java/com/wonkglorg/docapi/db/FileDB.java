@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.time.LocalDateTime;
 import java.util.List;
 
+//this is just the component reference, the actual db will be in core? might be stupid gotta test that
 @Component
 public class FileDB {
 
