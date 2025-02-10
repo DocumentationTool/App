@@ -5,6 +5,8 @@ https://stackoverflow.com/questions/73353008/how-to-integrate-angular-in-spring-
 
 Configure gradle to first start spring and then angular frontend?
 
+create war file out of the result to deploy on a server, how to listen to the outside
+
 ----------User Permissions----------
 Create Node Tree to set permissions on directory or file level
 
