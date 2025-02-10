@@ -7,6 +7,16 @@ Configure gradle to first start spring and then angular frontend?
 
 create war file out of the result to deploy on a server, how to listen to the outside
 
+add basic login system just for showcasing, and so I can run it online on some server
+
+----------Building---------
+
+Build automation with jenkins
+https://www.jenkins.io/
+
+Deploy on server as war file
+
+
 ----------User Permissions----------
 Create Node Tree to set permissions on directory or file level
 

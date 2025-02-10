@@ -1,0 +1,17 @@
+Session Based with Spring Security
+
+vs
+
+Token Based using JWT
+
+
+
+Use Session-Based Authentication if:
+
+    You're building a traditional web app with server-rendered pages (Thymeleaf, JSP).
+    You want to manage user sessions and don't need to worry about scaling across multiple services.
+
+Use JWT Authentication if:
+
+    You're building a REST API for a frontend (React, Angular, etc.).
+    You need a stateless authentication system (easier to scale).
