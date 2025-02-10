@@ -23,6 +23,30 @@ Files and folder structures get stored inside whichever storage medium was defin
 
 
 
+How do I store permissions?
+Store all permutations
+
+Pros:
+    Fast Retrieval: Once the permissions are stored, they can be quickly retrieved. This approach is efficient for querying permissions, especially when a large number of files or folders are involved.
+    Simpler Permission Management: The database directly reflects the permissions structure, making it easier to track and audit.
+    No Need to Dynamically Compute Permissions: You don't have to calculate permissions on the fly every time you query the data.
+
+Cons:
+    Database Bloat: Storing all possible combinations of file/folder permissions can lead to a large number of rows in the permissions table, especially if there are many files and folders.
+    Data Redundancy: If a permission applies to many files or folders, you could be storing the same permission multiple times, leading to redundancy.
+    Updates Can Be Costly: When you change a permission for a folder or file, you might need to update many records, which can become inefficient if the number of affected files/folders is large.
+
+Store only needed ones, gives me greater control..
+Pros:
+    Less Database Bloat: You only store permissions at the folder (or higher-level) level, meaning the database doesn't grow as fast.
+    No Redundancy: You avoid having to store the same permission multiple times for each file in a folder.
+    More Flexible: You can easily change or adjust the set of files/folders that a permission applies to without needing to update multiple records in the database.
+
+Cons:
+    Performance at Query Time: Determining permissions on the fly can be slower, especially if there are many files or folders to check. For example, when retrieving permissions for a user or group, you would need to:
+        Retrieve all files/folders they have access to.
+        Programmatically check the set of files or folders they should be granted access to.
+    Complexity in Logic: You need more complex logic in your application code to handle permissions checking (e.g., retrieving all files in a folder and checking their individual permissions).
 
 
 
