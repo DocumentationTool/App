@@ -1,4 +1,4 @@
-package com.wonkglorg.docapi.repo;
+package com.wonkglorg.docapi.db;
 
 
 import java.nio.file.Path;

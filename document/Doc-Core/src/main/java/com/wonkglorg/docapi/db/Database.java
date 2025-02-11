@@ -1,4 +1,4 @@
-package com.wonkglorg.docapi.repo;
+package com.wonkglorg.docapi.db;
 
 
 import javax.imageio.ImageIO;

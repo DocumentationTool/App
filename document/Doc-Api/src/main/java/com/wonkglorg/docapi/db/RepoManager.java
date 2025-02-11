@@ -1,4 +1,4 @@
-package com.wonkglorg.docapi.repo;
+package com.wonkglorg.docapi.db;
 
 import com.wonkglorg.docapi.git.GitRepo;
 import static com.wonkglorg.docapi.git.GitRepo.GitStage.ADDED;
