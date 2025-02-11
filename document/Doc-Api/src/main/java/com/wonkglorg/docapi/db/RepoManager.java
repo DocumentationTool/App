@@ -77,6 +77,9 @@ public class RepoManager{
 				log.info("Found database in repo!");
 				//build db and then commit changes?
 			}
+			
+			log.info("Initializing DataBase");
+			dataDB.initialize();
 		}
 		
 		public GitRepo getGitRepo() {

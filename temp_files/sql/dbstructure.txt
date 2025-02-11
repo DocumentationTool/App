@@ -1,3 +1,5 @@
+https://dbdiagram.io/d
+
 Table Roles{
 roleID String [primary key]
 roleName String
@@ -31,20 +33,8 @@ Table GroupUsers{
   groupID String [primary key]
 }
 
-Table Files {
-  fileID integer [primary key]
-  name String
-  folderID integer
-  created_at timestamp
-  created_by String
-  last_modified_at timestamp
-  last_modified_by String
-}
-
-Table Folder  {
-  folderID integer [primary key]
-  folder_name String
-  path_to_folder String
+Table Resource {
+  resourcePath String [primary key]
   created_at timestamp
   created_by String
   last_modified_at timestamp
@@ -52,18 +42,14 @@ Table Folder  {
 }
 
 Table GroupPermissions {
-  permissionID integer [primary key]
-  groupID String
-  fileID integer
-  folderID integer
+  groupID String [primary key]
+  path String [primary key]
   type String
 }
 
 Table UserPermissions {
-  permissionID integer [primary key]
-  userID String
-  fileID integer
-  folderID integer
+  userID String [primary key]
+  path String [primary key]
   type String
 }
 
@@ -94,38 +80,21 @@ Ref: Groups.groupID < GroupUsers.groupID
 Ref: Users.userID < UserPermissions.userID
 Ref: Groups.groupID < GroupPermissions.groupID
 
-Ref: Files.fileID < UserPermissions.fileID
-Ref: Folder.folderID < UserPermissions.folderID
+Ref: Resource.resourcePath < UserPermissions.path
+Ref: Resource.resourcePath < GroupPermissions.path
 
-Ref: Files.fileID < GroupPermissions.fileID
-Ref: Folder.folderID < GroupPermissions.folderID
 
 
 Ref: Permissions.permissionID < UserPermissions.type
 Ref: Permissions.permissionID < GroupPermissions.type
 
-Ref: Files.folderID > Folder.folderID
 
-
-
-
--- Create Roles table
-CREATE TABLE IF NOT EXISTS Roles (
+CREATE TABLE Roles (
     roleID TEXT PRIMARY KEY,
     roleName TEXT
 );
 
--- Create UserRoles table
-CREATE TABLE IF NOT EXISTS UserRoles (
-    roleID TEXT,
-    userID TEXT,
-    PRIMARY KEY (roleID, userID),
-    FOREIGN KEY (roleID) REFERENCES Roles(roleID),
-    FOREIGN KEY (userID) REFERENCES Users(userID)
-);
-
--- Create Users table
-CREATE TABLE IF NOT EXISTS Users (
+CREATE TABLE Users (
     userID TEXT PRIMARY KEY,
     created_at TIMESTAMP,
     created_by TEXT,
@@ -133,8 +102,15 @@ CREATE TABLE IF NOT EXISTS Users (
     last_modified_by TEXT
 );
 
--- Create Groups table
-CREATE TABLE IF NOT EXISTS Groups (
+CREATE TABLE UserRoles (
+    roleID TEXT,
+    userID TEXT,
+    PRIMARY KEY (roleID, userID),
+    FOREIGN KEY (roleID) REFERENCES Roles(roleID),
+    FOREIGN KEY (userID) REFERENCES Users(userID)
+);
+
+CREATE TABLE Groups (
     groupID TEXT PRIMARY KEY,
     group_name TEXT,
     created_at TIMESTAMP,
@@ -143,8 +119,7 @@ CREATE TABLE IF NOT EXISTS Groups (
     last_modified_by TEXT
 );
 
--- Create GroupUsers table
-CREATE TABLE IF NOT EXISTS GroupUsers (
+CREATE TABLE GroupUsers (
     userID TEXT,
     groupID TEXT,
     PRIMARY KEY (userID, groupID),
@@ -152,73 +127,50 @@ CREATE TABLE IF NOT EXISTS GroupUsers (
     FOREIGN KEY (groupID) REFERENCES Groups(groupID)
 );
 
--- Create Files table
-CREATE TABLE IF NOT EXISTS Files (
-    fileID INTEGER PRIMARY KEY,
-    name TEXT,
-    folderID INTEGER,
-    created_at TIMESTAMP,
-    created_by TEXT,
-    last_modified_at TIMESTAMP,
-    last_modified_by TEXT,
-    FOREIGN KEY (folderID) REFERENCES Folder(folderID)
-);
-
--- Create Folder table
-CREATE TABLE IF NOT EXISTS Folder (
-    folderID INTEGER PRIMARY KEY,
-    folder_name TEXT,
-    path_to_folder TEXT,
+CREATE TABLE Resource (
+    resourcePath TEXT PRIMARY KEY,
     created_at TIMESTAMP,
     created_by TEXT,
     last_modified_at TIMESTAMP,
     last_modified_by TEXT
 );
 
--- Create GroupPermissions table
-CREATE TABLE IF NOT EXISTS GroupPermissions (
-    permissionID INTEGER PRIMARY KEY,
+CREATE TABLE GroupPermissions (
     groupID TEXT,
-    fileID INTEGER,
-    folderID INTEGER,
+    path TEXT,
     type TEXT,
+    PRIMARY KEY (groupID, path),
     FOREIGN KEY (groupID) REFERENCES Groups(groupID),
-    FOREIGN KEY (fileID) REFERENCES Files(fileID),
-    FOREIGN KEY (folderID) REFERENCES Folder(folderID)
+    FOREIGN KEY (path) REFERENCES Resource(resourcePath)
 );
 
--- Create UserPermissions table
-CREATE TABLE IF NOT EXISTS UserPermissions (
-    permissionID INTEGER PRIMARY KEY,
+CREATE TABLE UserPermissions (
     userID TEXT,
-    fileID INTEGER,
-    folderID INTEGER,
+    path TEXT,
     type TEXT,
+    PRIMARY KEY (userID, path),
     FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (fileID) REFERENCES Files(fileID),
-    FOREIGN KEY (folderID) REFERENCES Folder(folderID)
+    FOREIGN KEY (path) REFERENCES Resource(resourcePath)
 );
 
--- Create AuditLog table
-CREATE TABLE IF NOT EXISTS AuditLog (
+CREATE TABLE AuditLog (
     logID INTEGER PRIMARY KEY,
     userID TEXT,
-    action TEXT,
-    permissionID INTEGER,
+    action TEXT, -- Action type, e.g., 'grant', 'revoke'
+    permissionID TEXT,
     timestamp TIMESTAMP,
     affected_userID TEXT,
     affected_groupID TEXT,
-    FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID),
-    FOREIGN KEY (affected_userID) REFERENCES Users(userID),
-    FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID)
+    FOREIGN KEY (userID) REFERENCES Users(userID)
 );
 
--- Create Permissions table
-CREATE TABLE IF NOT EXISTS Permissions (
+CREATE TABLE Permissions (
     permissionID TEXT PRIMARY KEY,
     weight INTEGER
 );
+
+ALTER TABLE UserPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);
+ALTER TABLE GroupPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);
 
 
 
