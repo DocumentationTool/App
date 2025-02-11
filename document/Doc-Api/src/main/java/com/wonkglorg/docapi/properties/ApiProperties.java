@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
-@ConfigurationProperties("api")
+@ConfigurationProperties("doc.web.api")
 public class ApiProperties {
 
 	public class Ports {
@@ -43,20 +43,11 @@ public class ApiProperties {
 	 */
 	private List<String> whitelist = new ArrayList<>();
 	private Ports ports = new Ports();
-	/**
-	 * Defines the Destination of the repo
-	 */
-	private Path repo;
-	private String dbName;
 
 	public Ports getPorts() {
 		return ports;
 	}
-
-	public Path getRepo() {
-		return repo;
-	}
-
+	
 	public List<String> getWhitelist() {
 		return whitelist;
 	}
@@ -64,20 +55,8 @@ public class ApiProperties {
 	public void setPorts(Ports ports) {
 		this.ports = ports;
 	}
-
-	public void setRepo(String repo) {
-		this.repo = Path.of(repo);
-	}
-
+	
 	public void setWhitelist(List<String> whitelist) {
 		this.whitelist = whitelist;
-	}
-
-	public String getDbName() {
-		return dbName;
-	}
-
-	public void setDbName(String dbName) {
-		this.dbName = dbName;
 	}
 }

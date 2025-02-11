@@ -1,8 +1,7 @@
-package com.wonkglorg.docapi.db;
+package com.wonkglorg.docapi.repo;
 
 
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 public class DataDB extends SqliteDatabase {

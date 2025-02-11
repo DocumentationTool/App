@@ -1,14 +1,19 @@
-api:
-  #On which ports the services run on
-  ports:
-    angular: "4200"
-    spring: "8080"
-  #Defines all resources accessible by anyone without role or authentication needed
-  whitelist:
-    - "/auth/login"
-    - "/error"
-    - "/public/**"
-    - "/favicon.ico"
-  repo: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
-  dbName: data.sql
-
+doc:
+  web:
+    api:
+      #On which ports the services run on
+      ports:
+        angular: "4200"
+        spring: "8080"
+      #Defines all resources accessible by anyone without role or authentication needed
+      whitelist:
+        - "/auth/login"
+        - "/error"
+        - "/public/**"
+        - "/favicon.ico"
+  git:
+    repositories:
+      - name: "First Repo"
+        path: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
+      - name: "Second Repo"
+        path: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
