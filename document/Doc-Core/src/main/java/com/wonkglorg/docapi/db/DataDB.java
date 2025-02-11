@@ -21,6 +21,7 @@ public class DataDB extends SqliteDatabase{
 	public void initialize() {
 		log.info("Initialising Database");
 		try{
+			executeStatement("PRAGMA foreign_keys = OFF;");
 			connection.setAutoCommit(false);
 			executeStatement("""
 					CREATE TABLE Roles (
@@ -120,9 +121,10 @@ public class DataDB extends SqliteDatabase{
 			
 			executeStatement("ALTER TABLE UserPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);");
 			executeStatement("ALTER TABLE GroupPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);");
-			
+			executeStatement("PRAGMA foreign_keys = ON;");
 			connection.commit();
 		} catch(SQLException e){
+			log.error("Error while initialising Database", e);
 			try{
 				connection.rollback();
 			} catch(SQLException ex){
