@@ -23,9 +23,9 @@ public class DataDB extends SqliteDatabase {
 
 
 	private void initialize(){
+	
 
+	
 	}
-
-
-
+	
 }

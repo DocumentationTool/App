@@ -65,9 +65,9 @@ public class RepoManager{
 		}
 		
 		public void initialize() throws GitAPIException, IOException {
+			log.info("Looking for repo in: '{}'", repoProperty.getPath());
 			gitRepo = new GitRepo(repoProperty.getPath());
 			Optional<Path> file = gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperty.getDbName()), GitRepo.GitStage.UNTRACKED, ADDED, ADDED);
-			
 			dataDB = new DataDB(gitRepo.getRepoPath().resolve(repoProperty.getDbName()));
 			if(file.isPresent()){
 				//commit the file.

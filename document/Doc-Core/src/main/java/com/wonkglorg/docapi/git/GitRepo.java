@@ -77,6 +77,15 @@ public class GitRepo {
 
 		return files;
 	}
+	
+	
+	public void addFile(Path file) throws GitAPIException {
+		git.add().addFilepattern(file.toString()).call();
+	}
+	
+	public void commit(String message) throws GitAPIException {
+		git.commit().setMessage(message).call();
+	}
 
 	/**
 	 * Retrieves files from git repo

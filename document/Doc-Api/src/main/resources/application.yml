@@ -14,6 +14,6 @@ doc:
   git:
     repositories:
       - name: "First Repo"
-        path: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
+        path: temp/git/repo1
       - name: "Second Repo"
-        path: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
+        path: temp/git/repo2
