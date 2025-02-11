@@ -1,6 +1,11 @@
 api:
-  cross-origin-port:
+  #On which ports the services run on
+  ports:
     angular: "4200"
     spring: "8080"
-
-
+  #Defines all resources accessible by anyone without role or authentication needed
+  whitelist:
+    - "/auth/login"
+    - "/error"
+    - "/public/**"
+    - "/favicon.ico"

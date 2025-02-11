@@ -38,3 +38,9 @@ How it Works
         The JwtAuthenticationFilter checks if a valid token is present.
         If valid, it sets authentication in SecurityContext.
         Secured endpoints are accessible only to authenticated users.
+
+
+
+All requests are authentication and or role based.
+
+Any resource that should be accessible outside of specific authentication like login pages, home pages, can be added in "Doc-Api/resources/application.yml"
