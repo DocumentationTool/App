@@ -109,10 +109,24 @@ Ref: Files.folderID > Folder.folderID
 
 
 
+-- Create Roles table
+CREATE TABLE IF NOT EXISTS Roles (
+    roleID TEXT PRIMARY KEY,
+    roleName TEXT
+);
+
+-- Create UserRoles table
+CREATE TABLE IF NOT EXISTS UserRoles (
+    roleID TEXT,
+    userID TEXT,
+    PRIMARY KEY (roleID, userID),
+    FOREIGN KEY (roleID) REFERENCES Roles(roleID),
+    FOREIGN KEY (userID) REFERENCES Users(userID)
+);
+
 -- Create Users table
-CREATE TABLE IF NOT EXISTS Users(
+CREATE TABLE IF NOT EXISTS Users (
     userID TEXT PRIMARY KEY,
-    group_name TEXT,
     created_at TIMESTAMP,
     created_by TEXT,
     last_modified_at TIMESTAMP,
@@ -122,15 +136,14 @@ CREATE TABLE IF NOT EXISTS Users(
 -- Create Groups table
 CREATE TABLE IF NOT EXISTS Groups (
     groupID TEXT PRIMARY KEY,
-    username TEXT,
-    role TEXT,
+    group_name TEXT,
     created_at TIMESTAMP,
     created_by TEXT,
     last_modified_at TIMESTAMP,
     last_modified_by TEXT
 );
 
--- Create GroupUsers table (many-to-many relationship between Users and Groups)
+-- Create GroupUsers table
 CREATE TABLE IF NOT EXISTS GroupUsers (
     userID TEXT,
     groupID TEXT,
@@ -141,7 +154,7 @@ CREATE TABLE IF NOT EXISTS GroupUsers (
 
 -- Create Files table
 CREATE TABLE IF NOT EXISTS Files (
-    fileID INTEGER PRIMARY KEY AUTOINCREMENT,
+    fileID INTEGER PRIMARY KEY,
     name TEXT,
     folderID INTEGER,
     created_at TIMESTAMP,
@@ -153,7 +166,7 @@ CREATE TABLE IF NOT EXISTS Files (
 
 -- Create Folder table
 CREATE TABLE IF NOT EXISTS Folder (
-    folderID INTEGER PRIMARY KEY AUTOINCREMENT,
+    folderID INTEGER PRIMARY KEY,
     folder_name TEXT,
     path_to_folder TEXT,
     created_at TIMESTAMP,
@@ -164,7 +177,7 @@ CREATE TABLE IF NOT EXISTS Folder (
 
 -- Create GroupPermissions table
 CREATE TABLE IF NOT EXISTS GroupPermissions (
-    permissionID INTEGER PRIMARY KEY AUTOINCREMENT,
+    permissionID INTEGER PRIMARY KEY,
     groupID TEXT,
     fileID INTEGER,
     folderID INTEGER,
@@ -176,7 +189,7 @@ CREATE TABLE IF NOT EXISTS GroupPermissions (
 
 -- Create UserPermissions table
 CREATE TABLE IF NOT EXISTS UserPermissions (
-    permissionID INTEGER PRIMARY KEY AUTOINCREMENT,
+    permissionID INTEGER PRIMARY KEY,
     userID TEXT,
     fileID INTEGER,
     folderID INTEGER,
@@ -186,15 +199,9 @@ CREATE TABLE IF NOT EXISTS UserPermissions (
     FOREIGN KEY (folderID) REFERENCES Folder(folderID)
 );
 
--- Create Permissions table (for the permission types)
-CREATE TABLE IF NOT EXISTS Permissions (
-    permissionID TEXT PRIMARY KEY,
-    weight INTEGER
-);
-
 -- Create AuditLog table
 CREATE TABLE IF NOT EXISTS AuditLog (
-    logID INTEGER PRIMARY KEY AUTOINCREMENT,
+    logID INTEGER PRIMARY KEY,
     userID TEXT,
     action TEXT,
     permissionID INTEGER,
@@ -202,9 +209,13 @@ CREATE TABLE IF NOT EXISTS AuditLog (
     affected_userID TEXT,
     affected_groupID TEXT,
     FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (permissionID) REFERENCES UserPermissions(permissionID) ON DELETE CASCADE,
-    FOREIGN KEY (permissionID) REFERENCES GroupPermissions(permissionID) ON DELETE CASCADE
+    FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID),
+    FOREIGN KEY (affected_userID) REFERENCES Users(userID),
+    FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID)
 );
 
--- Enable foreign key constraints (optional, but recommended)
-PRAGMA foreign_keys = ON;
+-- Create Permissions table
+CREATE TABLE IF NOT EXISTS Permissions (
+    permissionID TEXT PRIMARY KEY,
+    weight INTEGER
+);

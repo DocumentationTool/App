@@ -1,3 +1,17 @@
+Request Layout:
+Header:
+    Authorization
+        Bearer: Api-Key
+
+Body:
+    Data
+
+
+
+
+
+
+
 Session Based with Spring Security
 
 vs

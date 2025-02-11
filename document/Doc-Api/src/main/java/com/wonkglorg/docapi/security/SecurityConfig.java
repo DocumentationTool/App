@@ -1,6 +1,8 @@
 package com.wonkglorg.docapi.security;
 
 import com.wonkglorg.docapi.properties.ApiProperties;
+import com.wonkglorg.docapi.security.filters.ApiKeyFilter;
+import com.wonkglorg.docapi.security.filters.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,9 +25,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
 	private final ApiProperties apiProperties;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-	public SecurityConfig(ApiProperties apiProperties) {
+	public SecurityConfig(ApiProperties apiProperties,
+			JwtAuthenticationFilter jwtAuthenticationFilter) {
 		this.apiProperties = apiProperties;
+		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 	}
 
 	/**
@@ -59,7 +64,10 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
 			AuthenticationManager authManager) throws Exception {
-		http.csrf(AbstractHttpConfigurer::disable)  //disables cross-site request forgery since JWT is
+		http.addFilterBefore(new ApiKeyFilter(),
+						UsernamePasswordAuthenticationFilter.class)//first authenticates the api key from the
+				// request
+				.csrf(AbstractHttpConfigurer::disable)  //disables cross-site request forgery since JWT is
 				// stateless
 				.sessionManagement(session -> session.sessionCreationPolicy(
 						SessionCreationPolicy.STATELESS)) //no session management we use jwt
@@ -68,7 +76,7 @@ public class SecurityConfig {
 								.permitAll().anyRequest()
 								.authenticated())// Require authentication for all other endpoints
 				.exceptionHandling(e -> e.authenticationEntryPoint(new UserAuthenticationEntryPoint()))
-				.addFilterBefore(new JwtAuthenticationFilter(),
+				.addFilterBefore(jwtAuthenticationFilter,
 						UsernamePasswordAuthenticationFilter.class); // Add JWT filter before default
 		// authentication filter
 		return http.build();

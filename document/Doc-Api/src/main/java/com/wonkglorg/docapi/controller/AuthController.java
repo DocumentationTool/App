@@ -1,6 +1,5 @@
 package com.wonkglorg.docapi.controller;
 
-import static com.wonkglorg.docapi.controller.Constants.AuthMappings.LOGIN;
 import static com.wonkglorg.docapi.controller.Constants.ControllerPaths.AUTH;
 import com.wonkglorg.docapi.exception.LoginFailedException;
 import com.wonkglorg.docapi.security.JwtUtil;
@@ -26,7 +25,7 @@ public class AuthController{
 		this.authManager = authManager;
 	}
 	
-	@GetMapping(LOGIN)
+	@GetMapping("/login")
 	public ResponseEntity<String> login() {
 		log.info("Login GET request received");
 		return ResponseEntity.ok("Login");
@@ -38,7 +37,7 @@ public class AuthController{
 		return ResponseEntity.notFound().build();
 	}
 	
-	@PostMapping(LOGIN)
+	@PostMapping("/login")
 	public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
 		log.info("Login POST request received");
 		try{
