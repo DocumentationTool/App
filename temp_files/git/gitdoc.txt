@@ -1,0 +1,7 @@
+A file in Git can be in one of several states:
+
+    Untracked – A new file that Git is not tracking yet (not added to staging).
+    Tracked – A file that Git is aware of (either committed or staged).
+    Modified – A file that was changed after being committed but not yet staged.
+    Staged (Added) – A file that was modified and then staged with git add, meaning it's ready to be committed.
+    Committed – A file that has been recorded in Git history.

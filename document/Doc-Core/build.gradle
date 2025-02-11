@@ -1,6 +1,7 @@
 description = "Core Functionality of the Application"
 
 dependencies {
-     //implementation ProjectDependencies.gson
-     testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
+    implementation 'org.xerial:sqlite-jdbc:3.49.0.0'
+    implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'
+    testImplementation("org.junit.jupiter:junit-jupiter:5.9.1")
 }

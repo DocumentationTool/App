@@ -9,3 +9,6 @@ api:
     - "/error"
     - "/public/**"
     - "/favicon.ico"
+  repo: \\atfile3\TSUSERDATA\p10209\Desktop\db\repo
+  dbName: data.sql
+

@@ -76,3 +76,12 @@ Seperation between user groups and individual users a group takes less priority 
 
 Each Path and or file can have their own permissions defined
 
+
+
+
+https://docs.gitbook.com/
+
+
+automatically create new repo based on configs defined.
+
+

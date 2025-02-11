@@ -38,6 +38,9 @@ public class ApiUserController {
 	@PutMapping("/remove")
 	public ResponseEntity<UserProfile> deleteUser(@RequestParam("userID") String userId) {
 		log.info("Received PUT request to delete user with userID='{}'", userId);
+
+
+
 		return ResponseEntity.ok(null);
 	}
 
