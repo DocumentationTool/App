@@ -69,17 +69,16 @@ public class RepoManager{
 			gitRepo = new GitRepo(repoProperty.getPath());
 			Optional<Path> file = gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperty.getDbName()), GitRepo.GitStage.UNTRACKED, ADDED, ADDED);
 			dataDB = new DataDB(gitRepo.getRepoPath().resolve(repoProperty.getDbName()));
-			if(file.isPresent()){
+			if(file.isEmpty()){
 				//commit the file.
 				log.info("No Database in Repo");
+				dataDB.initialize();
 				gitRepo.getGit().add().addFilepattern(repoProperty.getDbName()).call();
 			} else {
 				log.info("Found database in repo!");
 				//build db and then commit changes?
 			}
 			
-			log.info("Initializing DataBase");
-			dataDB.initialize();
 		}
 		
 		public GitRepo getGitRepo() {
