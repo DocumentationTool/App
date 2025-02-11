@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Set;
 
 public class DataDB extends SqliteDatabase{
 	private static final Logger log = LoggerFactory.getLogger(DataDB.class);
@@ -140,6 +141,10 @@ public class DataDB extends SqliteDatabase{
 				throw new RuntimeException(e);
 			}
 		}
+	}
+	
+	public void updateResources(Set<String> files) {
+		//todo automatically insert not mapped files and remove files that are no longer in the set
 	}
 	
 	private void executeStatement(String sql) throws SQLException {
