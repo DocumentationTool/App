@@ -1,5 +1,6 @@
 package com.wonkglorg.docapi.db;
 
+import com.wonkglorg.docapi.git.RepoProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,15 +11,18 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Set;
 
-public class DataDB extends SqliteDatabase {
-	private static final Logger log = LoggerFactory.getLogger(DataDB.class);
+public class RepoDB extends SqliteDatabase {
+	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
+	private final RepoProperties repoProperties;
 
-	public DataDB(Path sourcePath, Path destinationPath) {
+	public RepoDB(RepoProperties repoProperties, Path sourcePath, Path destinationPath) {
 		super(sourcePath, destinationPath);
+		this.repoProperties = repoProperties;
 	}
 
-	public DataDB(Path openInPath) {
+	public RepoDB(RepoProperties repoProperties, Path openInPath) {
 		super(openInPath);
+		this.repoProperties = repoProperties;
 	}
 
 	private void executeStatement(String sql) throws SQLException {
@@ -42,13 +46,13 @@ public class DataDB extends SqliteDatabase {
 			}
 			return resources;
 		} catch (SQLException e) {
-			log.error("Error while reading resources", e);
+			log.error("Error while reading resources for repo '{}'", repoProperties.getName(), e);
 			return resources;
 		}
 	}
 
 	public void initialize() {
-		log.info("Initialising Database");
+		log.info("Initialising Database for repo '{}'", repoProperties.getName());
 		try {
 			executeStatement("PRAGMA foreign_keys = OFF;");
 			connection.setAutoCommit(false);
@@ -97,12 +101,33 @@ public class DataDB extends SqliteDatabase {
 					""");
 
 			executeStatement("""
+					CREATE TABLE IF NOT EXISTS Tags(
+					                          tag TEXT PRIMARY KEY,
+					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					                          created_by TEXT
+					);
+					""");
+
+
+			executeStatement("""
 					CREATE TABLE IF NOT EXISTS Resources (
 					                          resourcePath TEXT PRIMARY KEY,
 					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 					                          created_by TEXT,
 					                          last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 					                          last_modified_by TEXT
+					);
+					""");
+
+			executeStatement("""
+					CREATE TABLE IF NOT EXISTS ResourceTags(
+					                          tag TEXT,
+					                          resourcePath TEXT,
+					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					                          created_by TEXT,
+					                          PRIMARY KEY (tag, resourcePath),
+					                          FOREIGN KEY (tag) REFERENCES Tags(tag),
+					                          FOREIGN KEY (resourcePath) REFERENCES Resources(resourcePath)
 					);
 					""");
 
@@ -156,7 +181,7 @@ public class DataDB extends SqliteDatabase {
 			executeStatement("PRAGMA foreign_keys = ON;");
 			connection.commit();
 		} catch (SQLException e) {
-			log.error("Error while initialising Database", e);
+			log.error("Error while initialising Database for repo '{}'", repoProperties.getName(), e);
 			try {
 				connection.rollback();
 			} catch (SQLException ex) {
@@ -178,33 +203,37 @@ public class DataDB extends SqliteDatabase {
 	 * @return true if it was inserted false otherwise
 	 */
 	public boolean insertResource(Path path) {
-		log.info("Inserting resource {}", path);
+		log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
 		try (var statement = getConnection().prepareStatement(
 				"INSERT INTO Resources(resourcePath, created_at, created_by, last_modified_at, "
 						+ "last_modified_by) VALUES(?,datetime('now'),'system',datetime('now'),'system')")) {
 			statement.setString(1, path.toString());
 			return statement.executeUpdate() == 1;
 		} catch (SQLException e) {
-			log.error("Error while inserting resource", e);
+			log.error("Error while inserting resource '{}' from repo '{}'", path,
+					repoProperties.getName(), e);
 			return false;
 		}
 	}
 
 	public boolean removeResource(Path path) {
-		log.info("Deleting resource {}", path);
+		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
 		try (var statement = getConnection().prepareStatement(
 				"DELETE FROM Resources WHERE resourcePath = ?")) {
 			statement.setString(1, path.toString());
+
 			return statement.executeUpdate() == 1;
 		} catch (SQLException e) {
-			log.error("Error while removing resource", e);
+			log.error("Error while removing resource '{}' from repo '{}'", path,
+					repoProperties.getName(),
+					e);
 			return false;
 		}
 	}
 
 	public boolean updateResources(Set<Path> files) {
 		boolean filesChanged = false;
-		log.info("Updating resources");
+		log.info("Updating resources for '{}'.", repoProperties.getName());
 		Set<Path> existingFiles = getResources();
 
 		Set<Path> filesToAdd = new HashSet<>(files);
@@ -224,6 +253,9 @@ public class DataDB extends SqliteDatabase {
 		for (Path path : filesToAdd) {
 			insertResource(path);
 		}
+		log.info("Finished updating resources for '{}'.", repoProperties.getName());
+		log.info("Added: {}", filesToAdd.size());
+		log.info("Deleted: {}", filesToRemove.size());
 		return filesChanged;
 	}
 

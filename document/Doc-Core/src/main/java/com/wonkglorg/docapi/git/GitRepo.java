@@ -4,15 +4,19 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.ServiceUnavailableException;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -39,35 +43,80 @@ public class GitRepo {
 
 	private static final Logger log = LoggerFactory.getLogger(GitRepo.class);
 	/**
-	 * The Plumbing view of the backing git repo (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
+	 * The Plumbing view of the backing git repo
+	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
 	 */
 	private final Repository repository;
 	/**
-	 * The Porcelain view of the backing git repo (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
+	 * The Porcelain view of the backing git repo
+	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
 	 */
 	private final Git git;
+	private RepoProperties properties;
 
-	public GitRepo(Path pathToLocalRepo, boolean shouldCreate) throws GitAPIException, IOException {
+	public GitRepo(RepoProperties properties) throws GitAPIException {
+		this.properties = properties;
+		Path pathToLocalRepo = properties.getPath();
 		if (!Files.exists(pathToLocalRepo)) {
-			if (shouldCreate) {
-				repository = FileRepositoryBuilder.create(pathToLocalRepo.toFile());
+			log.info("No local repository found. Creating a new one...");
+			if (!properties.isReadOnly()) {
+				createRepoFromPath(pathToLocalRepo);
+				repository = openRepoFromPath(pathToLocalRepo).orElseThrow();
 				git = new Git(repository);
+				log.info("Created a new git repository");
 			} else {
 				throw new ServiceUnavailableException(
-						"Read only Git repository not found! at path: " + pathToLocalRepo);
+						"Unable to create new Repository Marked as Read only! at path: " + pathToLocalRepo);
 			}
 
 			log.info("GitRepo initialized");
 		} else {
-			repository = new FileRepositoryBuilder().setGitDir(pathToLocalRepo.toFile()).build();
+			log.info("Local repository already exists");
+			repository = openRepoFromPath(pathToLocalRepo).orElseThrow();
 			git = new Git(repository);
 			log.info("GitRepo opened");
 		}
 	}
 
+
 	public GitRepo(Repository repository) {
 		this.repository = repository;
 		this.git = new Git(repository);
+	}
+
+	/**
+	 * Creates a git repository from the given path
+	 *
+	 * @param pathToRepo the path to the root of the repo
+	 */
+	public static void createRepoFromPath(Path pathToRepo) {
+		File repoDir = pathToRepo.toFile();
+		//creates the repo if it doesn't exist, FileRepository doesn't handle empty projects
+		if (!repoDir.exists()) {
+			try (Git ignored = Git.init().setDirectory(repoDir).call()) {
+				log.info("Initialized new Git repository at: " + repoDir.getAbsolutePath());
+			} catch (GitAPIException e) {
+				log.error("Failed to initialize Git repository", e);
+			}
+		}
+	}
+
+	/**
+	 * Opens an existing repo
+	 *
+	 * @param pathToRepo the path to the root of the repo
+	 * @return an empty optional if no valid repo was fond, otherwise the loaded repo
+	 */
+	public static Optional<Repository> openRepoFromPath(Path pathToRepo) {
+
+		try {
+			return Optional.of(new FileRepositoryBuilder().setGitDir(
+							pathToRepo.resolve(".git").toFile()) // Ensure it points to .git directory
+					.readEnvironment().findGitDir().setMustExist(true).build());
+		} catch (IOException e) {
+			log.error("IO Exception while accessing repository at: " + pathToRepo, e);
+		}
+		return Optional.empty();
 	}
 
 	public void addFile(Path file) throws GitAPIException {
@@ -80,6 +129,32 @@ public class GitRepo {
 
 	public void commit(String message) throws GitAPIException {
 		git.commit().setMessage(message).call();
+	}
+
+	/**
+	 * Creates a new branch
+	 *
+	 * @param branchName the name of the branch
+	 * @return the result of the creation
+	 */
+	public Ref createBranch(String branchName) {
+		try {
+			return git.branchCreate().setName(branchName).call();
+		} catch (GitAPIException e) {
+			log.error("Error while creating branch: " + branchName, e);
+		}
+		return null;
+	}
+
+	public List<String> deleteBranch(String branchName) {
+		try {
+			return git.branchDelete().setBranchNames(branchName).call();
+		} catch (GitAPIException e) {
+			log.error("Error while deleting branch '{}' for repo '{}'.", branchName,
+					properties.getName(),
+					e);
+		}
+		return new ArrayList<>();
 	}
 
 	/**
@@ -125,8 +200,8 @@ public class GitRepo {
 		return git;
 	}
 
-	public Repository getRepository() {
-		return repository;
+	public RepoProperties getProperties() {
+		return properties;
 	}
 
 	/**
@@ -135,6 +210,12 @@ public class GitRepo {
 	public Path getRepoPath() {
 		return Path.of(git.getRepository().getWorkTree().getAbsolutePath());
 	}
+
+	public Repository getRepository() {
+		return repository;
+	}
+
+
 
 	/**
 	 * @param filter
@@ -146,5 +227,9 @@ public class GitRepo {
 			throws GitAPIException {
 		return get(filter, true, stages).stream().findFirst();
 	}
+
+	//todo:jmd create new branch anytime someone checks out a file and merge it after they are done
+	// and want to save it
+	//or trow away the branch if its not needed anymore and they quit the changes
 
 }

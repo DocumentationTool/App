@@ -1,8 +1,7 @@
 package com.wonkglorg.docapi.db;
 
 import com.wonkglorg.docapi.git.GitRepo;
-import com.wonkglorg.docapi.properties.RepoProperties;
-import com.wonkglorg.docapi.properties.RepoProperties.RepoProperty;
+import com.wonkglorg.docapi.git.RepoProperties;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,7 +24,7 @@ public class RepoManager {
 	 */
 	public static class FileRepository {
 		private static final Logger log = LogManager.getLogger(FileRepository.class);
-		private final RepoProperty repoProperties;
+		private final RepoProperties repoProperties;
 		/**
 		 * The backing repo
 		 */
@@ -33,13 +32,13 @@ public class RepoManager {
 		/**
 		 * Represents the data in the database for quicker access and
 		 */
-		private DataDB dataDB;
+		private RepoDB dataDB;
 
-		public FileRepository(RepoProperty repoProperty) {
+		public FileRepository(RepoProperties repoProperty) {
 			this.repoProperties = repoProperty;
 		}
 
-		public DataDB getDataDB() {
+		public RepoDB getDataDB() {
 			return dataDB;
 		}
 
@@ -47,13 +46,14 @@ public class RepoManager {
 			return gitRepo;
 		}
 
-		public void initialize() throws GitAPIException, IOException {
+		public void initialize() throws GitAPIException {
 			log.info("Looking for repo in: '{}'", repoProperties.getPath());
-			gitRepo = new GitRepo(repoProperties.getPath(), repoProperties.isReadOnly());
+			gitRepo = new GitRepo(repoProperties);
 			Optional<Path> file =
 					gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperties.getDbName()), UNTRACKED,
 							MODIFIED, ADDED);
-			dataDB = new DataDB(gitRepo.getRepoPath().resolve(repoProperties.getDbName()));
+			dataDB =
+					new RepoDB(repoProperties, gitRepo.getRepoPath().resolve(repoProperties.getDbName()));
 			if (file.isEmpty()) {
 				log.info("No Database in Repo");
 				dataDB.initialize();
@@ -76,9 +76,9 @@ public class RepoManager {
 
 	private static final Logger log = LogManager.getLogger(RepoManager.class);
 	private final List<FileRepository> repositories = new ArrayList<>();
-	private final RepoProperties properties;
+	private final com.wonkglorg.docapi.properties.RepoProperties properties;
 
-	public RepoManager(RepoProperties properties) {
+	public RepoManager(com.wonkglorg.docapi.properties.RepoProperties properties) {
 		this.properties = properties;
 	}
 
@@ -90,7 +90,7 @@ public class RepoManager {
 	public void initialize() throws GitAPIException, IOException {
 		log.info("Initializing RepoManager");
 
-		for (RepoProperty repoProperty : properties.getRepositories()) {
+		for (RepoProperties repoProperty : properties.getRepositories()) {
 			log.info("Adding Repo '{}'", repoProperty.getName());
 			repositories.add(new FileRepository(repoProperty));
 		}
