@@ -1,1 +1,3 @@
 Even with new system I still need to build up a tree of permissions how to do that best?
+
+What database to store html in?

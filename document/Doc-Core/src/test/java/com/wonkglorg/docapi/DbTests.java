@@ -2,6 +2,8 @@ package com.wonkglorg.docapi;
 
 import com.wonkglorg.docapi.db.RepoDB;
 import com.wonkglorg.docapi.git.RepoProperties;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -11,16 +13,31 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.Set;
 
 class DbTests {
-	private RepoProperties properties;
+	private static RepoProperties properties;
+
+	@Test
+	void addResource() {
+		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
+
+		repoDB.initialize();
+		repoDB.insertResource(Path.of("test.xml"));
+		repoDB.insertResource(Path.of("folder/test.xml"));
+		Set<Path> resources = repoDB.getResources();
+
+		Assertions.assertEquals(2, resources.size());
+		repoDB.close();
+	}
 
 	@Test
 	void canCreateDatabase() {
 		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
+		repoDB.close();
 	}
 
-	private void deleteDirecory(Path path) throws IOException {
+	private static void deleteDirecory(Path path) throws IOException {
 		if (!Files.isDirectory(path)) {
 			return;
 		}
@@ -37,6 +54,12 @@ class DbTests {
 				return FileVisitResult.CONTINUE;
 			}
 		});
+	}
+
+	@AfterAll
+	public static void exit() throws IOException, InterruptedException {
+		Thread.sleep(500);
+		deleteDirecory(properties.getPath());
 	}
 
 	@BeforeEach

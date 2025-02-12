@@ -65,7 +65,9 @@ Cons:
 
 
 
+XML Data should be generated on change into html and put into a database. Used to get quicker access to said data
 
+Elasticsearch for quick access? https://www.elastic.co/elasticsearch
 
 
 
@@ -80,8 +82,17 @@ Each Path and or file can have their own permissions defined
 
 
 https://docs.gitbook.com/
+Site Plugin:
+https://maven.apache.org/plugins/maven-site-plugin/
+https://www.baeldung.com/maven-site-plugin
 
+
+https://www.baeldung.com/java-convert-xml-to-html
 
 automatically create new repo based on configs defined.
+
+
+
+
 
 

@@ -4,6 +4,7 @@ import com.wonkglorg.docapi.db.RepoDB;
 import com.wonkglorg.docapi.git.GitRepo;
 import com.wonkglorg.docapi.git.RepoProperties;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,32 @@ import static com.wonkglorg.docapi.git.GitRepo.GitStage.*;
 
 class RepoTests {
 
-	private RepoProperties properties;
+	private static RepoProperties properties;
+
+	private static void deleteDirecory(Path path) throws IOException {
+		if (!Files.isDirectory(path)) {
+			return;
+		}
+		Files.walkFileTree(path, new SimpleFileVisitor<>() {
+			@Override
+			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+				Files.delete(dir);
+				return FileVisitResult.CONTINUE;
+			}
+
+			@Override
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				Files.delete(file);
+				return FileVisitResult.CONTINUE;
+			}
+		});
+	}
+
+	@AfterAll
+	public static void exit() throws IOException, InterruptedException {
+		Thread.sleep(500);
+		deleteDirecory(properties.getPath());
+	}
 
 	@Test
 	void canCreateDatabaseInRepo() {
@@ -51,25 +77,6 @@ class RepoTests {
 		} catch (GitAPIException e) {
 			Assertions.fail(e);
 		}
-	}
-
-	private void deleteDirecory(Path path) throws IOException {
-		if (!Files.isDirectory(path)) {
-			return;
-		}
-		Files.walkFileTree(path, new SimpleFileVisitor<>() {
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-				Files.delete(dir);
-				return FileVisitResult.CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				Files.delete(file);
-				return FileVisitResult.CONTINUE;
-			}
-		});
 	}
 
 	@Test
