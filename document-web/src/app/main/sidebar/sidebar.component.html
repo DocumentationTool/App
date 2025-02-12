@@ -1,0 +1,17 @@
+@if (navigationService.toggle()) {
+  <div class="left-sidebar">
+    <nav class="nav flex-column">
+      <ul>
+        @for (file of fileService.files(); track file) {
+          <li>
+            <a [href]="getAssetUrl(file)"
+               (click)="selectFile(file); $event.preventDefault()"
+               [ngClass]="{'active': fileService.selectedFile() === file}">
+              {{ file }}
+            </a>
+          </li>
+        }
+      </ul>
+    </nav>
+  </div>
+}
