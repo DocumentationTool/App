@@ -36,3 +36,4 @@ out/
 ### VS Code ###
 .vscode/
 /temp/
+/document/Doc-Core/temp/

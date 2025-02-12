@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileAttribute;
 import java.util.Set;
 
 class DbTests {
@@ -69,7 +70,7 @@ class DbTests {
 		properties.setName("Test Repo");
 		properties.setReadOnly(false);
 		deleteDirecory(properties.getPath());
-		Files.createDirectory(properties.getPath());
+		Files.createDirectories(properties.getPath());
 	}
 
 }
