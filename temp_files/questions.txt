@@ -1,1 +1,1 @@
-how to handle file updates? What if files in repo change while its being worked on?, Have a task that runs every x minutes that rechecks the db for updates?
+Even with new system I still need to build up a tree of permissions how to do that best?

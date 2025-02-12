@@ -33,7 +33,7 @@ Table GroupUsers{
   groupID String [primary key]
 }
 
-Table Resource {
+Table Resources {
   resourcePath String [primary key]
   created_at timestamp
   created_by String
@@ -53,13 +53,25 @@ Table UserPermissions {
   type String
 }
 
+Table Tags {
+  tag String [primary key]
+  created_at timestamp
+  created_by String
+}
+
+Table ResourceTags {
+  resourcePath String [primary key]
+  tag String [primary key]
+  added_at timestamp
+  added_by String
+}
 
 
 
 Table AuditLog {
   logID integer [primary key]
   userID String
-  action String  // Action type, e.g., 'grant', 'revoke'
+  action String
   permissionID integer
   timestamp timestamp
   affected_userID String
@@ -80,13 +92,17 @@ Ref: Groups.groupID < GroupUsers.groupID
 Ref: Users.userID < UserPermissions.userID
 Ref: Groups.groupID < GroupPermissions.groupID
 
-Ref: Resource.resourcePath < UserPermissions.path
-Ref: Resource.resourcePath < GroupPermissions.path
+Ref: Resources.resourcePath < UserPermissions.path
+Ref: Resources.resourcePath < GroupPermissions.path
 
 
 
 Ref: Permissions.permissionID < UserPermissions.type
 Ref: Permissions.permissionID < GroupPermissions.type
+
+
+Ref: Tags.tag < ResourceTags.tag
+Ref: Resources.resourcePath < ResourceTags.resourcePath
 
 
 CREATE TABLE Roles (

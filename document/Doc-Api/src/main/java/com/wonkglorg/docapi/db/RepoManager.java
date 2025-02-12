@@ -55,7 +55,6 @@ public class RepoManager {
 							MODIFIED, ADDED);
 			dataDB = new DataDB(gitRepo.getRepoPath().resolve(repoProperties.getDbName()));
 			if (file.isEmpty()) {
-				//commit the file.
 				log.info("No Database in Repo");
 				dataDB.initialize();
 			} else {
