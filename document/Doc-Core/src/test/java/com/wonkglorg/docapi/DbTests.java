@@ -16,6 +16,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Set;
 
+import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
+
 class DbTests {
 	private static RepoProperties properties;
 
@@ -36,25 +38,6 @@ class DbTests {
 	void canCreateDatabase() {
 		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
 		repoDB.close();
-	}
-
-	private static void deleteDirecory(Path path) throws IOException {
-		if (!Files.isDirectory(path)) {
-			return;
-		}
-		Files.walkFileTree(path, new SimpleFileVisitor<>() {
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-				Files.delete(dir);
-				return FileVisitResult.CONTINUE;
-			}
-
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				Files.delete(file);
-				return FileVisitResult.CONTINUE;
-			}
-		});
 	}
 
 	@AfterAll

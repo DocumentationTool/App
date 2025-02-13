@@ -105,20 +105,25 @@ Ref: Tags.tag < ResourceTags.tag
 Ref: Resources.resourcePath < ResourceTags.resourcePath
 
 
-CREATE TABLE Roles (
+PRAGMA foreign_keys = ON;
+
+-- Roles Table
+CREATE TABLE IF NOT EXISTS Roles (
     roleID TEXT PRIMARY KEY,
     roleName TEXT
 );
 
-CREATE TABLE Users (
+-- Users Table
+CREATE TABLE IF NOT EXISTS Users (
     userID TEXT PRIMARY KEY,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by TEXT,
-    last_modified_at TIMESTAMP,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_modified_by TEXT
 );
 
-CREATE TABLE UserRoles (
+-- UserRoles Table
+CREATE TABLE IF NOT EXISTS UserRoles (
     roleID TEXT,
     userID TEXT,
     PRIMARY KEY (roleID, userID),
@@ -126,16 +131,18 @@ CREATE TABLE UserRoles (
     FOREIGN KEY (userID) REFERENCES Users(userID)
 );
 
-CREATE TABLE Groups (
+-- Groups Table
+CREATE TABLE IF NOT EXISTS Groups (
     groupID TEXT PRIMARY KEY,
     group_name TEXT,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by TEXT,
-    last_modified_at TIMESTAMP,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_modified_by TEXT
 );
 
-CREATE TABLE GroupUsers (
+-- GroupUsers Table
+CREATE TABLE IF NOT EXISTS GroupUsers (
     userID TEXT,
     groupID TEXT,
     PRIMARY KEY (userID, groupID),
@@ -143,51 +150,75 @@ CREATE TABLE GroupUsers (
     FOREIGN KEY (groupID) REFERENCES Groups(groupID)
 );
 
-CREATE TABLE Resource (
+-- Resources Table
+CREATE TABLE IF NOT EXISTS Resources (
     resourcePath TEXT PRIMARY KEY,
-    created_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by TEXT,
-    last_modified_at TIMESTAMP,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     last_modified_by TEXT
 );
 
-CREATE TABLE GroupPermissions (
+-- GroupPermissions Table
+CREATE TABLE IF NOT EXISTS GroupPermissions (
     groupID TEXT,
     path TEXT,
     type TEXT,
     PRIMARY KEY (groupID, path),
     FOREIGN KEY (groupID) REFERENCES Groups(groupID),
-    FOREIGN KEY (path) REFERENCES Resource(resourcePath)
+    FOREIGN KEY (path) REFERENCES Resources(resourcePath)
 );
 
-CREATE TABLE UserPermissions (
+-- UserPermissions Table
+CREATE TABLE IF NOT EXISTS UserPermissions (
     userID TEXT,
     path TEXT,
     type TEXT,
     PRIMARY KEY (userID, path),
     FOREIGN KEY (userID) REFERENCES Users(userID),
-    FOREIGN KEY (path) REFERENCES Resource(resourcePath)
+    FOREIGN KEY (path) REFERENCES Resources(resourcePath)
 );
 
-CREATE TABLE AuditLog (
-    logID INTEGER PRIMARY KEY,
-    userID TEXT,
-    action TEXT, -- Action type, e.g., 'grant', 'revoke'
-    permissionID TEXT,
-    timestamp TIMESTAMP,
-    affected_userID TEXT,
-    affected_groupID TEXT,
-    FOREIGN KEY (userID) REFERENCES Users(userID)
-);
-
-CREATE TABLE Permissions (
+-- Permissions Table
+CREATE TABLE IF NOT EXISTS Permissions (
     permissionID TEXT PRIMARY KEY,
     weight INTEGER
 );
 
-ALTER TABLE UserPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);
-ALTER TABLE GroupPermissions ADD FOREIGN KEY (type) REFERENCES Permissions(permissionID);
+-- Tags Table
+CREATE TABLE IF NOT EXISTS Tags (
+    tag TEXT PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT
+);
 
+-- ResourceTags Table
+CREATE TABLE IF NOT EXISTS ResourceTags (
+    resourcePath TEXT,
+    tag TEXT,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    added_by TEXT,
+    PRIMARY KEY (resourcePath, tag),
+    FOREIGN KEY (resourcePath) REFERENCES Resources(resourcePath),
+    FOREIGN KEY (tag) REFERENCES Tags(tag)
+);
+
+-- AuditLog Table
+CREATE TABLE IF NOT EXISTS AuditLog (
+    logID INTEGER PRIMARY KEY AUTOINCREMENT,
+    userID TEXT,
+    action TEXT,
+    permissionID TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    affected_userID TEXT,
+    affected_groupID TEXT,
+    FOREIGN KEY (userID) REFERENCES Users(userID),
+    FOREIGN KEY (affected_userID) REFERENCES Users(userID),
+    FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID),
+    FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID)
+);
+
+CREATE VIRTUAL TABLE FileData USING fts5(resourcePath, data, tokenize='trigram');
 
 
 ------Insert default data-----

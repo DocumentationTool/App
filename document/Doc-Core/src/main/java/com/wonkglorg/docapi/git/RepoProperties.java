@@ -22,6 +22,12 @@ import java.nio.file.Path;
 		 * Name of the database file
 		 */
 		private String dbName = "data.sql";
+
+	/**
+	 * defines in what repo the data.sql is stored in (if the repo is marked as readOnly
+	 */
+	private Path dbStorage = path;
+
 		
 		public String getName() {
 			return name;
@@ -54,4 +60,14 @@ import java.nio.file.Path;
 		public void setDbName(String dbName) {
 			this.dbName = dbName;
 		}
+
+	public Path getDbStorage() {
+		return dbStorage;
 	}
+
+	public void setDbStorage(Path dbStorage) {
+		this.dbStorage = dbStorage;
+	}
+
+
+}

@@ -1,0 +1,19 @@
+How to allow fast searching of text but keep it self contained?
+
+
+if it were non self contained elasticsearch would be the way to go but we want it self contained
+
+
+Decision for fts5 sticks out, was made to store / sort them in that way.
+
+fts5 default doesn't support middle word search so I set the mode to: trigram
+as seen here: "CREATE VIRTUAL TABLE renderedPages USING fts5(resourcePath, content, tokenize='trigram');"
+
+at the cost of tripple file size
+
+
+https://www.sqlite.org/fts5.html
+
+
+
+

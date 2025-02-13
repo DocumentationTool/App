@@ -8,8 +8,11 @@ import java.nio.file.Path;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.wonkglorg.docapi.db.DbObjects.*;
 
 public class RepoDB extends SqliteDatabase {
 	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
@@ -37,12 +40,17 @@ public class RepoDB extends SqliteDatabase {
 	 *
 	 * @return all resources or an empty set
 	 */
-	public Set<Path> getResources() {
-		Set<Path> resources = new HashSet<>();
-		try (var statement = getConnection().prepareStatement("SELECT resourcePath FROM Resources")) {
+	public Set<Resource> getResources() {
+		Set<Resource> resources = new HashSet<>();
+		try (var statement = getConnection().prepareStatement("SELECT resourcePath,created_at,created_by,last_modified_at,last_modified_by FROM Resources")) {
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
-				resources.add(Path.of(resultSet.getString(1)));
+				Path path = Path.of(resultSet.getString(1));
+				LocalDateTime createdAt = LocalDateTime.parse(resultSet.getString(2));
+				String createdBy = resultSet.getString(3);
+				LocalDateTime lastModifiedAt = LocalDateTime.parse(resultSet.getString(3));
+				String lastModifiedBy = resultSet.getString(4);
+				resources.add(new Resource(path, createdAt, createdBy, lastModifiedAt, lastModifiedBy));
 			}
 			return resources;
 		} catch (SQLException e) {
@@ -54,6 +62,8 @@ public class RepoDB extends SqliteDatabase {
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
 		try {
+			executeStatement("PRAGMA auto_vacuum = INCREMENTAL;");
+			executeStatement("PRAGMA incremental_vacuum(500);");
 			executeStatement("PRAGMA foreign_keys = OFF;");
 			connection.setAutoCommit(false);
 			executeStatement("""
@@ -216,6 +226,22 @@ public class RepoDB extends SqliteDatabase {
 		}
 	}
 
+	/**
+	 * Rebuilds the entire ntfs table to remove any unused records
+	 */
+	@SuppressWarnings("SqlResolve")//disabled duo to wrong errors showing up duo to fts specific command
+	public void rebuildFts() {
+		log.info("Rebuilding FTS for repo '{}'", repoProperties.getName());
+		try (var statement = getConnection().prepareStatement(
+				"INSERT INTO renderedPages(renderedPages) VALUES ('rebuild')")) { //rebuilds the table to reduce any old data
+			statement.execute();
+			log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getName());
+		} catch (SQLException e) {
+			log.error("Error while rebuilding FTS for repo '{}'", repoProperties.getName(), e);
+		}
+	}
+
+
 	public boolean removeResource(Path path) {
 		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
 		try (var statement = getConnection().prepareStatement(
@@ -233,14 +259,18 @@ public class RepoDB extends SqliteDatabase {
 
 	public boolean updateResources(Set<Path> files) {
 		boolean filesChanged = false;
-		log.info("Updating resources for '{}'.", repoProperties.getName());
-		Set<Path> existingFiles = getResources();
 
-		Set<Path> filesToAdd = new HashSet<>(files);
+		log.info("Updating resources for '{}'.", repoProperties.getName());
+		Set<Resource> existingFiles = getResources();
+		Set<Resource> modifiedFiles = new HashSet<>(existingFiles);
+		modifiedFiles.forEach(path -> {});
+
+		Set<Resource> filesToAdd = new HashSet<>(files);
 		filesToAdd.removeAll(existingFiles);
 
-		Set<Path> filesToRemove = new HashSet<>(existingFiles);
+		Set<Resource> filesToRemove = new HashSet<>(existingFiles);
 		filesToRemove.removeAll(files);
+
 
 		if (!filesToRemove.isEmpty() || !filesToAdd.isEmpty()) {
 			filesChanged = true;
@@ -255,8 +285,11 @@ public class RepoDB extends SqliteDatabase {
 		}
 		log.info("Finished updating resources for '{}'.", repoProperties.getName());
 		log.info("Added: {}", filesToAdd.size());
+		log.info("Modified: {}", filesChanged);
 		log.info("Deleted: {}", filesToRemove.size());
 		return filesChanged;
 	}
+
+
 
 }

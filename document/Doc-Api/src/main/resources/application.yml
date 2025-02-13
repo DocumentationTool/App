@@ -17,3 +17,7 @@ doc:
         path: temp/git/repo1
       - name: "Second Repo"
         path: temp/git/repo2
+      - name: "Read only Repo"
+        path: temp/git/readOnlyRepo
+        readOnly: true
+        dbStorage: temp/git/readOnlyRepoDB

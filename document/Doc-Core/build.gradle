@@ -5,6 +5,8 @@ dependencies {
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testImplementation 'ch.qos.logback:logback-classic:1.4.12'
+    //just for testing and filling data
+    testImplementation 'com.github.javafaker:javafaker:1.0.2'
 }
 
 test {

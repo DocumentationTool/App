@@ -52,6 +52,19 @@ public class GitRepo {
 	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
 	 */
 	private final Git git;
+
+
+	/**
+	 * Is the same as {@link #repository} unless {@link RepoProperties#isReadOnly()} is defined, in
+	 * that case this repo points specifically to the path defined by
+	 * {@link RepoProperties#getDbStorage()}
+	 */
+	private final Repository databaseRepository;
+
+	/**
+	 * Behaves the same as {@link #databaseRepository}
+	 */
+	private final Git databaseGit;
 	private RepoProperties properties;
 
 	public GitRepo(RepoProperties properties) throws GitAPIException {
@@ -66,7 +79,7 @@ public class GitRepo {
 				log.info("Created a new git repository");
 			} else {
 				throw new ServiceUnavailableException(
-						"Unable to create new Repository Marked as Read only! at path: " + pathToLocalRepo);
+						"Unable to locate Repository Marked as Read only! at path: " + pathToLocalRepo);
 			}
 
 			log.info("GitRepo initialized");
@@ -76,12 +89,35 @@ public class GitRepo {
 			git = new Git(repository);
 			log.info("GitRepo opened");
 		}
-	}
+		Path pathToDB = properties.isReadOnly() ? properties.getDbStorage() : properties.getPath();
+
+		if (!properties.isReadOnly()) {
+			databaseRepository = repository;
+			databaseGit = git;
+			return;
+		}
+
+		if (properties.isReadOnly() && pathToDB == null) {
+			throw new ServiceUnavailableException(
+					"Read only repository with no valid database repository reference! For: %s".formatted(
+							properties.getDbName()));
+		}
 
 
-	public GitRepo(Repository repository) {
-		this.repository = repository;
-		this.git = new Git(repository);
+		if (!Files.exists(pathToDB)) {
+			log.info("No database repository found. Creating a new one...");
+			createRepoFromPath(pathToLocalRepo);
+			databaseRepository = openRepoFromPath(pathToLocalRepo).orElseThrow();
+			databaseGit = new Git(repository);
+			log.info("Created a new database git repository");
+		} else {
+			log.info("Local database repository already exists");
+			databaseRepository = openRepoFromPath(pathToLocalRepo).orElseThrow();
+			databaseGit = new Git(repository);
+			log.info("GitRepo opened");
+		}
+
+
 	}
 
 	/**
@@ -216,7 +252,6 @@ public class GitRepo {
 	}
 
 
-
 	/**
 	 * @param filter
 	 * @param stages
@@ -232,4 +267,12 @@ public class GitRepo {
 	// and want to save it
 	//or trow away the branch if its not needed anymore and they quit the changes
 
+
+	public Repository getDatabaseRepository() {
+		return databaseRepository;
+	}
+
+	public Git getDatabaseGit() {
+		return databaseGit;
+	}
 }
