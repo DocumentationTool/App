@@ -1,5 +1,6 @@
 package com.wonkglorg.docapi.db;
 
+import com.wonkglorg.docapi.db.objects.Resource;
 import com.wonkglorg.docapi.git.GitRepo;
 import com.wonkglorg.docapi.git.RepoProperties;
 import jakarta.annotation.PostConstruct;
@@ -84,7 +85,7 @@ public class RepoManager {
 	/**
 	 * Keeps track of all cached resources for quick access in each repo
 	 */
-	private final Map<String, List<DbObjects.Resource>> cachedResources = new HashMap<>();
+	private final Map<String, List<Resource>> cachedResources = new HashMap<>();
 
 	private final com.wonkglorg.docapi.properties.RepoProperties properties;
 

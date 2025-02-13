@@ -1,35 +1,39 @@
 package com.wonkglorg.docapi.db;
 
+import com.wonkglorg.docapi.db.daos.ResourceDAO;
+import com.wonkglorg.docapi.db.daos.SetupDAO;
+import com.wonkglorg.docapi.db.dbs.JdbiDatabase;
+import com.wonkglorg.docapi.db.objects.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.jdbi.v3.core.Handle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static com.wonkglorg.docapi.db.DbObjects.Resource;
 
 public class RepoDB extends JdbiDatabase {
 	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
 	private final RepoProperties repoProperties;
-
 	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-	public RepoDB(RepoProperties repoProperties, Path sourcePath, Path destinationPath) {
-		super(sourcePath, destinationPath);
+	public RepoDB(RepoProperties repoProperties, Path openInPath) {
+		super(getDataSource(repoProperties, openInPath));
 		this.repoProperties = repoProperties;
+		dataSource = new HikariDataSource();
 	}
 
-	public RepoDB(RepoProperties repoProperties, Path openInPath) {
-		super(openInPath);
-		this.repoProperties = repoProperties;
+	private static HikariDataSource getDataSource(RepoProperties repoProperties, Path openInPath) {
+		HikariConfig hikariConfig = new HikariConfig();
+		hikariConfig.setJdbcUrl(SQLITE.driver() + openInPath.toString());
+		return new HikariDataSource(hikariConfig);
 	}
 
 	public boolean deleteResource(Path path) {
@@ -57,187 +61,25 @@ public class RepoDB extends JdbiDatabase {
 		}
 	}
 
-	private void executeStatement(String sql) throws SQLException {
-		try (PreparedStatement statement = connection.prepareStatement(sql)) {
-			statement.execute();
-		}
-
-	}
-
 	/**
 	 * Retrieve all saved resources from the database
 	 *
 	 * @return all resources or an empty set
 	 */
-	public Set<Resource> getResources() {
-		Set<Resource> resources = new HashSet<>();
-		try (var statement = getConnection().prepareStatement(
-				"SELECT resourcePath,created_at,created_by,last_modified_at,last_modified_by FROM "
-						+ "Resources")) {
-			ResultSet resultSet = statement.executeQuery();
-			while (resultSet.next()) {
-				Path path = Path.of(resultSet.getString(1));
-				LocalDateTime createdAt = LocalDateTime.parse(resultSet.getString(2), formatter);
-				String createdBy = resultSet.getString(3);
-				LocalDateTime lastModifiedAt = LocalDateTime.parse(resultSet.getString(4), formatter);
-				String lastModifiedBy = resultSet.getString(5);
-				resources.add(new Resource(path, createdAt, createdBy, lastModifiedAt, lastModifiedBy));
-			}
-			return resources;
-		} catch (SQLException e) {
-			log.error("Error while reading resources for repo '{}'", repoProperties.getName(), e);
-			return resources;
+	public List<Resource> getResources() {
+		try (Handle handle = jdbi().open()) {
+			ResourceDAO attach = handle.attach(ResourceDAO.class);
+			return attach.findAll();
 		}
 	}
 
+	@SuppressWarnings("TextBlockBackwardMigration")
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
-		try {
-			executeStatement("PRAGMA auto_vacuum = INCREMENTAL;");
-			executeStatement("PRAGMA incremental_vacuum(500);");
-			executeStatement("PRAGMA foreign_keys = OFF;");
-			connection.setAutoCommit(false);
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Roles (
-					                       roleID TEXT PRIMARY KEY,
-					                       roleName TEXT NOT NULL
-					);
-					""");
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Users (
-					                       userID TEXT PRIMARY KEY,
-					                       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                       created_by TEXT,
-					                       last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                       last_modified_by TEXT
-					);
-					""");
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS UserRoles (
-					                           roleID TEXT,
-					                           userID TEXT,
-					                           PRIMARY KEY (roleID, userID),
-					                           FOREIGN KEY (roleID) REFERENCES Roles(roleID),
-					                           FOREIGN KEY (userID) REFERENCES Users(userID)
-					);
-					""");
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Groups (
-					                        groupID TEXT PRIMARY KEY,
-					                        group_name TEXT NOT NULL,
-					                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                        created_by TEXT,
-					                        last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                        last_modified_by TEXT
-					);
-					""");
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS GroupUsers (
-					                            userID TEXT,
-					                            groupID TEXT,
-					                            PRIMARY KEY (userID, groupID),
-					                            FOREIGN KEY (userID) REFERENCES Users(userID),
-					                            FOREIGN KEY (groupID) REFERENCES Groups(groupID)
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Tags(
-					                          tag TEXT PRIMARY KEY,
-					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                          created_by TEXT
-					);
-					""");
-
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Resources (
-					                          resourcePath TEXT PRIMARY KEY,
-					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                          created_by TEXT,
-					                          last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                          last_modified_by TEXT
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS ResourceTags(
-					                          tag TEXT,
-					                          resourcePath TEXT,
-					                          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                          created_by TEXT,
-					                          PRIMARY KEY (tag, resourcePath),
-					                          FOREIGN KEY (tag) REFERENCES Tags(tag),
-					                          FOREIGN KEY (resourcePath) REFERENCES Resources(resourcePath)
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS GroupPermissions (
-					                                  groupID TEXT,
-					                                  path TEXT,
-					                                  type TEXT,
-					                                  PRIMARY KEY (groupID, path),
-					                                  FOREIGN KEY (groupID) REFERENCES Groups(groupID),
-					                                  FOREIGN KEY (path) REFERENCES Resources(resourcePath),
-					                                  FOREIGN KEY (type) REFERENCES Permissions(permissionID)
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS UserPermissions (
-					                                 userID TEXT,
-					                                 path TEXT,
-					                                 type TEXT,
-					                                 PRIMARY KEY (userID, path),
-					                                 FOREIGN KEY (userID) REFERENCES Users(userID),
-					                                 FOREIGN KEY (path) REFERENCES Resources(resourcePath),
-					                                 FOREIGN KEY (type) REFERENCES Permissions(permissionID)
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS Permissions (
-					                             permissionID TEXT PRIMARY KEY,
-					                             weight INTEGER NOT NULL
-					);
-					""");
-
-			executeStatement("""
-					CREATE TABLE IF NOT EXISTS AuditLog (
-					                          logID INTEGER PRIMARY KEY AUTOINCREMENT,
-					                          userID TEXT,
-					                          action TEXT NOT NULL,  -- Action type, e.g., 'grant', 'revoke'
-					                          permissionID TEXT,
-					                          timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					                          affected_userID TEXT,
-					                          affected_groupID TEXT,
-					                          FOREIGN KEY (userID) REFERENCES Users(userID),
-					                          FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID),
-					                          FOREIGN KEY (affected_userID) REFERENCES Users(userID),
-					                          FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID)
-					);
-					""");
-
-			executeStatement(
-					"CREATE VIRTUAL TABLE FileData USING fts5(resourcePath, data, tokenize='trigram');");
-
-			executeStatement("PRAGMA foreign_keys = ON;");
-			connection.commit();
-		} catch (SQLException e) {
-			log.error("Error while initialising Database for repo '{}'", repoProperties.getName(), e);
-			try {
-				connection.rollback();
-			} catch (SQLException ex) {
-				throw new RuntimeException(ex);
-			}
-		} finally {
-			try {
-				connection.setAutoCommit(true);
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
+		try (Handle handle = jdbi().open()) {
+			handle.attach(SetupDAO.class).initialize();
 		}
+		log.info("Database initialized for repo '{}'", repoProperties.getName());
 	}
 
 	/**
@@ -247,10 +89,18 @@ public class RepoDB extends JdbiDatabase {
 	 * @return true if it was inserted false otherwise
 	 */
 	public boolean insertResource(Path path) {
+		try (Handle handle = jdbi().open()) {
+			ResourceDAO attach = handle.attach(ResourceDAO.class);
+			attach.insert(new Resource(path, "system"));
+
+
+		}
+
+
 		log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
 		try (var statement = getConnection().prepareStatement(
 				"INSERT INTO Resources(resourcePath, created_at, created_by, last_modified_at, "
-						+ "last_modified_by) VALUES(?,datetime('now'),'system',datetime('now'),'system')")) {
+				+ "last_modified_by) VALUES(?,datetime('now'),'system',datetime('now'),'system')")) {
 			statement.setString(1, path.toString());
 			return statement.executeUpdate() == 1;
 		} catch (SQLException e) {
@@ -264,6 +114,7 @@ public class RepoDB extends JdbiDatabase {
 
 	/**
 	 * Moves a resource to another location (also includes renaming)
+	 *
 	 * @param oldPath the initial resource location
 	 * @param newPath the new resource location
 	 * @return
