@@ -17,7 +17,7 @@ import java.nio.file.Path;
 		/**
 		 * If the repository is read only
 		 */
-		private boolean readOnly = true;
+		private boolean readOnly = false;
 		/**
 		 * Name of the database file
 		 */

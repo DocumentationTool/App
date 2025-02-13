@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -53,7 +55,7 @@ public class RepoManager {
 					gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperties.getDbName()), UNTRACKED,
 							MODIFIED, ADDED);
 			dataDB =
-					new RepoDB(repoProperties, gitRepo.getRepoPath().resolve(repoProperties.getDbName()));
+					new RepoDB(repoProperties, gitRepo.getDatabaseRepoPath().resolve(repoProperties.getDbName()));
 			if (file.isEmpty()) {
 				log.info("No Database in Repo");
 				dataDB.initialize();
@@ -70,12 +72,20 @@ public class RepoManager {
 				gitRepo.addFile(repoProperties.getDbName());
 				gitRepo.commit("Updated File DB");
 			}
-
 		}
 	}
 
 	private static final Logger log = LogManager.getLogger(RepoManager.class);
+	/**
+	 * A list of all loaded repositories
+	 */
 	private final List<FileRepository> repositories = new ArrayList<>();
+
+	/**
+	 * Keeps track of all cached resources for quick access in each repo
+	 */
+	private final Map<String, List<DbObjects.Resource>> cachedResources = new HashMap<>();
+
 	private final com.wonkglorg.docapi.properties.RepoProperties properties;
 
 	public RepoManager(com.wonkglorg.docapi.properties.RepoProperties properties) {

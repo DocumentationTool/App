@@ -52,7 +52,7 @@ public class SqliteDatabase extends Database {
      * @param destinationPath the location to copy to
      */
     public SqliteDatabase(Path sourcePath, Path destinationPath) {
-        super(DatabaseType.SQLITE);
+        super(SQLITE);
         String name = destinationPath.getFileName().toString();
         databaseName = name.endsWith(".db") ? name : name + ".db";
         this.sourcePath = sourcePath;

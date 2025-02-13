@@ -46,12 +46,12 @@ public class GitRepo {
 	 * The Plumbing view of the backing git repo
 	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
 	 */
-	private final Repository repository;
+	private Repository repository;
 	/**
 	 * The Porcelain view of the backing git repo
 	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
 	 */
-	private final Git git;
+	private Git git;
 
 
 	/**
@@ -59,66 +59,74 @@ public class GitRepo {
 	 * that case this repo points specifically to the path defined by
 	 * {@link RepoProperties#getDbStorage()}
 	 */
-	private final Repository databaseRepository;
+	private Repository databaseRepository;
 
 	/**
 	 * Behaves the same as {@link #databaseRepository}
 	 */
-	private final Git databaseGit;
-	private RepoProperties properties;
+	private Git databaseGit;
+	private final RepoProperties properties;
 
-	public GitRepo(RepoProperties properties) throws GitAPIException {
-		this.properties = properties;
-		Path pathToLocalRepo = properties.getPath();
-		if (!Files.exists(pathToLocalRepo)) {
-			log.info("No local repository found. Creating a new one...");
-			if (!properties.isReadOnly()) {
-				createRepoFromPath(pathToLocalRepo);
-				repository = openRepoFromPath(pathToLocalRepo).orElseThrow();
-				git = new Git(repository);
-				log.info("Created a new git repository");
-			} else {
-				throw new ServiceUnavailableException(
-						"Unable to locate Repository Marked as Read only! at path: " + pathToLocalRepo);
-			}
+public GitRepo(RepoProperties properties) throws GitAPIException {
+    this.properties = properties;
+    Path pathToLocalRepo = properties.getPath();
 
-			log.info("GitRepo initialized");
-		} else {
-			log.info("Local repository already exists");
-			repository = openRepoFromPath(pathToLocalRepo).orElseThrow();
-			git = new Git(repository);
-			log.info("GitRepo opened");
-		}
-		Path pathToDB = properties.isReadOnly() ? properties.getDbStorage() : properties.getPath();
+    if (!Files.exists(pathToLocalRepo)) {
+        handleMissingRepository(pathToLocalRepo, properties.isReadOnly());
+    } else {
+        openRepository(pathToLocalRepo);
+    }
 
-		if (!properties.isReadOnly()) {
-			databaseRepository = repository;
-			databaseGit = git;
-			return;
+
+
+    Path pathToDB = properties.getDbStorage();
+
+    if (properties.isReadOnly() && pathToDB == null) {
+        throw new ServiceUnavailableException("Read-only repository with no valid database reference for: %s"
+                .formatted(properties.getDbName()));
+    }
+
+		if(pathToDB == null) {
+			log.info("No unique Database Repo specified using Documentation Repo instead: '{}'", pathToLocalRepo);
+			pathToDB = pathToLocalRepo; //its not read only so not forced to be a seperate repo and no explicit repo is specified (db gets moved into same repo as docs)
 		}
 
-		if (properties.isReadOnly() && pathToDB == null) {
-			throw new ServiceUnavailableException(
-					"Read only repository with no valid database repository reference! For: %s".formatted(
-							properties.getDbName()));
-		}
+    if (!Files.exists(pathToDB)) {
+        handleMissingDatabaseRepository(pathToDB);
+    } else {
+        openDatabaseRepository(pathToDB);
+    }
+}
 
+private void handleMissingRepository(Path path, boolean isReadOnly) throws GitAPIException {
+    if (isReadOnly) {
+        throw new ServiceUnavailableException("Unable to locate Repository Marked as Read-Only! at path: " + path);
+    }
+    log.info("No local repository found. Creating a new one...");
+    createRepoFromPath(path);
+    openRepository(path);
+    log.info("Created a new Git repository");
+}
 
-		if (!Files.exists(pathToDB)) {
-			log.info("No database repository found. Creating a new one...");
-			createRepoFromPath(pathToLocalRepo);
-			databaseRepository = openRepoFromPath(pathToLocalRepo).orElseThrow();
-			databaseGit = new Git(repository);
-			log.info("Created a new database git repository");
-		} else {
-			log.info("Local database repository already exists");
-			databaseRepository = openRepoFromPath(pathToLocalRepo).orElseThrow();
-			databaseGit = new Git(repository);
-			log.info("GitRepo opened");
-		}
+private void openRepository(Path path) {
+    repository = openRepoFromPath(path).orElseThrow();
+    git = new Git(repository);
+    log.info("GitRepo initialized");
+}
 
+private void handleMissingDatabaseRepository(Path path) throws GitAPIException {
+    log.info("No database repository found. Creating a new one...");
+    createRepoFromPath(path);
+    openDatabaseRepository(path);
+    log.info("Created a new database Git repository");
+}
 
-	}
+private void openDatabaseRepository(Path path) {
+    databaseRepository = openRepoFromPath(path).orElseThrow();
+    databaseGit = new Git(databaseRepository);
+    log.info("Database GitRepo opened");
+}
+
 
 	/**
 	 * Creates a git repository from the given path
@@ -244,12 +252,18 @@ public class GitRepo {
 	 * @return the working directory of the git repo
 	 */
 	public Path getRepoPath() {
-		return Path.of(git.getRepository().getWorkTree().getAbsolutePath());
+		return Path.of(repository.getWorkTree().getAbsolutePath());
+	}
+
+	public Path getDatabaseRepoPath(){
+		return Path.of(databaseRepository.getWorkTree().getAbsolutePath());
 	}
 
 	public Repository getRepository() {
 		return repository;
 	}
+
+
 
 
 	/**

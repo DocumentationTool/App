@@ -9,14 +9,18 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
-import static com.wonkglorg.docapi.db.DbObjects.*;
+import static com.wonkglorg.docapi.db.DbObjects.Resource;
 
-public class RepoDB extends SqliteDatabase {
+public class RepoDB extends JdbiDatabase {
 	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
 	private final RepoProperties repoProperties;
+
+	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	public RepoDB(RepoProperties repoProperties, Path sourcePath, Path destinationPath) {
 		super(sourcePath, destinationPath);
@@ -26,6 +30,31 @@ public class RepoDB extends SqliteDatabase {
 	public RepoDB(RepoProperties repoProperties, Path openInPath) {
 		super(openInPath);
 		this.repoProperties = repoProperties;
+	}
+
+	public boolean deleteResource(Path path) {
+		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
+		try (var connection = getConnection(); var resourceStatement = connection.prepareStatement(
+				"DELETE FROM Resources WHERE resourcePath = ?");
+				var fileDataStatement = connection.prepareStatement(
+						"DELETE FROM FileData WHERE resourcePath = ?")) {
+
+			connection.setAutoCommit(false); // Start transaction
+
+			resourceStatement.setString(1, path.toString());
+			fileDataStatement.setString(1, path.toString());
+
+			boolean resourceDeleted = resourceStatement.executeUpdate() == 1;
+			boolean fileDataDeleted = fileDataStatement.executeUpdate() >= 0;
+
+			connection.commit();
+			return resourceDeleted;
+		} catch (SQLException e) {
+			log.error("Error while deleting resource '{}' from repo '{}'", path,
+					repoProperties.getName(),
+					e);
+			return false;
+		}
 	}
 
 	private void executeStatement(String sql) throws SQLException {
@@ -42,14 +71,16 @@ public class RepoDB extends SqliteDatabase {
 	 */
 	public Set<Resource> getResources() {
 		Set<Resource> resources = new HashSet<>();
-		try (var statement = getConnection().prepareStatement("SELECT resourcePath,created_at,created_by,last_modified_at,last_modified_by FROM Resources")) {
+		try (var statement = getConnection().prepareStatement(
+				"SELECT resourcePath,created_at,created_by,last_modified_at,last_modified_by FROM "
+						+ "Resources")) {
 			ResultSet resultSet = statement.executeQuery();
 			while (resultSet.next()) {
 				Path path = Path.of(resultSet.getString(1));
-				LocalDateTime createdAt = LocalDateTime.parse(resultSet.getString(2));
+				LocalDateTime createdAt = LocalDateTime.parse(resultSet.getString(2), formatter);
 				String createdBy = resultSet.getString(3);
-				LocalDateTime lastModifiedAt = LocalDateTime.parse(resultSet.getString(3));
-				String lastModifiedBy = resultSet.getString(4);
+				LocalDateTime lastModifiedAt = LocalDateTime.parse(resultSet.getString(4), formatter);
+				String lastModifiedBy = resultSet.getString(5);
 				resources.add(new Resource(path, createdAt, createdBy, lastModifiedAt, lastModifiedBy));
 			}
 			return resources;
@@ -188,6 +219,9 @@ public class RepoDB extends SqliteDatabase {
 					);
 					""");
 
+			executeStatement(
+					"CREATE VIRTUAL TABLE FileData USING fts5(resourcePath, data, tokenize='trigram');");
+
 			executeStatement("PRAGMA foreign_keys = ON;");
 			connection.commit();
 		} catch (SQLException e) {
@@ -224,16 +258,54 @@ public class RepoDB extends SqliteDatabase {
 					repoProperties.getName(), e);
 			return false;
 		}
+
+
+	}
+
+	/**
+	 * Moves a resource to another location (also includes renaming)
+	 * @param oldPath the initial resource location
+	 * @param newPath the new resource location
+	 * @return
+	 */
+	public boolean moveResource(Path oldPath, Path newPath) {
+		log.info("Updating resource '{}' to '{}' in repo '{}'", oldPath, newPath,
+				repoProperties.getName());
+		try (var deleteStatement = connection.prepareStatement(
+				"DELETE FROM FileData WHERE resourcePath = ?");
+				var insertStatement = connection.prepareStatement(
+						"INSERT INTO FileData(resourcePath, data) VALUES(?, ?)")) {
+
+			connection.setAutoCommit(false); // Start transaction
+
+			// Delete old entry
+			deleteStatement.setString(1, oldPath.toString());
+			deleteStatement.executeUpdate();
+
+			// Insert new entry
+			insertStatement.setString(1, newPath.toString());
+			insertStatement.setString(2, newData);
+			boolean inserted = insertStatement.executeUpdate() == 1;
+
+			connection.commit();
+			return inserted;
+		} catch (SQLException e) {
+			log.error("Error while updating resource '{}' in repo '{}'", oldPath,
+					repoProperties.getName(), e);
+			return false;
+		}
 	}
 
 	/**
 	 * Rebuilds the entire ntfs table to remove any unused records
 	 */
-	@SuppressWarnings("SqlResolve")//disabled duo to wrong errors showing up duo to fts specific command
+	@SuppressWarnings("SqlResolve")
+	//disabled duo to wrong errors showing up duo to fts specific command
 	public void rebuildFts() {
 		log.info("Rebuilding FTS for repo '{}'", repoProperties.getName());
 		try (var statement = getConnection().prepareStatement(
-				"INSERT INTO renderedPages(renderedPages) VALUES ('rebuild')")) { //rebuilds the table to reduce any old data
+				"INSERT INTO renderedPages(renderedPages) VALUES ('rebuild')")) { //rebuilds the table to
+			// reduce any old data
 			statement.execute();
 			log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getName());
 		} catch (SQLException e) {
@@ -241,34 +313,50 @@ public class RepoDB extends SqliteDatabase {
 		}
 	}
 
+	public boolean updateResource(Path oldPath, Path newPath, String newData) {
+		log.info("Updating resource '{}' to '{}' in repo '{}'", oldPath, newPath,
+				repoProperties.getName());
+		try (var connection = getConnection(); var deleteStatement = connection.prepareStatement(
+				"DELETE FROM FileData WHERE resourcePath = ?");
+				var insertStatement = connection.prepareStatement(
+						"INSERT INTO FileData(resourcePath, data) VALUES(?, ?)")) {
 
-	public boolean removeResource(Path path) {
-		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
-		try (var statement = getConnection().prepareStatement(
-				"DELETE FROM Resources WHERE resourcePath = ?")) {
-			statement.setString(1, path.toString());
+			connection.setAutoCommit(false); // Start transaction
 
-			return statement.executeUpdate() == 1;
+			// Delete old entry
+			deleteStatement.setString(1, oldPath.toString());
+			deleteStatement.executeUpdate();
+
+			// Insert new entry
+			insertStatement.setString(1, newPath.toString());
+			insertStatement.setString(2, newData);
+			boolean inserted = insertStatement.executeUpdate() == 1;
+
+			connection.commit();
+			return inserted;
 		} catch (SQLException e) {
-			log.error("Error while removing resource '{}' from repo '{}'", path,
-					repoProperties.getName(),
-					e);
+			log.error("Error while updating resource '{}' in repo '{}'", oldPath,
+					repoProperties.getName(), e);
 			return false;
 		}
 	}
 
 	public boolean updateResources(Set<Path> files) {
+		//todo:jmd compare last changes + other info to determin if changes happened, if so rebuild
+		// that particular entry and redo.
 		boolean filesChanged = false;
 
 		log.info("Updating resources for '{}'.", repoProperties.getName());
-		Set<Resource> existingFiles = getResources();
-		Set<Resource> modifiedFiles = new HashSet<>(existingFiles);
-		modifiedFiles.forEach(path -> {});
+		Set<Path> existingFiles =
+				getResources().stream().map(Resource::resourcePath).collect(Collectors.toSet());
+		Set<Path> modifiedFiles = new HashSet<>(existingFiles);
+		modifiedFiles.forEach(path -> {
+		});
 
-		Set<Resource> filesToAdd = new HashSet<>(files);
+		Set<Path> filesToAdd = new HashSet<>(files);
 		filesToAdd.removeAll(existingFiles);
 
-		Set<Resource> filesToRemove = new HashSet<>(existingFiles);
+		Set<Path> filesToRemove = new HashSet<>(existingFiles);
 		filesToRemove.removeAll(files);
 
 
@@ -289,7 +377,6 @@ public class RepoDB extends SqliteDatabase {
 		log.info("Deleted: {}", filesToRemove.size());
 		return filesChanged;
 	}
-
 
 
 }

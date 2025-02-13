@@ -8,12 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.nio.file.attribute.FileAttribute;
 import java.util.Set;
 
 import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
@@ -28,7 +24,7 @@ class DbTests {
 		repoDB.initialize();
 		repoDB.insertResource(Path.of("test.xml"));
 		repoDB.insertResource(Path.of("folder/test.xml"));
-		Set<Path> resources = repoDB.getResources();
+		Set<DbObjects.Resource> resources = repoDB.getResources();
 
 		Assertions.assertEquals(2, resources.size());
 		repoDB.close();
