@@ -82,18 +82,22 @@ public class RepoDB extends JdbiDatabase {
 		log.info("Database initialized for repo '{}'", repoProperties.getName());
 	}
 
+	public boolean insertResource(Path path) {
+		try (Handle handle = jdbi().open()) {
+			return handle.attach(ResourceDAO.class).insert(new Resource(path, "system")) == 1;
+		}
+	}
+
 	/**
 	 * Inserts a new resource into the database
 	 *
 	 * @param path the path the resource is located at
 	 * @return true if it was inserted false otherwise
 	 */
-	public boolean insertResource(Path path) {
+	public boolean insertResource(Path path, String data) {
 		try (Handle handle = jdbi().open()) {
 			ResourceDAO attach = handle.attach(ResourceDAO.class);
-			attach.insert(new Resource(path, "system"));
-
-
+			attach.insert(new Resource(path, "system"), data);
 		}
 
 
