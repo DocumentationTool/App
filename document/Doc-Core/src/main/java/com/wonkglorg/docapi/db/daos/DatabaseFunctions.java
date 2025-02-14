@@ -2,7 +2,7 @@ package com.wonkglorg.docapi.db.daos;
 
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
-public interface SetupDAO {
+public interface DatabaseFunctions {
 	/**
 	 * Initialises the SQL Tables
 	 */
@@ -104,4 +104,44 @@ public interface SetupDAO {
 			COMMIT;
 			""")
 	void initialize();
+
+	@SqlUpdate("INSERT INTO FileData(renderedPages) VALUES ('rebuild')")
+	void rebuildFts();
+
+	/**
+	 * Sets up triggers for various usecases
+	 */
+	@SqlUpdate("""
+			CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
+			AFTER DELETE ON Resources
+			FOR EACH ROW
+			BEGIN
+			-- Delete related permissions
+			DELETE FROM GroupPermissions WHERE resourcePath = OLD.resourcePath;
+			DELETE FROM UserPermissions WHERE resourcePath = OLD.resourcePath;
+			--Delete Related Tags
+			DELETE FROM ResourceTags WHERE resourcePath = OLD.resourcePath;
+			--Delete Indexed Data
+			DELETE FROM FileData WHERE resourcePath = OLD.resourcePath;
+			END;
+			
+			CREATE TRIGGER IF NOT EXISTS update_resource_path
+    	AFTER UPDATE ON Resources
+    	FOR EACH ROW
+    	WHEN OLD.resourcePath != NEW.resourcePath
+    	BEGIN
+    	-- Update related permissions
+    	UPDATE GroupPermissions SET resourcePath = NEW.resourcePath WHERE resourcePath = OLD.resourcePath;
+    	UPDATE UserPermissions SET resourcePath = NEW.resourcePath WHERE resourcePath = OLD.resourcePath;
+    	-- Update related tags
+    	UPDATE ResourceTags SET resourcePath = NEW.resourcePath WHERE resourcePath = OLD.resourcePath;
+   
+    	-- Update indexed data
+    	UPDATE FileData SET resourcePath = NEW.resourcePath WHERE resourcePath = OLD.resourcePath;
+    	END;
+			""")
+	void setupTriggers();
+
+
+
 }

@@ -1,7 +1,7 @@
 package com.wonkglorg.docapi.db;
 
-import com.wonkglorg.docapi.db.daos.ResourceDAO;
-import com.wonkglorg.docapi.db.daos.SetupDAO;
+import com.wonkglorg.docapi.db.daos.DatabaseFunctions;
+import com.wonkglorg.docapi.db.daos.ResourceFunctions;
 import com.wonkglorg.docapi.db.dbs.JdbiDatabase;
 import com.wonkglorg.docapi.db.objects.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RepoDB extends JdbiDatabase {
+public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
 	private final RepoProperties repoProperties;
 	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -38,6 +38,8 @@ public class RepoDB extends JdbiDatabase {
 
 	public boolean deleteResource(Path path) {
 		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
+
+
 		try (var connection = getConnection(); var resourceStatement = connection.prepareStatement(
 				"DELETE FROM Resources WHERE resourcePath = ?");
 				var fileDataStatement = connection.prepareStatement(
@@ -68,7 +70,7 @@ public class RepoDB extends JdbiDatabase {
 	 */
 	public List<Resource> getResources() {
 		try (Handle handle = jdbi().open()) {
-			ResourceDAO attach = handle.attach(ResourceDAO.class);
+			ResourceFunctions attach = handle.attach(ResourceFunctions.class);
 			return attach.findAll();
 		}
 	}
@@ -77,14 +79,14 @@ public class RepoDB extends JdbiDatabase {
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
 		try (Handle handle = jdbi().open()) {
-			handle.attach(SetupDAO.class).initialize();
+			handle.attach(DatabaseFunctions.class).initialize();
 		}
 		log.info("Database initialized for repo '{}'", repoProperties.getName());
 	}
 
 	public boolean insertResource(Path path) {
 		try (Handle handle = jdbi().open()) {
-			return handle.attach(ResourceDAO.class).insert(new Resource(path, "system")) == 1;
+			return handle.attach(ResourceFunctions.class).insert(new Resource(path, "system")) == 1;
 		}
 	}
 
@@ -95,25 +97,15 @@ public class RepoDB extends JdbiDatabase {
 	 * @return true if it was inserted false otherwise
 	 */
 	public boolean insertResource(Path path, String data) {
-		try (Handle handle = jdbi().open()) {
-			ResourceDAO attach = handle.attach(ResourceDAO.class);
-			attach.insert(new Resource(path, "system"), data);
-		}
-
-
 		log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
-		try (var statement = getConnection().prepareStatement(
-				"INSERT INTO Resources(resourcePath, created_at, created_by, last_modified_at, "
-				+ "last_modified_by) VALUES(?,datetime('now'),'system',datetime('now'),'system')")) {
-			statement.setString(1, path.toString());
-			return statement.executeUpdate() == 1;
-		} catch (SQLException e) {
+		try {
+			return attach(ResourceFunctions.class,
+					f -> f.insert(new Resource(path, "system"), data) == 2);
+		} catch (Exception e) {
 			log.error("Error while inserting resource '{}' from repo '{}'", path,
 					repoProperties.getName(), e);
 			return false;
 		}
-
-
 	}
 
 	/**
@@ -154,16 +146,12 @@ public class RepoDB extends JdbiDatabase {
 	/**
 	 * Rebuilds the entire ntfs table to remove any unused records
 	 */
-	@SuppressWarnings("SqlResolve")
-	//disabled duo to wrong errors showing up duo to fts specific command
 	public void rebuildFts() {
 		log.info("Rebuilding FTS for repo '{}'", repoProperties.getName());
-		try (var statement = getConnection().prepareStatement(
-				"INSERT INTO renderedPages(renderedPages) VALUES ('rebuild')")) { //rebuilds the table to
-			// reduce any old data
-			statement.execute();
+		try (Handle handle = jdbi.open()) {
+			handle.attach(DatabaseFunctions.class).rebuildFts();
 			log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getName());
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			log.error("Error while rebuilding FTS for repo '{}'", repoProperties.getName(), e);
 		}
 	}
@@ -171,6 +159,8 @@ public class RepoDB extends JdbiDatabase {
 	public boolean updateResource(Path oldPath, Path newPath, String newData) {
 		log.info("Updating resource '{}' to '{}' in repo '{}'", oldPath, newPath,
 				repoProperties.getName());
+
+
 		try (var connection = getConnection(); var deleteStatement = connection.prepareStatement(
 				"DELETE FROM FileData WHERE resourcePath = ?");
 				var insertStatement = connection.prepareStatement(

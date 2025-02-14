@@ -11,7 +11,7 @@ import java.util.logging.Logger;
  * Base class for databases
  */
 @SuppressWarnings("unused")
-public abstract class Database implements AutoCloseable {
+public abstract class Database<T extends DataSource> implements AutoCloseable {
 	public record DatabaseType(String name, String driver, String classLoader) {
 	}
 
@@ -25,33 +25,28 @@ public abstract class Database implements AutoCloseable {
 			new DatabaseType("SQLServer", "jdbc:sqlserver:", "org.sqlserver.jdbc.SQLServerDriver");
 	public static final DatabaseType MARIA_DB =
 			new DatabaseType("MariaDB", "jdbc:mariadb:", "org.mariadb.jdbc.Driver");
-	protected final String driver;
-	protected final String classloader;
 	protected final Logger logger = Logger.getLogger(Database.class.getName());
-	protected DataSource dataSource;
+	protected final DatabaseType databaseType;
+	protected final T dataSource;
 
-	protected Database(DatabaseType databaseType) {
-		this.driver = databaseType.driver();
-		this.classloader = databaseType.classLoader();
+	protected Database(DatabaseType databaseType,T dataSource) {
+		this.databaseType = databaseType;
+		this.dataSource = dataSource;
 	}
 
-	protected Database(final String driver, final String classLoader) {
-		this.driver = driver;
-		this.classloader = classLoader;
-	}
 
 	/**
 	 * @return the classloader path
 	 */
 	public String getClassLoader() {
-		return classloader;
+		return databaseType.classLoader();
 	}
 
 	/**
 	 * @return The database driver
 	 */
 	public String getDriver() {
-		return driver;
+		return databaseType.driver();
 	}
 
 
@@ -66,4 +61,12 @@ public abstract class Database implements AutoCloseable {
 		return input.replaceAll("[^a-zA-Z0-9]", "");
 	}
 
+
+	public DatabaseType getDatabaseType() {
+		return databaseType;
+	}
+
+	public T getDataSource() {
+		return dataSource;
+	}
 }

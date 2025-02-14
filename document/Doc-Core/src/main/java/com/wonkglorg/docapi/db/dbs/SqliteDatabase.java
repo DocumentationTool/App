@@ -1,6 +1,7 @@
 package com.wonkglorg.docapi.db.dbs;
 
 
+
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -9,8 +10,7 @@ import java.sql.SQLException;
  * @author Wonkglorg
  */
 @SuppressWarnings("unused")
-public class SqliteDatabase extends Database implements Connectable {
-	private final DataSource dataSource;
+public class SqliteDatabase<T extends DataSource> extends Database<T> implements Connectable {
 
 	/**
 	 * * Creates a Sqlite database at the specified copyToPath.
@@ -38,9 +38,8 @@ public class SqliteDatabase extends Database implements Connectable {
 	 * otherwise sqlite database files will be filtered and become corrupted.
 	 *
 	 */
-	public SqliteDatabase(DataSource dataSource) {
-		super(SQLITE);
-		this.dataSource = dataSource;
+	public SqliteDatabase(T dataSource) {
+		super(SQLITE, dataSource);
 	}
 
 	@Override

@@ -8,10 +8,21 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import java.util.List;
 
-public interface ResourceDAO {
+public interface ResourceFunctions {
 
+	/**
+	 * Deletes a specific resource and all its related data in ResourceData, Tags and Permissions
+	 * @param resourcePath the path to the resource
+	 */
 	@SqlUpdate("DELETE FROM Resources WHERE resourcePath = :resourcePath")
 	void delete(@Bind("resourcePath") String resourcePath);
+
+	/**
+	 * Deletes the indexed data for this resource
+	 * @param resourcePath the path to the resource
+	 */
+	@SqlUpdate("DELETE FROM ResourceData WHERE resourcePath = :resourcePath")
+	void deleteData(@Bind("resourcePath") String resourcePath);
 
 	@SqlQuery("Select * From Resources")
 	List<Resource> findAll();
@@ -31,6 +42,6 @@ public interface ResourceDAO {
 			INSERT INTO FileData(resourcePath,data) VALUES(:resourcePath,:data);
 			COMMIT;
 			""")
-	void insert(@BindBean Resource resource, @Bind("data") String data);
+	int insert(@BindBean Resource resource, @Bind("data") String data);
 }
 
