@@ -55,14 +55,15 @@ public class RepoManager {
 			Optional<Path> file =
 					gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperties.getDbName()), UNTRACKED,
 							MODIFIED, ADDED);
-			dataDB =
-					new RepoDB(repoProperties, gitRepo.getDatabaseRepoPath().resolve(repoProperties.getDbName()));
+
 			if (file.isEmpty()) {
-				log.info("No Database in Repo");
-				dataDB.initialize();
-			} else {
-				log.info("Found database in repo!");
+				log.info("No Database in '{}'. Creating new Database.", repoProperties.getDbName());
 			}
+
+			dataDB = new RepoDB(repoProperties,
+					gitRepo.getDatabaseRepoPath().resolve(repoProperties.getDbName()));
+			dataDB.initialize();
+
 
 			Set<Path> foundFiles =
 					gitRepo.getFiles(s -> s.toLowerCase().endsWith(".xml"), UNTRACKED, MODIFIED, ADDED);

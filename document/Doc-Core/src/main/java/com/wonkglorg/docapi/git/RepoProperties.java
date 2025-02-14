@@ -21,7 +21,7 @@ import java.nio.file.Path;
 		/**
 		 * Name of the database file
 		 */
-		private String dbName = "data.sql";
+		private String dbName = "data.db";
 
 	/**
 	 * defines in what repo the data.sql is stored in (if the repo is marked as readOnly

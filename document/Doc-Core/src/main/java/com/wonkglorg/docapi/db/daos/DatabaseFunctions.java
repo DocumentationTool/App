@@ -119,7 +119,7 @@ COMMIT;
 	 */
 	@SqlUpdate("""
 			CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
-			AFTER DELETE ON Resources
+			AFTER DELETE ON main.Resources
 			FOR EACH ROW
 			BEGIN
 			   -- Delete related permissions
@@ -132,7 +132,7 @@ COMMIT;
 			END;
 
 			CREATE TRIGGER IF NOT EXISTS update_resource_path
-			    AFTER UPDATE ON Resources
+			    AFTER UPDATE ON main.Resources
 			    FOR EACH ROW
 			    WHEN OLD.resourcePath != NEW.resourcePath
 			    BEGIN
@@ -147,6 +147,11 @@ COMMIT;
 			""")
 	void setupTriggers();
 
-
+	@SqlUpdate("""
+			    CREATE TABLE IF NOT EXISTS Roles (
+			                  roleID TEXT PRIMARY KEY,
+			                  roleName TEXT NOT NULL);
+			""")
+	void test();
 
 }

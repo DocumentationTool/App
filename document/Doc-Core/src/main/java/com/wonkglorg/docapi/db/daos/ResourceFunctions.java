@@ -5,6 +5,7 @@ import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
+import org.jdbi.v3.sqlobject.statement.UseRowMapper;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -28,9 +29,11 @@ public interface ResourceFunctions {
 	void deleteData(@Bind("resourcePath") Path resourcePath);
 
 	@SqlQuery("Select * From Resources")
+	@UseRowMapper(ResourceMappers.ResourceRowMapper.class)
 	List<Resource> findAll();
 
 	@SqlQuery("SELECT * FROM Resources WHERE resourcePath = :resourcePath")
+	@UseRowMapper(ResourceMappers.ResourceRowMapper.class)
 	Resource findByPath(@Bind("resourcePath") Path resourcePath);
 
 

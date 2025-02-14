@@ -2,6 +2,7 @@ package com.wonkglorg.docapi.db;
 
 import com.wonkglorg.docapi.db.daos.DatabaseFunctions;
 import com.wonkglorg.docapi.db.daos.ResourceFunctions;
+import com.wonkglorg.docapi.db.dbs.FileDataSource;
 import com.wonkglorg.docapi.db.dbs.JdbiDatabase;
 import com.wonkglorg.docapi.db.objects.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
@@ -12,19 +13,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class RepoDB extends JdbiDatabase<HikariDataSource> {
+public class RepoDB extends JdbiDatabase<FileDataSource> {
 	private static final Logger log = LoggerFactory.getLogger(RepoDB.class);
 	private final RepoProperties repoProperties;
-	private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 	public RepoDB(RepoProperties repoProperties, Path openInPath) {
-		super(getDataSource(repoProperties, openInPath));
+		//super(getDataSource(repoProperties, openInPath));
+		super(new FileDataSource(SQLITE,openInPath));
 		this.repoProperties = repoProperties;
 	}
 
@@ -61,10 +61,25 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	@SuppressWarnings("TextBlockBackwardMigration")
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
-		voidAttach(DatabaseFunctions.class, db -> {
-			db.initialize();
-			db.setupTriggers();
-		});
+		try (Handle handle = jdbi().open()) {
+			handle.execute("");
+
+
+		}
+
+
+
+		try {
+
+
+
+
+
+			//voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
+			//voidAttach(DatabaseFunctions.class, DatabaseFunctions::setupTriggers);
+		} catch (Exception e) {
+			log.error("Error while initializing Database for repo '{}'", repoProperties.getName(), e);
+		}
 
 		log.info("Database initialized for repo '{}'", repoProperties.getName());
 	}
