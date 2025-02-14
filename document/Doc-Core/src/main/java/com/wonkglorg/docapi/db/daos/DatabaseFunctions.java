@@ -1,12 +1,13 @@
 package com.wonkglorg.docapi.db.daos;
 
+import org.jdbi.v3.sqlobject.statement.SqlScript;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 public interface DatabaseFunctions {
 	/**
 	 * Initialises the SQL Tables
 	 */
-	@SqlUpdate("""
+	@SqlScript("""
     BEGIN TRANSACTION;
     PRAGMA auto_vacuum = INCREMENTAL;
     PRAGMA incremental_vacuum(500);
@@ -104,9 +105,9 @@ public interface DatabaseFunctions {
                               data Text,
                               modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
-    CREATE VIRTUAL TABLE FileData_FTS USING fts5(resourcePath, content='FileData',tokenize='trigram'); --content referes to another table to keep indexed
+    CREATE VIRTUAL TABLE IF NOT EXISTS FileData_FTS USING fts5(resourcePath, content='FileData',tokenize='trigram'); --content referes to another table to keep indexed
     PRAGMA foreign_keys = ON;
-COMMIT;
+    COMMIT
 """)
 	void initialize();
 
@@ -117,9 +118,9 @@ COMMIT;
 	/**
 	 * Sets up triggers for various usecases
 	 */
-	@SqlUpdate("""
+	@SqlScript("""
 			CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
-			AFTER DELETE ON main.Resources
+			AFTER DELETE ON Resources
 			FOR EACH ROW
 			BEGIN
 			   -- Delete related permissions
@@ -130,9 +131,9 @@ COMMIT;
 			    --Delete Indexed Data
 			    DELETE FROM FileData WHERE resourcePath = OLD.resourcePath;
 			END;
-
+			
 			CREATE TRIGGER IF NOT EXISTS update_resource_path
-			    AFTER UPDATE ON main.Resources
+			    AFTER UPDATE ON Resources
 			    FOR EACH ROW
 			    WHEN OLD.resourcePath != NEW.resourcePath
 			    BEGIN
@@ -143,15 +144,23 @@ COMMIT;
 			    UPDATE ResourceTags SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
 			    -- Update indexed data
 			    UPDATE FileData SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
-			    END;
+			    END
 			""")
 	void setupTriggers();
 
-	@SqlUpdate("""
-			    CREATE TABLE IF NOT EXISTS Roles (
-			                  roleID TEXT PRIMARY KEY,
-			                  roleName TEXT NOT NULL);
+		@SqlScript("""
+			CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
+			AFTER DELETE ON Resources
+			FOR EACH ROW
+			BEGIN
+			   -- Delete related permissions
+			    DELETE FROM GroupPermissions WHERE resourcePath = OLD.resourcePath;
+			    DELETE FROM UserPermissions WHERE resourcePath = OLD.resourcePath;
+			    --Delete Related Tags
+			    DELETE FROM ResourceTags WHERE resourcePath = OLD.resourcePath;
+			    --Delete Indexed Data
+			    DELETE FROM FileData WHERE resourcePath = OLD.resourcePath;
+			END;
 			""")
-	void test();
-
+	void setupTriggersTest();
 }

@@ -9,6 +9,7 @@ import com.wonkglorg.docapi.git.RepoProperties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.statement.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,22 +62,35 @@ public class RepoDB extends JdbiDatabase<FileDataSource> {
 	@SuppressWarnings("TextBlockBackwardMigration")
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
-		try (Handle handle = jdbi().open()) {
-			handle.execute("");
+		try{
+			voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
+			try(Handle handle = jdbi().open()) {
+				//todo:jmd doesn't work find a fix later!!!!!!!!!!!!
+				Script script = handle.createScript("""
+						CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
+						AFTER DELETE ON Resources
+						FOR EACH ROW
+						BEGIN
+						   -- Delete related permissions
+						    DELETE FROM GroupPermissions WHERE resourcePath = OLD.resourcePath;
+						    DELETE FROM UserPermissions WHERE resourcePath = OLD.resourcePath;
+						    --Delete Related Tags
+						    DELETE FROM ResourceTags WHERE resourcePath = OLD.resourcePath;
+						    --Delete Indexed Data
+						    DELETE FROM FileData WHERE resourcePath = OLD.resourcePath;
+						END;
+						""");
+
+				List<String> statements = script.getStatements();
+				script.execute();
+
+				script.close();
+				System.out.println(statements);
+			}
 
 
-		}
 
-
-
-		try {
-
-
-
-
-
-			//voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
-			//voidAttach(DatabaseFunctions.class, DatabaseFunctions::setupTriggers);
+			//voidAttach(DatabaseFunctions.class, DatabaseFunctions::setupTriggersTest);
 		} catch (Exception e) {
 			log.error("Error while initializing Database for repo '{}'", repoProperties.getName(), e);
 		}
