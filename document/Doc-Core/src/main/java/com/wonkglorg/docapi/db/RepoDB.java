@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,6 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	public RepoDB(RepoProperties repoProperties, Path openInPath) {
 		super(getDataSource(repoProperties, openInPath));
 		this.repoProperties = repoProperties;
-		dataSource = new HikariDataSource();
 	}
 
 	private static HikariDataSource getDataSource(RepoProperties repoProperties, Path openInPath) {
@@ -38,29 +36,14 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 
 	public boolean deleteResource(Path path) {
 		log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
-
-
-		try (var connection = getConnection(); var resourceStatement = connection.prepareStatement(
-				"DELETE FROM Resources WHERE resourcePath = ?");
-				var fileDataStatement = connection.prepareStatement(
-						"DELETE FROM FileData WHERE resourcePath = ?")) {
-
-			connection.setAutoCommit(false); // Start transaction
-
-			resourceStatement.setString(1, path.toString());
-			fileDataStatement.setString(1, path.toString());
-
-			boolean resourceDeleted = resourceStatement.executeUpdate() == 1;
-			boolean fileDataDeleted = fileDataStatement.executeUpdate() >= 0;
-
-			connection.commit();
-			return resourceDeleted;
-		} catch (SQLException e) {
+		try {
+			return attach(ResourceFunctions.class, db -> db.delete(path)) > 0;
+		} catch (Exception e) {
 			log.error("Error while deleting resource '{}' from repo '{}'", path,
 					repoProperties.getName(),
 					e);
-			return false;
 		}
+		return false;
 	}
 
 	/**
@@ -78,9 +61,11 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	@SuppressWarnings("TextBlockBackwardMigration")
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getName());
-		try (Handle handle = jdbi().open()) {
-			handle.attach(DatabaseFunctions.class).initialize();
-		}
+		voidAttach(DatabaseFunctions.class, db -> {
+			db.initialize();
+			db.setupTriggers();
+		});
+
 		log.info("Database initialized for repo '{}'", repoProperties.getName());
 	}
 
@@ -116,31 +101,18 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	 * @return
 	 */
 	public boolean moveResource(Path oldPath, Path newPath) {
-		log.info("Updating resource '{}' to '{}' in repo '{}'", oldPath, newPath,
+		log.info("Moving resource '{}' to '{}' in repo '{}'", oldPath, newPath,
 				repoProperties.getName());
-		try (var deleteStatement = connection.prepareStatement(
-				"DELETE FROM FileData WHERE resourcePath = ?");
-				var insertStatement = connection.prepareStatement(
-						"INSERT INTO FileData(resourcePath, data) VALUES(?, ?)")) {
-
-			connection.setAutoCommit(false); // Start transaction
-
-			// Delete old entry
-			deleteStatement.setString(1, oldPath.toString());
-			deleteStatement.executeUpdate();
-
-			// Insert new entry
-			insertStatement.setString(1, newPath.toString());
-			insertStatement.setString(2, newData);
-			boolean inserted = insertStatement.executeUpdate() == 1;
-
-			connection.commit();
-			return inserted;
-		} catch (SQLException e) {
-			log.error("Error while updating resource '{}' in repo '{}'", oldPath,
-					repoProperties.getName(), e);
-			return false;
+		try {
+			Integer i = attach(ResourceFunctions.class, db -> db.updatePath(oldPath, newPath));
+			log.info("Updated {} entries when moving resource '{}' in repo '{}'", i, newPath,
+					repoProperties.getName());
+			return i > 0;
+		} catch (Exception e) {
+			log.error("Error while moving resource '{}' in repo '{}'", oldPath, repoProperties.getName(),
+					e);
 		}
+		return false;
 	}
 
 	/**
@@ -148,42 +120,24 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 	 */
 	public void rebuildFts() {
 		log.info("Rebuilding FTS for repo '{}'", repoProperties.getName());
-		try (Handle handle = jdbi.open()) {
-			handle.attach(DatabaseFunctions.class).rebuildFts();
+
+		try {
+			voidAttach(DatabaseFunctions.class, DatabaseFunctions::rebuildFts);
 			log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getName());
 		} catch (Exception e) {
 			log.error("Error while rebuilding FTS for repo '{}'", repoProperties.getName(), e);
 		}
 	}
 
-	public boolean updateResource(Path oldPath, Path newPath, String newData) {
-		log.info("Updating resource '{}' to '{}' in repo '{}'", oldPath, newPath,
-				repoProperties.getName());
-
-
-		try (var connection = getConnection(); var deleteStatement = connection.prepareStatement(
-				"DELETE FROM FileData WHERE resourcePath = ?");
-				var insertStatement = connection.prepareStatement(
-						"INSERT INTO FileData(resourcePath, data) VALUES(?, ?)")) {
-
-			connection.setAutoCommit(false); // Start transaction
-
-			// Delete old entry
-			deleteStatement.setString(1, oldPath.toString());
-			deleteStatement.executeUpdate();
-
-			// Insert new entry
-			insertStatement.setString(1, newPath.toString());
-			insertStatement.setString(2, newData);
-			boolean inserted = insertStatement.executeUpdate() == 1;
-
-			connection.commit();
-			return inserted;
-		} catch (SQLException e) {
-			log.error("Error while updating resource '{}' in repo '{}'", oldPath,
+	public boolean updateResource(Path resourcePath, String newData) {
+		log.info("Updating resource '{}' in repo '{}'", resourcePath, repoProperties.getName());
+		try {
+			return attach(ResourceFunctions.class, db -> db.updateResource(resourcePath, newData)) > 0;
+		} catch (Exception e) {
+			log.error("Error while updating resource '{}' in repo '{}'", resourcePath,
 					repoProperties.getName(), e);
-			return false;
 		}
+		return false;
 	}
 
 	public boolean updateResources(Set<Path> files) {
@@ -208,10 +162,13 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
 		if (!filesToRemove.isEmpty() || !filesToAdd.isEmpty()) {
 			filesChanged = true;
 		}
-
-		for (Path path : filesToRemove) {
-			removeResource(path);
+		try (Handle handle = jdbi().open()) {
+			ResourceFunctions resources = handle.attach(ResourceFunctions.class);
+			for (Path path : filesToRemove) {
+				resources.delete(path);
+			}
 		}
+
 
 		for (Path path : filesToAdd) {
 			insertResource(path);

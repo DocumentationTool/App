@@ -1,9 +1,9 @@
 package com.wonkglorg.docapi.db.dbs;
 
-import org.intellij.lang.annotations.Language;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
 import org.jdbi.v3.core.statement.Query;
+import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.sql.DataSource;
 import java.util.function.Consumer;
@@ -44,6 +44,7 @@ public class JdbiDatabase<T extends DataSource> extends Database<T> {
 	public JdbiDatabase(T dataSource) {
 		super(SQLITE, dataSource);
 		connect();
+		jdbi().installPlugin(new SqlObjectPlugin());
 	}
 
 	/**
@@ -54,12 +55,12 @@ public class JdbiDatabase<T extends DataSource> extends Database<T> {
 	 * @param consumer the consumer of the prepared class
 	 * @return the expected value
 	 */
-public <V, R> R attach(Class<V> clazz, Function<V, R> consumer) {
-    try (Handle handle = jdbi.open()) {
-        V dao = handle.attach(clazz);  // Explicit assignment
-        return consumer.apply(dao);    // Now consumer knows `dao` is `V`
-    }
-}
+	public <V, R> R attach(Class<V> clazz, Function<V, R> consumer) {
+		try (Handle handle = jdbi.open()) {
+			V dao = handle.attach(clazz);  // Explicit assignment
+			return consumer.apply(dao);    // Now consumer knows `dao` is `V`
+		}
+	}
 
 	@Override
 	public void close() {
@@ -115,7 +116,7 @@ public <V, R> R attach(Class<V> clazz, Function<V, R> consumer) {
 	 * @param sql The sql query to execute
 	 * @param function The function to apply to the query
 	 */
-	public void voidQuery(@Language("SQL") String sql, Consumer<Query> function) {
+	public void voidQuery(String sql, Consumer<Query> function) {
 		connect();
 		try (Handle handle = jdbi.open(); Query query = handle.createQuery(sql)) {
 			function.accept(query);
