@@ -1,6 +1,23 @@
-api:
-  cross-origin-port:
-    angular: "4200"
-    spring: "8080"
-
-
+doc:
+  web:
+    api:
+      #On which ports the services run on
+      ports:
+        angular: "4200"
+        spring: "8080"
+      #Defines all resources accessible by anyone without role or authentication needed
+      whitelist:
+        - "/auth/login"
+        - "/error"
+        - "/public/**"
+        - "/favicon.ico"
+  git:
+    repositories:
+      - name: "First Repo"
+        path: temp/git/repo1
+      - name: "Second Repo"
+        path: temp/git/repo2
+      #- name: "Read only Repo"
+      #  path: temp/git/readOnlyRepo
+       # readOnly: true
+       # dbStorage: temp/git/readOnlyRepoDB

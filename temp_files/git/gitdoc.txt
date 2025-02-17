@@ -1,0 +1,18 @@
+https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit
+
+
+A file in Git can be in one of several states:
+
+    Untracked – A new file that Git is not tracking yet (not added to staging).
+    Tracked – A file that Git is aware of (either committed or staged).
+    Modified – A file that was changed after being committed but not yet staged.
+    Staged (Added) – A file that was modified and then staged with git add, meaning it's ready to be committed.
+    Committed – A file that has been recorded in Git history.
+
+
+
+
+2025-02-12T08:59:35.120+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\folder\subfolderDoc.xml
+2025-02-12T08:59:35.163+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\baseDoc.xml
+2025-02-12T08:59:35.202+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Inserting resource baseDoc.xml
+2025-02-12T08:59:35.225+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Inserting resource folder\subfolderDoc.xml

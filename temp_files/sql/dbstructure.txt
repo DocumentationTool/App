@@ -1,0 +1,231 @@
+https://dbdiagram.io/d
+
+Table Roles{
+roleID String [primary key]
+roleName String
+}
+
+Table UserRoles{
+  roleID String [primary key]
+  userID String [primary key]
+}
+
+
+Table Users {
+  userID String [primary key]
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table Groups {
+  groupID String [primary key]
+    group_name String
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table GroupUsers{
+  userID String [primary key]
+  groupID String [primary key]
+}
+
+Table Resources {
+  resourcePath String [primary key]
+  created_at timestamp
+  created_by String
+  last_modified_at timestamp
+  last_modified_by String
+}
+
+Table GroupPermissions {
+  groupID String [primary key]
+  path String [primary key]
+  type String
+}
+
+Table UserPermissions {
+  userID String [primary key]
+  path String [primary key]
+  type String
+}
+
+Table Tags {
+  tag String [primary key]
+  created_at timestamp
+  created_by String
+}
+
+Table ResourceTags {
+  resourcePath String [primary key]
+  tag String [primary key]
+  added_at timestamp
+  added_by String
+}
+
+
+
+Table AuditLog {
+  logID integer [primary key]
+  userID String
+  action String
+  permissionID integer
+  timestamp timestamp
+  affected_userID String
+  affected_groupID String
+}
+
+Table Permissions{
+  permissionID String [primary key]
+  weight int
+}
+
+Ref: Users.userID < UserRoles.userID
+Ref: Roles.roleID < UserRoles.roleID
+
+Ref: Users.userID < GroupUsers.userID
+Ref: Groups.groupID < GroupUsers.groupID
+
+Ref: Users.userID < UserPermissions.userID
+Ref: Groups.groupID < GroupPermissions.groupID
+
+Ref: Resources.resourcePath < UserPermissions.path
+Ref: Resources.resourcePath < GroupPermissions.path
+
+
+
+Ref: Permissions.permissionID < UserPermissions.type
+Ref: Permissions.permissionID < GroupPermissions.type
+
+
+Ref: Tags.tag < ResourceTags.tag
+Ref: Resources.resourcePath < ResourceTags.resourcePath
+
+
+PRAGMA foreign_keys = ON;
+
+-- Roles Table
+CREATE TABLE IF NOT EXISTS Roles (
+    roleID TEXT PRIMARY KEY,
+    roleName TEXT
+);
+
+-- Users Table
+CREATE TABLE IF NOT EXISTS Users (
+    userID TEXT PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified_by TEXT
+);
+
+-- UserRoles Table
+CREATE TABLE IF NOT EXISTS UserRoles (
+    roleID TEXT,
+    userID TEXT,
+    PRIMARY KEY (roleID, userID),
+    FOREIGN KEY (roleID) REFERENCES Roles(roleID),
+    FOREIGN KEY (userID) REFERENCES Users(userID)
+);
+
+-- Groups Table
+CREATE TABLE IF NOT EXISTS Groups (
+    groupID TEXT PRIMARY KEY,
+    group_name TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified_by TEXT
+);
+
+-- GroupUsers Table
+CREATE TABLE IF NOT EXISTS GroupUsers (
+    userID TEXT,
+    groupID TEXT,
+    PRIMARY KEY (userID, groupID),
+    FOREIGN KEY (userID) REFERENCES Users(userID),
+    FOREIGN KEY (groupID) REFERENCES Groups(groupID)
+);
+
+-- Resources Table
+CREATE TABLE IF NOT EXISTS Resources (
+    resourcePath TEXT PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT,
+    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_modified_by TEXT
+);
+
+-- GroupPermissions Table
+CREATE TABLE IF NOT EXISTS GroupPermissions (
+    groupID TEXT,
+    path TEXT,
+    type TEXT,
+    PRIMARY KEY (groupID, path),
+    FOREIGN KEY (groupID) REFERENCES Groups(groupID),
+    FOREIGN KEY (path) REFERENCES Resources(resourcePath)
+);
+
+-- UserPermissions Table
+CREATE TABLE IF NOT EXISTS UserPermissions (
+    userID TEXT,
+    path TEXT,
+    type TEXT,
+    PRIMARY KEY (userID, path),
+    FOREIGN KEY (userID) REFERENCES Users(userID),
+    FOREIGN KEY (path) REFERENCES Resources(resourcePath)
+);
+
+-- Permissions Table
+CREATE TABLE IF NOT EXISTS Permissions (
+    permissionID TEXT PRIMARY KEY,
+    weight INTEGER
+);
+
+-- Tags Table
+CREATE TABLE IF NOT EXISTS Tags (
+    tag TEXT PRIMARY KEY,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    created_by TEXT
+);
+
+-- ResourceTags Table
+CREATE TABLE IF NOT EXISTS ResourceTags (
+    resourcePath TEXT,
+    tag TEXT,
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    added_by TEXT,
+    PRIMARY KEY (resourcePath, tag),
+    FOREIGN KEY (resourcePath) REFERENCES Resources(resourcePath),
+    FOREIGN KEY (tag) REFERENCES Tags(tag)
+);
+
+-- AuditLog Table
+CREATE TABLE IF NOT EXISTS AuditLog (
+    logID INTEGER PRIMARY KEY AUTOINCREMENT,
+    userID TEXT,
+    action TEXT,
+    permissionID TEXT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    affected_userID TEXT,
+    affected_groupID TEXT,
+    FOREIGN KEY (userID) REFERENCES Users(userID),
+    FOREIGN KEY (affected_userID) REFERENCES Users(userID),
+    FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID),
+    FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID)
+);
+
+CREATE VIRTUAL TABLE FileData USING fts5(resourcePath, data, tokenize='trigram');
+
+
+------Insert default data-----
+INSERT OR IGNORE INTO ROLES(roleID, roleName) VALUES ('ROLE_ADMIN', 'Admin');
+INSERT OR IGNORE INTO ROLES(roleID, roleName) VALUES ('ROLE_USER', 'User');
+
+INSERT OR IGNORE INTO Permissions(PERMISSIONID, WEIGHT) VALUES ('DENY', 99);
+INSERT OR IGNORE INTO Permissions(PERMISSIONID, WEIGHT) VALUES ('READ', 1);
+INSERT OR IGNORE INTO Permissions(PERMISSIONID, WEIGHT) VALUES ('WRITE', 2);
+INSERT OR IGNORE INTO Permissions(PERMISSIONID, WEIGHT) VALUES ('ADMIN', 4);

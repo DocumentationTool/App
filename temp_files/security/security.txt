@@ -1,0 +1,60 @@
+Request Layout:
+Header:
+    Authorization
+        Bearer: Api-Key
+
+Body:
+    Data
+
+
+
+
+
+
+
+Session Based with Spring Security
+
+vs
+
+Token Based using JWT
+
+
+
+Use Session-Based Authentication if:
+
+    You're building a traditional web app with server-rendered pages (Thymeleaf, JSP).
+    You want to manage user sessions and don't need to worry about scaling across multiple services.
+
+Use JWT Authentication if:
+
+    You're building a REST API for a frontend (React, Angular, etc.).
+    You need a stateless authentication system (easier to scale).
+
+
+
+
+Standart Web Security Generating a JWS key
+
+
+
+
+How it Works
+
+    User Logs In (/auth/login)
+        The user sends their username & password.
+        If correct, they receive a JWT token in response.
+
+    JWT Token is Stored on Client
+        Frontend (React, Angular, etc.) stores the token (localStorage, cookies, etc.).
+        The client sends this token with every request in the Authorization header.
+
+    Spring Security Intercepts Requests
+        The JwtAuthenticationFilter checks if a valid token is present.
+        If valid, it sets authentication in SecurityContext.
+        Secured endpoints are accessible only to authenticated users.
+
+
+
+All requests are authentication and or role based.
+
+Any resource that should be accessible outside of specific authentication like login pages, home pages, can be added in "Doc-Api/resources/application.yml"

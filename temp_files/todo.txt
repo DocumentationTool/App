@@ -7,6 +7,16 @@ Configure gradle to first start spring and then angular frontend?
 
 create war file out of the result to deploy on a server, how to listen to the outside
 
+add basic login system just for showcasing, and so I can run it online on some server
+
+----------Building---------
+
+Build automation with jenkins
+https://www.jenkins.io/
+
+Deploy on server as war file
+
+
 ----------User Permissions----------
 Create Node Tree to set permissions on directory or file level
 
@@ -55,7 +65,9 @@ Cons:
 
 
 
+XML Data should be generated on change into html and put into a database. Used to get quicker access to said data
 
+Elasticsearch for quick access? https://www.elastic.co/elasticsearch
 
 
 
@@ -65,4 +77,22 @@ Create node tree for user permissions
 Seperation between user groups and individual users a group takes less priority than a specific user permission
 
 Each Path and or file can have their own permissions defined
+
+
+
+
+https://docs.gitbook.com/
+Site Plugin:
+https://maven.apache.org/plugins/maven-site-plugin/
+https://www.baeldung.com/maven-site-plugin
+
+
+https://www.baeldung.com/java-convert-xml-to-html
+
+automatically create new repo based on configs defined.
+
+
+
+
+
 
