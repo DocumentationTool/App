@@ -53,5 +53,4 @@ class DbTests {
 		deleteDirecory(properties.getPath());
 		Files.createDirectories(properties.getPath());
 	}
-
 }
