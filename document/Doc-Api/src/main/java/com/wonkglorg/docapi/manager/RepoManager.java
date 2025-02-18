@@ -91,6 +91,7 @@ public class RepoManager{
 	 * Keeps track of all cached resources for quick access in each repo
 	 */
 	private final Map<String, List<Resource>> cachedResources = new HashMap<>();
+	//todo:jmd also cache all permissions, roles etc across all repos, how to best handle that?
 	
 	private final com.wonkglorg.docapi.properties.RepoProperties properties;
 	
