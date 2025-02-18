@@ -7,7 +7,6 @@ import com.wonkglorg.docapi.db.objects.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.intellij.lang.annotations.Language;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.Batch;
 import org.slf4j.Logger;
@@ -160,7 +159,6 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
             for (var resourceEntry : resources) {
                 var resource = resourceEntry.getKey();
                 var data = resourceEntry.getValue();
-                @Language("SQL")
                 String sql = "INSERT INTO FileData(resourcePath, data) VALUES(%s,%s)".formatted(resource.resourcePath().toString(), data);
                 batch.add(sql);
             }
