@@ -93,6 +93,10 @@ automatically create new repo based on configs defined.
 
 
 
+//todo:jmd how to handle permissions /admins if each repo is its own self contained entity with permissions etc perhaps just a globally defined admin in the config that can manage all repos permissions?
+
+
+
 
 
 
