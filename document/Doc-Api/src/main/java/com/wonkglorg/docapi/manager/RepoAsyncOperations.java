@@ -1,6 +1,6 @@
 package com.wonkglorg.docapi.manager;
 
-import com.wonkglorg.docapi.db.objects.Resource;
+import com.wonkglorg.docapi.common.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;

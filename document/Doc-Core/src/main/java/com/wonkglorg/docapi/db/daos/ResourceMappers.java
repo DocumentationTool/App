@@ -1,6 +1,6 @@
 package com.wonkglorg.docapi.db.daos;
 
-import com.wonkglorg.docapi.db.objects.Resource;
+import com.wonkglorg.docapi.common.Resource;
 import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.StatementContext;
 

@@ -3,7 +3,7 @@ package com.wonkglorg.docapi.db;
 import com.wonkglorg.docapi.db.daos.DatabaseFunctions;
 import com.wonkglorg.docapi.db.daos.ResourceFunctions;
 import com.wonkglorg.docapi.db.dbs.JdbiDatabase;
-import com.wonkglorg.docapi.db.objects.Resource;
+import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -92,9 +92,9 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         log.info("Database initialized for repo '{}'", repoProperties.getName());
     }
 
-    public boolean insertResource(Path path) {
+    public boolean insertResource(Path path,String commit) {
         try (Handle handle = jdbi().open()) {
-            return handle.attach(ResourceFunctions.class).insert(new Resource(path, "system")) == 1;
+            return handle.attach(ResourceFunctions.class).insert(new Resource(path, "system","123992")) == 1;
         }
     }
 
@@ -104,11 +104,11 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
      * @param path the path the resource is located at
      * @return true if it was inserted false otherwise
      */
-    public void insertResource(Path path, String data) {
+    public void insertResource(Path path,String commit, String data) {
         log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
         try {
             voidAttach(ResourceFunctions.class,
-                    f -> f.insert(new Resource(path, "system"), data));
+                    f -> f.insert(new Resource(path, "system","testet"), data));
         } catch (Exception e) {
             log.error("Error while inserting resource '{}' from repo '{}'", path,
                     repoProperties.getName(), e);

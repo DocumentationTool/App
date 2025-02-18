@@ -1,7 +1,7 @@
 package com.wonkglorg.docapi;
 
 import com.wonkglorg.docapi.db.RepoDB;
-import com.wonkglorg.docapi.db.objects.Resource;
+import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -12,7 +12,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 
 import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
 

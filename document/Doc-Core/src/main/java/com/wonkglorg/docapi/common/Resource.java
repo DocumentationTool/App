@@ -1,9 +1,18 @@
-package com.wonkglorg.docapi.db.objects;
+package com.wonkglorg.docapi.common;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 
-//todo:jmd add repo name to the resource to link it to the correct repo?
+/**
+ * Represents a resource in the database
+ * @param resourcePath the path to the resource
+ * @param createdAt the time the resource was created
+ * @param createdBy the user who created the resource
+ * @param modifiedAt the time the resource was last modified
+ * @param modifiedBy the user who last modified the resource
+ * @param commitId the commit id of the resource
+ * @param data the data of the resource (null unless explicitly requested)
+ */
 public record Resource(Path resourcePath, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt, String modifiedBy, String commitId,
 					   String data){
 	
