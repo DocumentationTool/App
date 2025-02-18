@@ -6,6 +6,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -20,6 +22,7 @@ import static com.wonkglorg.docapi.DocApiApplication.DEV_MODE;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final CustomUserDetailsService customUserDetailsService;
+	private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 	// Service to load user details from DB
 
 	public JwtAuthenticationFilter(CustomUserDetailsService customUserDetailsService) {
@@ -31,6 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			FilterChain chain) throws ServletException, IOException {
 
 		if (DEV_MODE) {
+			log.info("DEV_MODE: Bypassing JWT authentication");
 			// Load the user details from the username
 			User userDetails = (User) customUserDetailsService.loadUserByUsername("dev_p10209");
 
@@ -43,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			chain.doFilter(request, response);
 			return;
 		}
+		log.info("JWT Authentication Filter");
 
 		// Extract token from the Authorization header
 		String token = request.getHeader("Authorization");

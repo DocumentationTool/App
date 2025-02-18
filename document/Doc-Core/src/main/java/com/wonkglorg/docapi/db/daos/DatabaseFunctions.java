@@ -145,7 +145,7 @@ public interface DatabaseFunctions {
                 UPDATE ResourceTags SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
                 -- Update indexed data
                 UPDATE FileData SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
-                END
+                END;
             """)
     void setupTriggers();
 }

@@ -1,5 +1,6 @@
 package com.wonkglorg.docapi.controller;
 
+import com.wonkglorg.docapi.manager.RepoManager;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,13 @@ public class ApiUserController {
 	//todo, setup specific api key to bypass role permissions (when the app itself needs to make
 	// changes / be setup for new admins)
 	private static final Logger log = LoggerFactory.getLogger(ApiUserController.class);
-
+	
+	private final RepoManager repoManager;
+	
+	public ApiUserController(RepoManager repoManager) {
+		this.repoManager = repoManager;
+	}
+	
 	@PreAuthorize("hasRole('ADMIN')")
 	@PutMapping("/add")
 	public ResponseEntity<UserProfile> addUser(@RequestParam("userID") String userId,
@@ -38,9 +45,6 @@ public class ApiUserController {
 	@PutMapping("/remove")
 	public ResponseEntity<UserProfile> deleteUser(@RequestParam("userID") String userId) {
 		log.info("Received PUT request to delete user with userID='{}'", userId);
-
-
-
 		return ResponseEntity.ok(null);
 	}
 

@@ -45,7 +45,12 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         hikariConfig.setJdbcUrl(SQLITE.driver() + openInPath.toString());
         return new HikariDataSource(hikariConfig);
     }
-
+    
+    /**
+     * Deletes a resource from the database
+     * @param path the path of the resource to delete
+     * @return true if the resource was deleted, false otherwise
+     */
     public boolean deleteResource(Path path) {
         log.info("Deleting resource '{}' from repo '{}'", path, repoProperties.getName());
         try {
@@ -69,13 +74,17 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
             return attach.findAll();
         }
     }
-
+    
+    /**
+     * Initializes the database for the current repo (creating tables, triggers, etc.)
+     */
     @SuppressWarnings("TextBlockBackwardMigration")
     public void initialize() {
         log.info("Initialising Database for repo '{}'", repoProperties.getName());
         try {
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
-            //voidAttach(DatabaseFunctions.class,DatabaseFunctions::setupTriggers);
+            //todo:jmd fix this issue
+            voidAttach(DatabaseFunctions.class,DatabaseFunctions::setupTriggers);
         } catch (Exception e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getName(), e);
         }

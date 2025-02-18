@@ -1,5 +1,7 @@
 package com.wonkglorg.docapi.controller;
 
+import static com.wonkglorg.docapi.DocApiApplication.DEV_MODE;
+import static com.wonkglorg.docapi.DocApiApplication.DEV_USER;
 import static com.wonkglorg.docapi.controller.Constants.ControllerPaths.AUTH;
 import com.wonkglorg.docapi.exception.LoginFailedException;
 import com.wonkglorg.docapi.security.JwtUtil;
@@ -8,6 +10,7 @@ import com.wonkglorg.docapi.security.UserAuthenticationManager.AuthResponse;
 import com.wonkglorg.docapi.security.UserAuthenticationManager.LoginRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -18,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(AUTH)
 public class AuthController{
-		private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 	private final UserAuthenticationManager authManager;
 	
 	public AuthController(UserAuthenticationManager authManager) {
@@ -26,12 +29,18 @@ public class AuthController{
 	}
 	
 	@GetMapping("/login")
-	public ResponseEntity<String> login() {
+	public ResponseEntity<AuthResponse> login() {
 		log.info("Login GET request received");
-		return ResponseEntity.ok("Login");
+		if(DEV_MODE){
+			authManager.authenticate(DEV_USER.getId(), "TEST_PASSWORT");
+			String token = JwtUtil.generateToken(DEV_USER.getId());
+			return ResponseEntity.ok(new AuthResponse(token, null));
+		}
+		
+		return new ResponseEntity<>(new AuthResponse(null, "Endpoint for testing purposes only enable DEV_MODE!"), HttpStatus.FORBIDDEN);
 	}
-
-		@GetMapping("/logout")
+	
+	@GetMapping("/logout")
 	public ResponseEntity<String> logout() {
 		log.info("Logout request received");
 		return ResponseEntity.notFound().build();
