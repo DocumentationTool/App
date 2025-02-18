@@ -84,7 +84,7 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         try {
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
             //todo:jmd fix this issue
-            voidAttach(DatabaseFunctions.class,DatabaseFunctions::setupTriggers);
+            //voidAttach(DatabaseFunctions.class,DatabaseFunctions::setupTriggers);
         } catch (Exception e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getName(), e);
         }
