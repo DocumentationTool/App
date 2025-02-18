@@ -91,7 +91,7 @@ public class RepoManager{
 	 * Keeps track of all cached resources for quick access in each repo
 	 */
 	private final Map<String, List<Resource>> cachedResources = new HashMap<>();
-	//todo:jmd also cache all permissions, roles etc across all repos, how to best handle that?
+	//todo:jmd also cache all permissions, roles etc across all repos, how to best handle that? Should I combine them and treat them as 1 space or have seperate perms per repo?
 	
 	private final com.wonkglorg.docapi.properties.RepoProperties properties;
 	
