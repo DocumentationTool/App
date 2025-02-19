@@ -58,7 +58,7 @@ public class ApiUserController {
 
 
     @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("/{id}")
+    @GetMapping("get/{id}")
     public ResponseEntity<UserProfile> getUser(@PathVariable("id") String id) {
         log.info("Received GET request to retrieve user with userID='{}'", id);
         if (DEV_MODE) {
