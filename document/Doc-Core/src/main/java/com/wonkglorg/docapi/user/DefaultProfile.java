@@ -8,57 +8,38 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DefaultProfile implements UserProfile {
-
-    private final String userName;
+    private final String id;
     private final List<PermissionNode> permissionNodes;
-	private final List<Role> roles;
-	
-	public DefaultProfile(String userName) {
-        this.userName = userName;
+    private final List<Role> roles;
+
+    public DefaultProfile(String id) {
+        this.id = id;
         this.permissionNodes = new ArrayList<>();
         this.roles = new ArrayList<>();
     }
 
-    public DefaultProfile(String userName, List<PermissionNode> permissionNodes, List<Role> roles) {
-        this.userName = userName;
+    public DefaultProfile(String id, List<PermissionNode> permissionNodes, List<Role> roles) {
+        this.id = id;
         this.permissionNodes = permissionNodes;
-		this.roles = roles;
-	}
+        this.roles = roles;
+    }
 
     public static DefaultProfile createDefault() {
-        return new DefaultProfile("TestProfile", List.of(), List.of());
+        return new DefaultProfile("test_p10209", List.of(), List.of());
     }
 
     @Override
     public String getId() {
-        return "";
+        return id;
     }
 
     @Override
-    public String getUsername() {
-        return userName;
-    }
-
-    @Override
-    public String getPasswordHash() {
-        return "";
-    }
-
-    @Override
-    public List<PermissionNode> permissions() {
+    public List<PermissionNode> getPermissions() {
         return permissionNodes;
     }
-    
+
     @Override
-    public List<Role> roles() {
+    public List<Role> getRoles() {
         return roles;
-    }
-    
-    @Override
-    public String toString() {
-        return "DefaultProfile{" +
-                "userName='" + userName + '\'' +
-                ", permissionNodes=" + permissionNodes +
-                '}';
     }
 }

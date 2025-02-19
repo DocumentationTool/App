@@ -64,6 +64,7 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http,
 			AuthenticationManager authManager) throws Exception {
+		//todo:jmd with devmode off even whitelisted pages are not permitted 401, despite them having no login needed
 		http.addFilterBefore(new ApiKeyFilter(),
 						UsernamePasswordAuthenticationFilter.class)//first authenticates the api key from the
 				// request

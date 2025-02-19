@@ -13,24 +13,25 @@ public interface DatabaseFunctions {
 			    PRAGMA incremental_vacuum(500);
 			    PRAGMA foreign_keys = OFF;
 			    CREATE TABLE IF NOT EXISTS Roles (
-			                  roleID TEXT PRIMARY KEY,
-			                  roleName TEXT NOT NULL);
+			                  role_id TEXT PRIMARY KEY,
+			                  role_name TEXT NOT NULL);
 			    CREATE TABLE IF NOT EXISTS Users (
-			                           userID TEXT PRIMARY KEY,
+			                           user_id TEXT PRIMARY KEY,
+			                           password_hash TEXT NOT NULL,
 			                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                           created_by TEXT,
 			                           last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                           last_modified_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS UserRoles (
-			                               roleID TEXT,
-			                               userID TEXT,
-			                               PRIMARY KEY (roleID, userID),
-			                               FOREIGN KEY (roleID) REFERENCES Roles(roleID),
-			                               FOREIGN KEY (userID) REFERENCES Users(userID)
+			                               role_id TEXT,
+			                               user_id TEXT,
+			                               PRIMARY KEY (role_id, user_id),
+			                               FOREIGN KEY (role_id) REFERENCES Roles(role_id),
+			                               FOREIGN KEY (user_id) REFERENCES Users(user_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Groups (
-			                            groupID TEXT PRIMARY KEY,
+			                            group_id TEXT PRIMARY KEY,
 			                            group_name TEXT NOT NULL,
 			                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                            created_by TEXT,
@@ -38,76 +39,76 @@ public interface DatabaseFunctions {
 			                            last_modified_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupUsers (
-			                                userID TEXT,
-			                                groupID TEXT,
-			                                PRIMARY KEY (userID, groupID),
-			                                FOREIGN KEY (userID) REFERENCES Users(userID),
-			                                FOREIGN KEY (groupID) REFERENCES Groups(groupID)
+			                                user_id TEXT,
+			                                group_id TEXT,
+			                                PRIMARY KEY (user_id, group_id),
+			                                FOREIGN KEY (user_id) REFERENCES Users(user_id),
+			                                FOREIGN KEY (group_id) REFERENCES Groups(group_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Tags(
-			                              tag TEXT PRIMARY KEY,
+			                              tag_id TEXT PRIMARY KEY,
+			                              tag_name TEXT,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS Resources (
-			                              resourcePath TEXT PRIMARY KEY,
+			                              resource_path TEXT PRIMARY KEY,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT,
 			                              last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              last_modified_by TEXT,
-			                              category TEXT
+			                              category TEXT,
+			                              commit_id TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS ResourceTags(
 			                              tag TEXT,
-			                              resourcePath TEXT,
+			                              resource_path TEXT,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT,
-			                              PRIMARY KEY (tag, resourcePath),
+			                              PRIMARY KEY (tag, resource_path),
 			                              FOREIGN KEY (tag) REFERENCES Tags(tag),
-			                              FOREIGN KEY (resourcePath) REFERENCES Resources(resourcePath)
+			                              FOREIGN KEY (resource_path) REFERENCES Resources(resource_path)
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupPermissions (
-			                                  groupID TEXT,
+			                                  group_id TEXT,
 			                                  path TEXT,
 			                                  type TEXT,
-			                                  PRIMARY KEY (groupID, path),
-			                                  FOREIGN KEY (groupID) REFERENCES Groups(groupID),
-			                                  FOREIGN KEY (path) REFERENCES Resources(resourcePath),
-			                                  FOREIGN KEY (type) REFERENCES Permissions(permissionID)
+			                                  PRIMARY KEY (group_id, path),
+			                                  FOREIGN KEY (group_id) REFERENCES Groups(group_id),
+			                                  FOREIGN KEY (path) REFERENCES Resources(resource_path),
+			                                  FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS UserPermissions (
-			                                 userID TEXT,
+			                                 user_id TEXT,
 			                                 path TEXT,
 			                                 type TEXT,
-			                                 PRIMARY KEY (userID, path),
-			                                 FOREIGN KEY (userID) REFERENCES Users(userID),
-			                                 FOREIGN KEY (path) REFERENCES Resources(resourcePath),
-			                                 FOREIGN KEY (type) REFERENCES Permissions(permissionID)
+			                                 PRIMARY KEY (user_id, path),
+			                                 FOREIGN KEY (user_id) REFERENCES Users(user_id),
+			                                 FOREIGN KEY (path) REFERENCES Resources(resource_path),
+			                                 FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Permissions (
-			                             permissionID TEXT PRIMARY KEY,
+			                             permission_id TEXT PRIMARY KEY,
 			                             weight INTEGER NOT NULL
 			    );
 			    CREATE TABLE IF NOT EXISTS AuditLog (
-			                              logID INTEGER PRIMARY KEY AUTOINCREMENT,
-			                              userID TEXT,
+			                              log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			                              user_id TEXT,
 			                              action TEXT NOT NULL,
-			                              permissionID TEXT,
+			                              permission_id TEXT,
 			                              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              affected_userID TEXT,
 			                              affected_groupID TEXT,
-			                              FOREIGN KEY (userID) REFERENCES Users(userID),
-			                              FOREIGN KEY (permissionID) REFERENCES Permissions(permissionID),
-			                              FOREIGN KEY (affected_userID) REFERENCES Users(userID),
-			                              FOREIGN KEY (affected_groupID) REFERENCES Groups(groupID)
+			                              FOREIGN KEY (user_id) REFERENCES Users(user_id),
+			                              FOREIGN KEY (permission_id) REFERENCES Permissions(permission_id),
+			                              FOREIGN KEY (affected_userID) REFERENCES Users(user_id),
+			                              FOREIGN KEY (affected_groupID) REFERENCES Groups(group_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS FileData(
-			                              resourcePath TEXT PRIMARY KEY,
-			                              data Text,
-			                              modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			                              commitID TEXT --add some other specification on what commit this file was retrieved from and if it changed update the data
+			                              resource_path TEXT PRIMARY KEY,
+			                              data Text
 			    );
-			    CREATE VIRTUAL TABLE IF NOT EXISTS FileData_FTS USING fts5(resourcePath,data, content='FileData',tokenize='trigram'); --the table names in the content field must match the table names of the table it references (to know what to index)
+			    CREATE VIRTUAL TABLE IF NOT EXISTS FileData_FTS USING fts5(resource_path,data, content='FileData',tokenize='trigram'); --the table names in the content field must match the table names of the table it references (to know what to index)
 			    PRAGMA foreign_keys = ON;
 			    COMMIT
 			""")
@@ -126,26 +127,26 @@ public interface DatabaseFunctions {
             FOR EACH ROW
             BEGIN
                -- Delete related permissions
-                DELETE FROM GroupPermissions WHERE resourcePath = OLD.resourcePath;
-                DELETE FROM UserPermissions WHERE resourcePath = OLD.resourcePath;
+                DELETE FROM GroupPermissions WHERE resource_path = OLD.resource_path;
+                DELETE FROM UserPermissions WHERE resource_path = OLD.resource_path;
                 --Delete Related Tags
-                DELETE FROM ResourceTags WHERE resourcePath = OLD.resourcePath;
+                DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
                 --Delete Indexed Data
-                DELETE FROM FileData WHERE resourcePath = OLD.resourcePath;
+                DELETE FROM FileData WHERE resource_path = OLD.resource_path;
             END;
             
             CREATE TRIGGER IF NOT EXISTS update_resource_path
                 AFTER UPDATE ON Resources
                 FOR EACH ROW
-                WHEN OLD.resourcePath != NEW.resourcePath
+                WHEN OLD.resource_path != NEW.resource_path
                 BEGIN
                 -- Update related permissions
-                UPDATE GroupPermissions SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
-                UPDATE UserPermissions SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
+                UPDATE GroupPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
+                UPDATE UserPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
                 -- Update related tags
-                UPDATE ResourceTags SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
+                UPDATE ResourceTags SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
                 -- Update indexed data
-                UPDATE FileData SET resourcePath = NEW.resourcePath, last_modified_at = datetime('now') WHERE resourcePath = OLD.resourcePath;
+                UPDATE FileData SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
                 END;
             """)
     void setupTriggers();

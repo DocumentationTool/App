@@ -1,9 +1,9 @@
 package com.wonkglorg.docapi.db;
 
+import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.db.daos.DatabaseFunctions;
 import com.wonkglorg.docapi.db.daos.ResourceFunctions;
 import com.wonkglorg.docapi.db.dbs.JdbiDatabase;
-import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -45,9 +45,10 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         hikariConfig.setJdbcUrl(SQLITE.driver() + openInPath.toString());
         return new HikariDataSource(hikariConfig);
     }
-    
+
     /**
      * Deletes a resource from the database
+     *
      * @param path the path of the resource to delete
      * @return true if the resource was deleted, false otherwise
      */
@@ -74,7 +75,7 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
             return attach.findAll();
         }
     }
-    
+
     /**
      * Initializes the database for the current repo (creating tables, triggers, etc.)
      */
@@ -92,9 +93,9 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         log.info("Database initialized for repo '{}'", repoProperties.getName());
     }
 
-    public boolean insertResource(Path path,String commit) {
+    public boolean insertResource(Path path, String commit) {
         try (Handle handle = jdbi().open()) {
-            return handle.attach(ResourceFunctions.class).insert(new Resource(path, "system","123992")) == 1;
+            return handle.attach(ResourceFunctions.class).insert(new Resource(path, "system", "123992")) == 1;
         }
     }
 
@@ -104,11 +105,11 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
      * @param path the path the resource is located at
      * @return true if it was inserted false otherwise
      */
-    public void insertResource(Path path,String commit, String data) {
+    public void insertResource(Path path, String commit, String data) {
         log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
         try {
             voidAttach(ResourceFunctions.class,
-                    f -> f.insert(new Resource(path, "system","testet"), data));
+                    f -> f.insert(new Resource(path, "system", "testet"), data));
         } catch (Exception e) {
             log.error("Error while inserting resource '{}' from repo '{}'", path,
                     repoProperties.getName(), e);
@@ -204,9 +205,9 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
             }
         }
 
-
+//todo:jmd get the commit id
         for (Path path : filesToAdd) {
-            insertResource(path);
+            insertResource(path,"default");
         }
         log.info("Finished updating resources for '{}'.", repoProperties.getName());
         log.info("Added: {}", filesToAdd.size());

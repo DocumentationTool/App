@@ -23,6 +23,7 @@ public class ResourceMappers{
 		private final String lastModifiedAt;
 		private final String lastModifiedBy;
 		private final String data;
+		private final String commitId;
 		
 		public ResourceRowMapper() {
 			path = "resourcePath";
@@ -31,9 +32,10 @@ public class ResourceMappers{
 			lastModifiedAt = "last_modified_at";
 			lastModifiedBy = "last_modified_by";
 			data = "data";
+			commitId = "commitId";
 		}
 		
-		public ResourceRowMapper(String path, String createdAt, String createdBy, String lastModifiedAt, String lastModifiedBy, String data) {
+		public ResourceRowMapper(String path, String createdAt, String createdBy, String lastModifiedAt, String lastModifiedBy, String commitId,String data) {
 			super();
 			this.path = path;
 			this.createdAt = createdAt;
@@ -41,6 +43,7 @@ public class ResourceMappers{
 			this.lastModifiedAt = lastModifiedAt;
 			this.lastModifiedBy = lastModifiedBy;
 			this.data = data;
+			this.commitId = commitId;
 		}
 		
 		@Override
@@ -51,7 +54,8 @@ public class ResourceMappers{
 			var lA = getOrCustom(rs, lastModifiedAt, s -> LocalDateTime.parse(s, formatter), null);
 			String lB = getOrDefault(rs, lastModifiedBy, null);
 			String dataReturn = getOrDefault(rs, data, null);
-			return new Resource(resourcePath, cA, cB, lA, lB, dataReturn);
+			String commitReturn = getOrDefault(rs,commitId,null);
+			return new Resource(resourcePath, cA, cB, lA, lB,commitReturn ,dataReturn);
 		}
 		
 		@SuppressWarnings("unchecked")

@@ -7,29 +7,22 @@ import com.wonkglorg.docapi.permissions.Role;
 import java.util.List;
 
 public interface UserProfile {
+
     /**
      * Gets the users id
      */
     String getId();
 
-    /**
-     * The Username of the profile
-     */
-    String getUsername();
 
-    /**
-     * @return the users hashed password
-     */
-    String getPasswordHash();
-    
     /**
      * The NodeMap of all permissions this user has
      */
-    List<PermissionNode> permissions();
-    
+    List<PermissionNode> getPermissions();
+
     /**
      * @return The roles this user has
      */
-    List<Role> roles();
-    
+    List<Role> getRoles();
+
+
 }
