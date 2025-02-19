@@ -1,8 +1,7 @@
 package com.wonkglorg.docapi.response;
 
-public class UserResponse implements Response{
-    @Override
-    public String errorMessage() {
-
+public class UserResponse extends Response{
+    public UserResponse(String response, String errorMessage) {
+        super(response, errorMessage);
     }
 }

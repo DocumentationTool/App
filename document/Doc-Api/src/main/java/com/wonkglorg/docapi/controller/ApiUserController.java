@@ -1,6 +1,7 @@
 package com.wonkglorg.docapi.controller;
 
 import com.wonkglorg.docapi.manager.RepoManager;
+import com.wonkglorg.docapi.response.Response;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,14 +33,20 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/add")
-    public ResponseEntity<UserProfile> addUser(@RequestParam("userID") String userId,
+    public ResponseEntity<String> addUser(@RequestParam("repo") String repo,@RequestParam("userID") String userId,
                                                @RequestParam("password") String password) {
         log.info("Received PUT request to add user with ID='{}'. Password provided: {}", userId,
                 password != null ? "*".repeat(password.length()) : "MISSING");
-        repoManager
+        if(DEV_MODE){
+            Response response = repoManager.addUser(repo, userId, password);
 
+            if(!response.isSuccess()){
+                return new ResponseEntity<>(response.getErrorMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+            }
 
-        return ResponseEntity.ok(null);
+            return new ResponseEntity<>(response.getResponse(), HttpStatus.OK);
+        }
+        return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

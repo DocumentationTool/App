@@ -3,6 +3,7 @@ package com.wonkglorg.docapi.manager;
 import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.wonkglorg.docapi.response.Response;
+import com.wonkglorg.docapi.response.UserResponse;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +38,7 @@ public class RepoManager {
         this.operations = operations;
     }
 
-    public HashMap<String, FileRepository> getRepositories() {
+    public Map<String, FileRepository> getRepositories() {
         return repositories;
     }
 
@@ -48,7 +49,7 @@ public class RepoManager {
         for (RepoProperties repoProperty : properties.getRepositories()) {
             log.info("Adding Repo '{}'", repoProperty.getName());
             FileRepository repository = new FileRepository(repoProperty);
-            repositories.add(repository);
+            repositories.put(repoProperty.getName(), repository);
             operations.initializeRepositoryAsync(repository);
         }
     }
@@ -70,7 +71,7 @@ public class RepoManager {
      * @return a list of all resources
      */
     public List<Resource> getResources() {
-        var resourceFutures = repositories.stream().map(operations::getResourcesFromRepositoryAsync).toList();
+        var resourceFutures = repositories.values().stream().map(operations::getResourcesFromRepositoryAsync).toList();
 
 
         return resourceFutures.stream().map(CompletableFuture::join)
@@ -88,7 +89,8 @@ public class RepoManager {
      * @return true if the user was added, false otherwise
      */
     public Response addUser(String repoName, String id, String password) {
-        repositories.get(repoName).getDataDB().
+        //todo:jmd implement
+        return new UserResponse("Worked yes", null);
     }
 
 
