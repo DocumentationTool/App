@@ -1,5 +1,3 @@
-https://dbdiagram.io/d
-
 Table Roles {
  role_id String [primary key]
  role_name String
@@ -28,7 +26,7 @@ Table Groups {
   last_modified_by String
 }
 
-Table GroupUsers {
+Table UserGroups {
   user_id String [primary key]
   group_id String [primary key]
 }
@@ -93,3 +91,20 @@ Table AuditLogs {
   affected_resource_path String
   time_stamp datetime
 }
+
+Ref: Roles.role_id < UserRoles.role_id
+Ref: Users.user_id < UserRoles.user_id
+Ref: Users.user_id < UserGroups.user_id
+Ref: Groups.group_id < UserGroups.group_id
+
+Ref:Users.user_id < UserPermissions.user_id
+Ref:Groups.group_id < GroupPermissions.group_id
+
+
+Ref:Permissions.permission_id < UserPermissions.permission_id
+Ref:Permissions.permission_id < GroupPermissions.permission_id
+
+Ref:Resources.resource_path < ResourceTags.resource_path
+Ref:Tags.tag_id < ResourceTags.tag_id
+
+Ref: FileData.resource_path - Resources.resource_path

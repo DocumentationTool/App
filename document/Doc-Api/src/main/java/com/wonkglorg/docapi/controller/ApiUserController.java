@@ -1,7 +1,7 @@
 package com.wonkglorg.docapi.controller;
 
 import com.wonkglorg.docapi.manager.RepoManager;
-import com.wonkglorg.docapi.response.Response;
+import com.wonkglorg.docapi.response.UserResponse;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,20 +33,16 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/add")
-    public ResponseEntity<String> addUser(@RequestParam("repo") String repo,@RequestParam("userID") String userId,
-                                               @RequestParam("password") String password) {
-        log.info("Received PUT request to add user with ID='{}'. Password provided: {}", userId,
+    public ResponseEntity<String> addUser(@RequestParam("repo") String repo, @RequestParam("userID") String userId,
+                                          @RequestParam("password") String password) {
+        log.info("Received PUT request to add user to repo = '{}'with ID='{}'. Password provided: {}", repo, userId,
                 password != null ? "*".repeat(password.length()) : "MISSING");
-        if(DEV_MODE){
-            Response response = repoManager.addUser(repo, userId, password);
-
-            if(!response.isSuccess()){
-                return new ResponseEntity<>(response.getErrorMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-            }
-
-            return new ResponseEntity<>(response.getResponse(), HttpStatus.OK);
+        if (DEV_MODE) {
+            return new ResponseEntity<>(DEV_USER.toJson(), HttpStatus.OK);
         }
-        return new ResponseEntity<>(null, HttpStatus.SERVICE_UNAVAILABLE);
+        UserResponse response = repoManager.addUser(repo, userId, password);
+
+        return new ResponseEntity<>(response.getUserProfile().toJson(), HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

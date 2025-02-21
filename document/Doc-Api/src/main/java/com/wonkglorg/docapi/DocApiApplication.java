@@ -16,7 +16,7 @@ public class DocApiApplication{
 	 * Bypasses permissions and allows full access to all endpoints
 	 */
 	public static final boolean DEV_MODE = true;
-	public static final UserProfile DEV_USER = new DefaultProfile("dev_p10209", List.of(), List.of(new Role("ADMIN", "Admin")));
+	public static final UserProfile DEV_USER = new DefaultProfile("dev_p10209","dev_hash", List.of(), List.of(new Role("ADMIN", "Admin")));
 	
 	public static void main(String[] args) {
 		SpringApplication.run(DocApiApplication.class, args);

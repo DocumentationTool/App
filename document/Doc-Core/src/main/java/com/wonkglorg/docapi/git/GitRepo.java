@@ -1,5 +1,6 @@
 package com.wonkglorg.docapi.git;
 
+import com.wonkglorg.docapi.user.UserProfile;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -14,11 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -40,6 +37,8 @@ public class GitRepo {
 			return getFiles.apply(stage);
 		}
 	}
+
+	private final Map<String,Ref> currentUserBranches = new HashMap<>();
 
 	private static final Logger log = LoggerFactory.getLogger(GitRepo.class);
 	/**
@@ -199,6 +198,19 @@ private void openDatabaseRepository(Path path) {
 					e);
 		}
 		return new ArrayList<>();
+	}
+
+	public void mergeBranchFromUserIntoMain(String userID) throws GitAPIException {
+		if(!currentUserBranches.containsKey(userID)) {
+			return;
+		}
+
+		try {
+			//todo:jmd set merge message
+			git.merge().include(currentUserBranches.get(userID)).setMessage("").call();
+		}catch (GitAPIException e) {
+			log.error("Todo");
+		}
 	}
 
 	/**

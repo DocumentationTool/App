@@ -4,6 +4,7 @@ import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.wonkglorg.docapi.response.Response;
 import com.wonkglorg.docapi.response.UserResponse;
+import com.wonkglorg.docapi.user.DefaultProfile;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static com.wonkglorg.docapi.DocApiApplication.DEV_USER;
 
 @Component
 public class RepoManager {
@@ -88,9 +91,9 @@ public class RepoManager {
      * @param password the password of the user (unhashed)
      * @return true if the user was added, false otherwise
      */
-    public Response addUser(String repoName, String id, String password) {
+    public UserResponse addUser(String repoName, String id, String password) {
         //todo:jmd implement
-        return new UserResponse("Worked yes", null);
+        return new UserResponse(DEV_USER,"Worked yes", null);
     }
 
 

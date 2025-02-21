@@ -48,10 +48,10 @@ public class RepoAsyncOperations{
 		return CompletableFuture.supplyAsync(() -> {
 			try{
 				log.info("Getting resources from Repo '{}'", repository.getRepoProperties().getName());
-				return repository.getDataDB().getResources(); // Assuming 'getResources' is a method in FileRepository
+				return repository.getDataDB().getResources();
 			} catch(Exception e){
 				log.error("Error getting resources from repository '{}'", repository.getRepoProperties().getName(), e);
-				return new ArrayList<>(); // Return empty list in case of error
+				return new ArrayList<>();
 			}
 		});
 	}
