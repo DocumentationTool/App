@@ -3,3 +3,17 @@
 #64b32c
 
 markdown files?
+
+lacy load -> in router
+
+Performance testes? im PSP -> beim Pflichtenheft erweiterung ?
+
+SWOT Analyse
+
+
+
+
+---------------------------------------------
+NPM:
+npm install ngx-markdown marked@^15.0.0 --save
+npm i bootstrap@5.3.3
