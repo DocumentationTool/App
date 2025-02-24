@@ -59,6 +59,21 @@ public interface ResourceFunctions {
             """)
     List<Resource> findByAntPath(@Bind("resourcePath") Path antPath);
 
+    //todo:jmd method not working yet find out why
+    /*
+                SELECT *
+              FROM FileData
+			  JOIN Resources
+			    ON FileData.resource_path = Resources.resource_path
+             WHERE
+              CASE
+                WHEN length('ab') >= 3
+                  THEN data MATCH 'ab'
+                ELSE data LIKE '%' || 'ab' || '%'
+             END;
+
+
+     */
     /**
      * Finds all resources with the matching search term in its data
      *
