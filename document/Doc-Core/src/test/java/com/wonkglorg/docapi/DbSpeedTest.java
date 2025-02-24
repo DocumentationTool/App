@@ -36,7 +36,7 @@ class DbSpeedTest{
 			
 			Faker faker = new Faker();
 			try(Handle handle = repoDB.jdbi().open(); PreparedBatch preparedBatch = handle.prepareBatch(
-					"insert into FileData (resourcePath,data) values (:path, :data)")){
+					"insert into FileData (resource_path,data) values (:path, :data)")){
 				for(int i = 0; i < 5000; i++){
 					preparedBatch.bind("path", "documents/test/doc%s.xml".formatted(i))//
 								 .bind("data", faker.lorem().characters(300, 9000)).add();

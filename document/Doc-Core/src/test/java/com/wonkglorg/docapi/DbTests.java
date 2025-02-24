@@ -23,8 +23,8 @@ class DbTests {
 		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
 
 		repoDB.initialize();
-		repoDB.insertResource(Path.of("test.xml"));
-		repoDB.insertResource(Path.of("folder/test.xml"));
+		repoDB.insertResource(Path.of("test.xml"),"test");
+		repoDB.insertResource(Path.of("folder/test.xml"),"test");
 		List<Resource> resources = repoDB.getResources();
 
 		Assertions.assertEquals(2, resources.size());

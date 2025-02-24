@@ -1,5 +1,8 @@
 package com.wonkglorg.docapi.db.daos;
 
+import org.jdbi.v3.sqlobject.SqlOperation;
+import org.jdbi.v3.sqlobject.statement.SqlBatch;
+import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlScript;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
@@ -61,12 +64,12 @@ public interface DatabaseFunctions {
 			                              commit_id TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS ResourceTags(
-			                              tag TEXT,
+			                              tag_id TEXT,
 			                              resource_path TEXT,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT,
-			                              PRIMARY KEY (tag, resource_path),
-			                              FOREIGN KEY (tag) REFERENCES Tags(tag),
+			                              PRIMARY KEY (tag_id, resource_path),
+			                              FOREIGN KEY (tag_id) REFERENCES Tags(tag_id),
 			                              FOREIGN KEY (resource_path) REFERENCES Resources(resource_path)
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupPermissions (
@@ -104,11 +107,7 @@ public interface DatabaseFunctions {
 			                              FOREIGN KEY (affected_userID) REFERENCES Users(user_id),
 			                              FOREIGN KEY (affected_groupID) REFERENCES Groups(group_id)
 			    );
-			    CREATE TABLE IF NOT EXISTS FileData(
-			                              resource_path TEXT PRIMARY KEY,
-			                              data Text
-			    );
-			    CREATE VIRTUAL TABLE IF NOT EXISTS FileData_FTS USING fts5(resource_path,data, content='FileData',tokenize='trigram'); --the table names in the content field must match the table names of the table it references (to know what to index)
+			    CREATE VIRTUAL TABLE IF NOT EXISTS FileData USING fts5(resource_path,data,tokenize='trigram'); --the table names in the content field must match the table names of the table it references (to know what to index)
 			    PRAGMA foreign_keys = ON;
 			    COMMIT
 			""")
@@ -121,7 +120,7 @@ public interface DatabaseFunctions {
     /**
      * Sets up triggers for various usecases
      */
-    @SqlScript("""
+    @SqlUpdate("""
             CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
             AFTER DELETE ON Resources
             FOR EACH ROW
