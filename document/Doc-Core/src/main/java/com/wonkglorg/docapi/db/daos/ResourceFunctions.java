@@ -53,13 +53,15 @@ public interface ResourceFunctions {
      * @return a list of resources matching the content
      */
     @SqlQuery("""
-    CASE 
-        WHEN length(:content) < 3
-        THEN SELECT resource_path FROM FileData WHERE data LIKE '%' + :content + '%'
-        ELSE SELECT resource_path FROM FileData WHERE data MATCH :content
-    END;
+    SELECT resource_path, data
+      FROM FileData
+     WHERE
+       CASE
+         WHEN length(:searchTerm) >= 3 THEN data Match :searchTerm
+		 ELSE data LIKE '%' || :searchTerm || '%'
+     END
     """)
-    List<Resource> findByContent(@Bind("content") String searchTerm);
+    List<Resource> findByContent(@Bind("searchTerm") String searchTerm);
 
 
     /**
