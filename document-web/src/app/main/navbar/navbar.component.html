@@ -7,9 +7,14 @@
         Login
       </a>
     </li>
-    <li class="nav-item">
-      <a routerLink="/test" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Test login
+   <li class="nav-item"> <!-- ToDo: IF logged in as Admin-->
+      <a routerLink="/main/admin" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
+        Admin
+      </a>
+    </li>
+    <li class="nav-item"> <!-- ToDo: IF logged in as Admin-->
+      <a routerLink="/main/editor" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
+        Editor
       </a>
     </li>
   </ul>

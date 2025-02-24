@@ -1,27 +1,24 @@
 import {Component, OnInit} from '@angular/core';
 import {NavbarComponent} from './navbar/navbar.component';
 import {SidebarComponent} from './sidebar/sidebar.component';
-import {NgIf, NgStyle} from '@angular/common';
 import {FileService} from './service/file.service';
-import {NavigationService} from './service/navigation.service';
 import {MarkdownModule} from 'ngx-markdown';
+import {RouterOutlet} from '@angular/router';
 
 @Component({
   selector: 'app-main',
   imports: [
     NavbarComponent,
     SidebarComponent,
-    NgIf,
-    NgStyle,
-    MarkdownModule
+    MarkdownModule,
+    RouterOutlet
   ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'
 })
 export class MainComponent implements OnInit{
 
-  constructor(public fileService: FileService,
-              public navigationService: NavigationService) {
+  constructor(public fileService: FileService) {
   }
   ngOnInit(): void {
     this.fileService.loadFiles();
