@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {RouterLink, RouterLinkActive} from '@angular/router';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 
 @Component({
@@ -13,11 +13,30 @@ import {NavigationService} from '../service/navigation.service';
   styleUrl: './navbar.component.css'
 })
 export class NavbarComponent {
-  constructor(public navigationService: NavigationService) {
+  constructor(public navigationService: NavigationService,
+              private router: Router) {
   }
 
   onToggle(){
     this.navigationService.toggleValue()
+  }
+
+  isEditorActive(): boolean {
+    return this.router.isActive('/main/editor', {
+      paths: 'exact',
+      queryParams: 'ignored',
+      fragment: 'ignored',
+      matrixParams: 'ignored',
+    });
+  }
+
+  isPreviewActive(): boolean {
+    return this.router.isActive('/main/preview', {
+      paths: 'exact',
+      queryParams: 'ignored',
+      fragment: 'ignored',
+      matrixParams: 'ignored',
+    })
   }
 
 }

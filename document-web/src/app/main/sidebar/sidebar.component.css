@@ -30,3 +30,8 @@ li a.active {
   padding: 10px;
   border: 1px solid #ddd;
 }
+
+.nav-admin{
+  color: rgb(255 255 255 / 55%);
+  font-size: 16pt;
+}

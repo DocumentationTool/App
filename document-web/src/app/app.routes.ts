@@ -3,6 +3,7 @@ import {LoginComponent} from './login/login.component';
 import {MainComponent} from './main/main.component';
 import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
+import {PreviewComponent} from './main/preview/preview.component';
 
 export const routes: Routes = [
   {
@@ -18,12 +19,16 @@ export const routes: Routes = [
     component: MainComponent,
     children: [
       {
-        path: 'admin', // child route path
-        component: AdminComponent, // child route component that the router renders
+        path: 'admin',
+        component: AdminComponent,
       },
       {
         path: 'editor',
-        component: EditorComponent, // another child route component that the router renders
+        component: EditorComponent,
+      },
+      {
+        path: 'preview',
+        component: PreviewComponent,
       },
     ],
   }

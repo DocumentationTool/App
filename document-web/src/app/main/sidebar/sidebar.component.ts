@@ -2,14 +2,16 @@ import {Component, OnInit} from '@angular/core';
 import {NavigationService} from '../service/navigation.service';
 import {NgClass} from '@angular/common';
 import {FileService} from '../service/file.service';
-import {Router} from '@angular/router';
+import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [
+    imports: [
 
-    NgClass
-  ],
+        NgClass,
+        RouterLink,
+        RouterLinkActive
+    ],
   templateUrl: './sidebar.component.html',
   standalone: true,
   styleUrl: './sidebar.component.css'

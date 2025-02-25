@@ -1,20 +1,32 @@
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #566367;">
+<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #566367; z-index: 1">
   <button class="btn ms-3" type="button" (click)="onToggle()" style="background-color: #566367"><span
     class="navbar-toggler-icon"></span></button>
+
+  <ul class="navbar-nav ms-md-5 mb-lg-0" style="padding-left: 130px">
+    <li class="nav-item">
+      <a routerLink="/main/editor" routerLinkActive="active" class="nav-link"
+         [routerLinkActiveOptions]="{ exact: true }">
+        Editor
+      </a>
+    </li>
+  </ul>
+
+  @if (isEditorActive() || isPreviewActive()) {
+    <ul class="navbar-nav">
+      <li class="nav-item">
+        <a routerLink="/main/preview" routerLinkActive="active" class="nav-link"
+           [routerLinkActiveOptions]="{ exact: true }">
+          Preview
+        </a>
+      </li>
+    </ul>
+  }
+
+
   <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
     <li class="nav-item">
       <a routerLink="/login" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Login
-      </a>
-    </li>
-   <li class="nav-item"> <!-- ToDo: IF logged in as Admin-->
-      <a routerLink="/main/admin" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Admin
-      </a>
-    </li>
-    <li class="nav-item"> <!-- ToDo: IF logged in as Admin-->
-      <a routerLink="/main/editor" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Editor
+        Profile
       </a>
     </li>
   </ul>
