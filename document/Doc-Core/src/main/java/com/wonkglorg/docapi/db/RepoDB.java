@@ -109,7 +109,7 @@ public class RepoDB extends JdbiDatabase<HikariDataSource> {
         log.info("Inserting resource '{}' into repo '{}'", path, repoProperties.getName());
         try {
             voidAttach(ResourceFunctions.class,
-                    f -> f.insert(new Resource(path, "system", "testet"), data));
+                    f -> f.insert(new Resource(path, "system", "testet",data)));
         } catch (Exception e) {
             log.error("Error while inserting resource '{}' from repo '{}'", path,
                     repoProperties.getName(), e);

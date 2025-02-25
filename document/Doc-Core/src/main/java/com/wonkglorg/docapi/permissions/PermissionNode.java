@@ -1,7 +1,7 @@
 package com.wonkglorg.docapi.permissions;
 
 
-import java.util.List;
+import com.wonkglorg.docapi.common.ResourcePath;
 
 /**
  * Defines a Permission node this could be a file, or directory any
@@ -10,12 +10,15 @@ import java.util.List;
  */
 public interface PermissionNode {
     /**
-     * The Name of the Node
+     * The path this permission points to
      */
-    String getNodeName();
+    ResourcePath getPath();
+
 
     /**
-     * All Permissions this user has for the specified node
+     * The permission this node has
      */
-    List<Permission> getPermissions();
+    Permission getPermission();
+
+
 }

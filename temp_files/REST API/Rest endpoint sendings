@@ -1,0 +1,22 @@
+Baum Struktur ans frontend schicken
+
+
+{
+	"REPO1":{
+		"Path": {
+			"File1",
+			"File2"
+			},
+			"Path2"{
+
+			}
+		}
+	}
+
+	"REPO2":{
+
+	}
+}
+
+
+
