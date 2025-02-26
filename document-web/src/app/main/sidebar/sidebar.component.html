@@ -12,15 +12,13 @@
           </li>
         }
 
-        <div>
-          <!-- ToDo: IF logged in as Admin-->
-          <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
-             [routerLinkActiveOptions]="{ exact: true }">
-            Admin
-          </a>
+        <div class="nav-admin">
+              <!-- ToDo: IF logged in as Admin-->
+              <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
+                 [routerLinkActiveOptions]="{ exact: true }">
+                Admin
+              </a>
         </div>
-
-
       </ul>
     </nav>
   </div>

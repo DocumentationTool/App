@@ -4,6 +4,7 @@ import {MainComponent} from './main/main.component';
 import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
 import {PreviewComponent} from './main/preview/preview.component';
+import {ViewComponent} from './main/view/view.component';
 
 export const routes: Routes = [
   {
@@ -21,6 +22,10 @@ export const routes: Routes = [
       {
         path: 'admin',
         component: AdminComponent,
+      },
+      {
+        path: 'view',
+        component: ViewComponent,
       },
       {
         path: 'editor',

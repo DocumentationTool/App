@@ -1,3 +1,8 @@
 <app-navbar></app-navbar>
-<app-sidebar></app-sidebar>
-<router-outlet></router-outlet>
+<div style="padding-top: 50px">
+  <app-sidebar></app-sidebar>
+  <div class="main" [ngStyle]="{'margin-left': this.navigationService.toggle() ? '270px' : '20px'}">
+    <router-outlet></router-outlet>
+  </div>
+</div>
+

@@ -4,6 +4,8 @@ import {SidebarComponent} from './sidebar/sidebar.component';
 import {FileService} from './service/file.service';
 import {MarkdownModule} from 'ngx-markdown';
 import {RouterOutlet} from '@angular/router';
+import {NgStyle} from '@angular/common';
+import {NavigationService} from './service/navigation.service';
 
 @Component({
   selector: 'app-main',
@@ -11,14 +13,17 @@ import {RouterOutlet} from '@angular/router';
     NavbarComponent,
     SidebarComponent,
     MarkdownModule,
-    RouterOutlet
+    RouterOutlet,
+    NgStyle
   ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'
 })
 export class MainComponent implements OnInit{
 
-  constructor(public fileService: FileService) {
+  constructor(public fileService: FileService,
+              public navigationService: NavigationService) {
+
   }
   ngOnInit(): void {
     this.fileService.loadFiles();

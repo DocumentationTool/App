@@ -29,7 +29,7 @@ export class SidebarComponent implements OnInit{
 
   selectFile(file: string): void {
     this.fileService.setSelectedFile(file)
-    this.router.navigate(['/main/editor']);
+    this.router.navigate(['/main/view']);
   }
 
   getAssetUrl(file: string): string {

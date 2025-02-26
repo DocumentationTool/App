@@ -1,12 +1,17 @@
 import { Component } from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
+import {FormsModule} from '@angular/forms';
+import {NgForOf, NgIf} from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   imports: [
     RouterLinkActive,
-    RouterLink
+    RouterLink,
+    FormsModule,
+    NgIf,
+    NgForOf
   ],
   templateUrl: './navbar.component.html',
   standalone: true,
@@ -37,6 +42,21 @@ export class NavbarComponent {
       fragment: 'ignored',
       matrixParams: 'ignored',
     })
+  }
+
+  searchTerm: string = '';
+  files: string[] = ['douk1.md', 'doku2.md'];
+  filteredFiles: string[] = [];
+
+  search() {
+    if (this.searchTerm.trim() === '') {
+      this.filteredFiles = [];
+      return;
+    }
+
+    this.filteredFiles = this.files.filter(file =>
+      file.toLowerCase().includes(this.searchTerm.toLowerCase())
+    );
   }
 
 }

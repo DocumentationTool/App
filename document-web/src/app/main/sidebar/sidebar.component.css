@@ -1,6 +1,5 @@
 .left-sidebar {
   position: fixed;
-  top: 60px;
   left: 0;
   width: 250px;
   height: 100vh;
@@ -25,13 +24,11 @@ li a.active {
   background-color: #64b32c;
   border-radius: 4px;
 }
-.file-preview {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ddd;
-}
 
 .nav-admin{
   color: rgb(255 255 255 / 55%);
   font-size: 16pt;
+  position: fixed;
+  bottom: 10px;
+  text-decoration: none;
 }
