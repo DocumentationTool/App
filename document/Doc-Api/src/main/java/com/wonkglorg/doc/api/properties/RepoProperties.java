@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.api.properties;
 
+import com.wonkglorg.doc.core.RepoProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -12,9 +13,9 @@ public class RepoProperties{
 	/**
 	 * List of repositories that are being managed by the application
 	 */
-	private final List<com.wonkglorg.docapi.git.RepoProperties> repositories = new ArrayList<>();
+	private final List<RepoProperty> repositories = new ArrayList<>();
 	
-	public List<com.wonkglorg.docapi.git.RepoProperties> getRepositories() {
+	public List<RepoProperty> getRepositories() {
 		return repositories;
 	}
 

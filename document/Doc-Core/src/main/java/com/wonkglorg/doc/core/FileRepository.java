@@ -21,7 +21,7 @@ public class FileRepository{
 	/**
 	 * THe properties of the repository
 	 */
-	private final RepoProperties repoProperties;
+	private final RepoProperty repoProperties;
 	/**
 	 * The backing repo
 	 */
@@ -31,7 +31,7 @@ public class FileRepository{
 	 */
 	private RepositoryDatabase dataDB;
 	
-	public FileRepository(RepoProperties repoProperty) {
+	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
 	}
 	

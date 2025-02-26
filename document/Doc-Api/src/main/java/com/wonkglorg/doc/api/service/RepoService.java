@@ -2,8 +2,10 @@ package com.wonkglorg.doc.api.service;
 
 import com.wonkglorg.doc.api.properties.RepoProperties;
 import com.wonkglorg.doc.core.FileRepository;
+import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import jakarta.annotation.PostConstruct;
@@ -52,7 +54,7 @@ public class RepoService{
     public void initialize() {
         log.info("Initializing RepoManager");
 
-        for (RepoProperties repoProperty : properties.getRepositories()) {
+        for (RepoProperty repoProperty : properties.getRepositories()) {
             log.info("Adding Repo '{}'", repoProperty.getName());
             FileRepository repository = new FileRepository(repoProperty);
             repositories.put(repoProperty.getName(), repository);

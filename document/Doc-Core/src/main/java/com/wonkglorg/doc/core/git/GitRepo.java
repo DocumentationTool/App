@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.git;
 
-import com.wonkglorg.doc.core.RepoProperties;
+import com.wonkglorg.doc.core.RepoProperty;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -59,9 +59,9 @@ public class GitRepo{
 	private Git git;
 	
 	/**
-	 * Is the same as {@link #repository} unless {@link RepoProperties#isReadOnly()} is defined, in
+	 * Is the same as {@link #repository} unless {@link RepoProperty#isReadOnly()} is defined, in
 	 * that case this repo points specifically to the path defined by
-	 * {@link RepoProperties#getDbStorage()}
+	 * {@link RepoProperty#getDbStorage()}
 	 */
 	private Repository databaseRepository;
 	
@@ -69,9 +69,9 @@ public class GitRepo{
 	 * Behaves the same as {@link #databaseRepository}
 	 */
 	private Git databaseGit;
-	private final RepoProperties properties;
+	private final RepoProperty properties;
 	
-	public GitRepo(RepoProperties properties) throws GitAPIException {
+	public GitRepo(RepoProperty properties) throws GitAPIException {
 		this.properties = properties;
 		Path pathToLocalRepo = properties.getPath();
 		
@@ -253,7 +253,7 @@ public class GitRepo{
 		return git;
 	}
 	
-	public RepoProperties getProperties() {
+	public RepoProperty getProperties() {
 		return properties;
 	}
 	

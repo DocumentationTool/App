@@ -7,7 +7,7 @@ import java.nio.file.Path;
 /**
  * Represents a single repository that is being managed by the application
  */
-public class RepoProperties{
+public class RepoProperty{
 	/**
 	 * Name to visually display the repository with
 	 */

@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.db;
 
-import com.wonkglorg.doc.core.RepoProperties;
+import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.daos.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.daos.ResourceFunctions;
 import com.wonkglorg.doc.core.db.daos.UserFunctions;
@@ -27,14 +27,14 @@ import java.util.stream.Collectors;
  */
 public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implements UserFunctions, ResourceFunctions{
 	private static final Logger log = LoggerFactory.getLogger(RepositoryDatabase.class);
-	private final RepoProperties repoProperties;
+	private final RepoProperty repoProperties;
 	
-	public RepositoryDatabase(RepoProperties repoProperties, Path openInPath) {
+	public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
 		super(getDataSource(openInPath));
 		this.repoProperties = repoProperties;
 	}
 	
-	public RepositoryDatabase(RepoProperties repoProperties) {
+	public RepositoryDatabase(RepoProperty repoProperties) {
 		this(repoProperties, repoProperties.getPath().resolve(repoProperties.getDbName()));
 	}
 	
