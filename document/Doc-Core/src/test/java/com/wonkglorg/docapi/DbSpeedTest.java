@@ -2,7 +2,7 @@ package com.wonkglorg.docapi;
 
 import com.github.javafaker.Faker;
 import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
-import com.wonkglorg.docapi.db.RepoDB;
+import com.wonkglorg.docapi.db.RepositoryDatabase;
 import com.wonkglorg.docapi.git.RepoProperties;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.PreparedBatch;
@@ -31,7 +31,7 @@ class DbSpeedTest{
 	
 	@Test
 	void testReadWriteSpeed() {
-		try(RepoDB repoDB = new RepoDB(properties)){
+		try(RepositoryDatabase repoDB = new RepositoryDatabase(properties)){
 			repoDB.initialize();
 			
 			Faker faker = new Faker();

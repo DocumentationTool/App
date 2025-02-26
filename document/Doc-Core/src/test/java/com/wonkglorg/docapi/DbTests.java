@@ -1,6 +1,6 @@
 package com.wonkglorg.docapi;
 
-import com.wonkglorg.docapi.db.RepoDB;
+import com.wonkglorg.docapi.db.RepositoryDatabase;
 import com.wonkglorg.docapi.common.Resource;
 import com.wonkglorg.docapi.git.RepoProperties;
 import org.junit.jupiter.api.AfterAll;
@@ -20,7 +20,7 @@ class DbTests {
 
 	@Test
 	void addResource() {
-		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
+		RepositoryDatabase repoDB = new RepositoryDatabase(properties, properties.getPath().resolve(properties.getDbName()));
 
 		repoDB.initialize();
 		repoDB.insertResource(Path.of("test.xml"),"test");
@@ -33,7 +33,7 @@ class DbTests {
 
 	@Test
 	void canCreateDatabase() {
-		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
+		RepositoryDatabase repoDB = new RepositoryDatabase(properties, properties.getPath().resolve(properties.getDbName()));
 		repoDB.close();
 	}
 

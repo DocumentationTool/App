@@ -1,6 +1,6 @@
 package com.wonkglorg.docapi;
 
-import com.wonkglorg.docapi.db.RepoDB;
+import com.wonkglorg.docapi.db.RepositoryDatabase;
 import com.wonkglorg.docapi.git.GitRepo;
 import com.wonkglorg.docapi.git.RepoProperties;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -10,14 +10,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 
 import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
-import static com.wonkglorg.docapi.git.GitRepo.GitStage.*;
 
 class RepoTests {
 
@@ -37,7 +32,7 @@ class RepoTests {
 					MODIFIED, ADDED);
 
 			Assertions.assertTrue(file.isEmpty());
-			RepoDB repoDB = new RepoDB(properties,
+			RepositoryDatabase repoDB = new RepositoryDatabase(properties,
 					gitRepo.getRepoPath().resolve(properties.getDbName()));
 			repoDB.close();
 
