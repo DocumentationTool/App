@@ -1,7 +1,6 @@
 package com.wonkglorg.docapi.user;
 
 
-import com.wonkglorg.docapi.permissions.PermissionNode;
 import com.wonkglorg.docapi.permissions.Role;
 
 import java.util.ArrayList;

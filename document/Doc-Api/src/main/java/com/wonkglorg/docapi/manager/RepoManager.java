@@ -1,6 +1,8 @@
 package com.wonkglorg.docapi.manager;
 
+import com.wonkglorg.docapi.common.RepoId;
 import com.wonkglorg.docapi.common.Resource;
+import com.wonkglorg.docapi.common.UserId;
 import com.wonkglorg.docapi.git.RepoProperties;
 import com.wonkglorg.docapi.response.Response;
 import com.wonkglorg.docapi.response.UserResponse;
@@ -24,15 +26,10 @@ public class RepoManager {
     private static final Logger log = LogManager.getLogger(RepoManager.class);
     private final RepoAsyncOperations operations;
     /**
-     * A list of all loaded repositories
+     * A Map of all loaded repositories
      */
-    private final Map<String, FileRepository> repositories = new HashMap<>();
+    private final Map<RepoId, FileRepository> repositories = new HashMap<>();
 
-    /**
-     * Keeps track of all cached resources for quick access in each repo
-     */
-    private final Map<String, List<Resource>> cachedResources = new HashMap<>();
-    //todo:jmd also cache all permissions, roles etc across all repos, how to best handle that? Should I combine them and treat them as 1 space or have seperate perms per repo?
 
     private final com.wonkglorg.docapi.properties.RepoProperties properties;
 
@@ -56,8 +53,8 @@ public class RepoManager {
             operations.initializeRepositoryAsync(repository);
         }
     }
+
 	/*
-	
 	public CompletableFuture<List<Resource>> searchFor(String searchTerm) {
 		var searchFutures = repositories.stream().map(repo -> operations.searchInRepositoryAsync(repo, searchTerm)).toList();
 		return CompletableFuture.allOf(searchFutures.toArray(new CompletableFuture[0]))
@@ -65,7 +62,6 @@ public class RepoManager {
 										.stream().flatMap(future -> future
 												.join().stream()).collect(Collectors.toList()));
 	}
-	
 	 */
 
     /**
@@ -91,7 +87,7 @@ public class RepoManager {
      * @param password the password of the user (unhashed)
      * @return true if the user was added, false otherwise
      */
-    public UserResponse addUser(String repoName, String id, String password) {
+    public UserResponse addUser(RepoId repoName, UserId id, String password) {
         //todo:jmd implement
         return new UserResponse(DEV_USER,"Worked yes", null);
     }

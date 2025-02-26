@@ -1,7 +1,6 @@
 package com.wonkglorg.docapi.db.daos;
 
-import com.wonkglorg.docapi.permissions.Permission;
-import com.wonkglorg.docapi.user.UserProfile;
+import com.wonkglorg.docapi.permissions.PermissionType;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -9,10 +8,10 @@ import java.util.List;
 public interface PermissionFunctions {
 
 
-    List<Permission> getPermissionsForUser();
+    List<PermissionType> getPermissionsForUser();
 
-    Permission getPermissionForFolder(String userId, Path path);
+    PermissionType getPermissionForFolder(String userId, Path path);
 
-    List<Permission> getAllPermissions();
+    List<PermissionType> getAllPermissions();
 
 }

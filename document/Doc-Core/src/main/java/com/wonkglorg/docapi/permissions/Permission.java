@@ -1,20 +1,42 @@
 package com.wonkglorg.docapi.permissions;
 
-public enum Permission {
+import com.wonkglorg.docapi.common.*;
+
+public class Permission<T extends Identifyable> {
+
     /**
-     * Allows full admin control over all Permissions
+     * The User this permission is for
      */
-    ADMIN(),
+    private final T id;
+
     /**
-     * Allows for editing and viewing the file (editing includes deleting files, or uploading if it is a directory)
+     * The permissions associated with this Node
      */
-    EDIT(),
+    private PermissionType permission;
+
     /**
-     * Allows for viewing but not editing of files
+     * The path this resource permission is for
      */
-    VIEW(),
+    private ResourcePath path;
+
     /**
-     * Explicitly denies access (this can be used to revoke access in a subfolder or specific file despite overall permissions being granted)
+     * The repo this permission belongs to
      */
-    DENY()
+    private RepoId repoId;
+
+    public Permission(T id, PermissionType permission, ResourcePath path, RepoId repoId) {
+        this.id = id;
+        this.permission = permission;
+        this.path = path;
+        this.repoId = repoId;
+    }
+
+
+    public boolean isGroup(){
+        return id instanceof GroupId;
+    }
+
+    public boolean isUser(){
+        return id instanceof UserId;
+    }
 }

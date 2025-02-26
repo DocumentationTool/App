@@ -2,7 +2,6 @@ package com.wonkglorg.docapi.user;
 
 
 import com.google.gson.Gson;
-import com.wonkglorg.docapi.permissions.PermissionNode;
 import com.wonkglorg.docapi.permissions.Role;
 
 import java.util.List;
