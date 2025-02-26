@@ -16,9 +16,4 @@ public abstract class CacheableResource {
      * Rebuilds the cache from the backing source
      */
     public abstract void rebuild();
-
-
-    private boolean hasRepoUpdated(){
-        //when repo commit is not up to date, rebuild the sources again to get the current changes.
-    }
 }
