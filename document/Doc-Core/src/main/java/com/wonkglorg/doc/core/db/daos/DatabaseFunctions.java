@@ -1,8 +1,6 @@
-package com.wonkglorg.docapi.db.daos;
+package com.wonkglorg.doc.core.db.daos;
 
-import org.jdbi.v3.sqlobject.SqlOperation;
-import org.jdbi.v3.sqlobject.statement.SqlBatch;
-import org.jdbi.v3.sqlobject.statement.SqlQuery;
+
 import org.jdbi.v3.sqlobject.statement.SqlScript;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 

@@ -5,7 +5,7 @@ import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.docapi.permissions.Permission;
+import com.wonkglorg.doc.core.permissions.Permission;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

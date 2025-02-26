@@ -98,9 +98,9 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
 	}
 	
 	@Override
-	public List<Resource> findAll() {
+	public List<Resource> getResources() {
 		try{
-			attach(ResourceFunctions.class, ResourceFunctions::findAll);
+			attach(ResourceFunctions.class, ResourceFunctions::getResources);
 		} catch(Exception e){
 			log.error("Error while retrieving resources from {}", repoProperties.getName());
 		}
@@ -109,11 +109,6 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
 	@Override
 	public Resource findByPath(Path resourcePath) {
 		return null;
-	}
-	
-	@Override
-	public List<Resource> findByAntPath(Path antPath) {
-		return List.of();
 	}
 	
 	@Override

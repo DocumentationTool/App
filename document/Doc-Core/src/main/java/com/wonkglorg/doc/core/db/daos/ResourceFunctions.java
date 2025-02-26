@@ -37,7 +37,7 @@ public interface ResourceFunctions {
      */
     @SqlQuery("Select * From Resources")
     @UseRowMapper(com.wonkglorg.docapi.db.daos.ResourceMappers.ResourceRowMapper.class)
-    List<Resource> findAll();
+    List<Resource> getResources();
 
     /**
      * Finds a resource by its fully Qualified path
@@ -48,18 +48,7 @@ public interface ResourceFunctions {
     @SqlQuery("SELECT * FROM Resources WHERE resource_path = :resourcePath")
     @UseRowMapper(com.wonkglorg.docapi.db.daos.ResourceMappers.ResourceRowMapper.class)
     Resource findByPath(@Bind("resourcePath") Path resourcePath);
-
-    /**
-     * Selects every resource based on antpaths
-     *
-     * @param antPath the path to search for
-     * @return a list of all valid resources (without data)
-     */
-    @SqlScript("""
-            SELECT * FROM Resources WHERE resource_path LIKE :resourcePath
-            """)
-    List<Resource> findByAntPath(@Bind("resourcePath") Path antPath);
-
+    
     //todo:jmd method not working yet find out why
     /*
                 SELECT *
