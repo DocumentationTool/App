@@ -4,11 +4,13 @@ import com.wonkglorg.docapi.common.GroupId;
 import com.wonkglorg.docapi.common.UserId;
 import com.wonkglorg.docapi.manager.FileRepository;
 import com.wonkglorg.docapi.permissions.Permission;
+import com.wonkglorg.docapi.permissions.PermissionType;
 import org.springframework.util.AntPathMatcher;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class CachedUsers extends CacheableResource {
 
@@ -23,15 +25,8 @@ public class CachedUsers extends CacheableResource {
      */
     private final Map<UserId, List<GroupId>> userGroupCache = new HashMap<>();
 
-    /**
-     * Stores all permissions assigned to each group, for quicker access
-     */
-    private final Map<GroupId, List<Permission<GroupId>>> cachedGroupPermissions = new HashMap<>();
-
-    /**
-     * Stores all permissions assigned to each individual user, for quicker access
-     */
-    private final Map<UserId, List<Permission<UserId>>> cachedUserPermissions = new HashMap<>();
+    private final Map<UserId, Map<PermissionType, Permission<UserId>>> cachedUserPermissions = new HashMap<>();
+    private final Map<GroupId, Map<PermissionType, Permission<GroupId>>> cachedGroupPermissions = new HashMap<>();
 
 
     public CachedUsers(FileRepository repository) {
@@ -73,7 +68,7 @@ public class CachedUsers extends CacheableResource {
      * @return
      */
     public List<Permission<UserId>> getUserPermissions(UserId id) {
-        return cachedUserPermissions.get(id);
+        return cachedUserPermissions.get(id).values().stream().toList();
     }
 
     /**
@@ -81,11 +76,37 @@ public class CachedUsers extends CacheableResource {
      * @return
      */
     public List<Permission<GroupId>> getGroupPermissions(GroupId groupId) {
-        return cachedGroupPermissions.get(groupId);
+        return cachedGroupPermissions.get(groupId).values().stream().toList();
+    }
+
+    public List<Permission<GroupId>> getGroupPermissions(GroupId groupId, PermissionType... types) {
+        return cachedGroupPermissions.get(groupId).entrySet().stream().filter(entry -> {
+            for (var type : types) {
+                if (type.equals(entry.getKey())) {
+                    return true;
+                }
+            }
+            return false;
+        }).map(Map.Entry::getValue).collect(Collectors.toList());
+    }
+
+    public List<Permission<UserId>> getUserPermissions(GroupId groupId, PermissionType... types) {
+        return cachedUserPermissions.get(groupId).entrySet().stream().filter(entry -> {
+            for (var type : types) {
+                if (type.equals(entry.getKey())) {
+                    return true;
+                }
+            }
+            return false;
+        }).map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     //todo:jmd merge with caches resources, also cache all paths the users has access to?
     // probably better than having to build up that path each time it changes?
+
+
+    //todo:jmd how do I correctly match those 2? to get all the files the user can access and in what form?
+
 
 
 }

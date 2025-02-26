@@ -86,13 +86,11 @@ public class FileRepository {
 
     }
 
-    public List<PermissionNode> getUserPermissions(UserId userId) {
-        userPermissions.getPermissions(userId);
-
-        groupPermissions.getGroupPermissions(userId);
+    public CachedUsers getCachedUsers() {
+        return cachedUsers;
     }
 
-    public RepoProperties getRepoProperties() {
-        return repoProperties;
+    public CachedResources getCachedResources() {
+        return cachedResources;
     }
 }
