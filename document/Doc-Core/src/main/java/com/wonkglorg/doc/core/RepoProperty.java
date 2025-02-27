@@ -34,7 +34,7 @@ public class RepoProperty{
 		return name;
 	}
 	
-	public void setName(String name) {
+	public void setName(RepoId name) {
 		this.name = name;
 	}
 	
