@@ -36,7 +36,7 @@ public interface ResourceFunctions {
      * @return a list of resources or an empty list if there are non
      */
     @SqlQuery("Select * From Resources")
-    @UseRowMapper(com.wonkglorg.docapi.db.daos.ResourceMappers.ResourceRowMapper.class)
+    @UseRowMapper(ResourceMappers.ResourceRowMapper.class)
     List<Resource> getResources();
 
     /**
@@ -46,7 +46,7 @@ public interface ResourceFunctions {
      * @return the resource found or null
      */
     @SqlQuery("SELECT * FROM Resources WHERE resource_path = :resourcePath")
-    @UseRowMapper(com.wonkglorg.docapi.db.daos.ResourceMappers.ResourceRowMapper.class)
+    @UseRowMapper(ResourceMappers.ResourceRowMapper.class)
     Resource findByPath(@Bind("resourcePath") Path resourcePath);
     
     //todo:jmd method not working yet find out why

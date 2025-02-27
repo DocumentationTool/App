@@ -5,6 +5,7 @@ import com.wonkglorg.docapi.response.UserResponse;
 import com.wonkglorg.docapi.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -47,7 +48,7 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/remove")
-    public ResponseEntity<UserProfile> deleteUser(@RequestParam("userID") String userId) {
+    public ResponseEntity<Profile> deleteUser(@RequestParam("userID") String userId) {
         log.info("Received PUT request to delete user with userID='{}'", userId);
         return ResponseEntity.ok(null);
     }
@@ -55,7 +56,7 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("get/{id}")
-    public ResponseEntity<UserProfile> getUser(@PathVariable("id") String id) {
+    public ResponseEntity<Profile> getUser(@PathVariable("id") String id) {
         log.info("Received GET request to retrieve user with userID='{}'", id);
         if (DEV_MODE) {
             log.info("DEVMODE: getting user profile.");
@@ -66,7 +67,7 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/update")
-    public ResponseEntity<UserProfile> updateUser(@RequestBody UserProfile userId) {
+    public ResponseEntity<Profile> updateUser(@RequestBody UserProfile userId) {
         log.info("Received PUT request to update user profile for userID='{}'", userId.getId());
         return ResponseEntity.ok(null);
     }
