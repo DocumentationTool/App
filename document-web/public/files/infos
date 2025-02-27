@@ -6,6 +6,9 @@ markdown files?
 
 lacy load -> in router
 
+Suchleiste
+Contrast
+
 
 -----------------------------------------------------------------
 NPM:
@@ -16,8 +19,6 @@ npm i remixicon
 https://www.npmjs.com/package/ngx-markdown-editor ????
 
 npm i bootstrap@5.3.3
-
-
 
 -----------------------------------------------------------------
 -----------------------Projekmanagement--------------------------
@@ -33,5 +34,3 @@ SWOT Analyse
 Definition of done ?
 
 Zusammengehörende Tabellen im Projekthandbuch zusammenführen
-
-

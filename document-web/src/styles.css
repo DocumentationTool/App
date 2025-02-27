@@ -1,3 +1,4 @@
 :root{
-  --navbarColor: rgba(255, 255, 255, 0.53);
+  --navbarTextColor: rgba(255, 255, 255, 0.53);
+  --backgroundColor: #2d3337;
 }

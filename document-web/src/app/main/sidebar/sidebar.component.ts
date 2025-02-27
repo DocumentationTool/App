@@ -36,4 +36,7 @@ export class SidebarComponent implements OnInit{
     return file;
   }
 
+  upload() {
+    //ToDo: HTTP
+  }
 }

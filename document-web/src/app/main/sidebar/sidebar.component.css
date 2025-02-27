@@ -3,7 +3,7 @@
   left: 0;
   width: 250px;
   height: 100vh;
-  background-color: #566367;
+  background-color: var(--backgroundColor);;
   padding: 20px;
   overflow-y: auto;
 }
@@ -26,9 +26,26 @@ li a.active {
 }
 
 .nav-admin{
-  color: rgb(255 255 255 / 55%);
+  color: var(--navbarTextColor);
   font-size: 16pt;
   position: fixed;
-  bottom: 10px;
+  bottom: 15px;
+  left: 100px;
   text-decoration: none;
+}
+
+.upload{
+  font-size: 30px;
+  position: fixed;
+  bottom: 10px;
+  color: var(--navbarTextColor);
+}
+
+.upload:hover{
+  cursor: pointer;
+}
+
+.bottom{
+  position: fixed;
+  bottom: 10px;
 }

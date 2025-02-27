@@ -11,14 +11,16 @@
             </a>
           </li>
         }
+          <div class="upload">
+            <i class="ri-file-upload-line ms-md-2" (click)="upload()"></i>
+          </div>
 
-        <div class="nav-admin">
-              <!-- ToDo: IF logged in as Admin-->
-              <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
-                 [routerLinkActiveOptions]="{ exact: true }">
-                Admin
-              </a>
-        </div>
+          <div class="nav-admin"> <!-- ToDo: IF logged in as Admin-->
+            <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
+               [routerLinkActiveOptions]="{ exact: true }">
+              Admin
+            </a>
+          </div>
       </ul>
     </nav>
   </div>
