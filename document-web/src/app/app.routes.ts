@@ -5,10 +5,11 @@ import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
 import {PreviewComponent} from './main/preview/preview.component';
 import {ViewComponent} from './main/view/view.component';
+import {EmptyPageComponent} from './main/empty-page/empty-page.component';
 
 export const routes: Routes = [
   {
-    path: '', redirectTo: 'login',
+    path: '', redirectTo: 'main/empty',
     pathMatch: "full"
   },
   {
@@ -34,6 +35,10 @@ export const routes: Routes = [
       {
         path: 'preview',
         component: PreviewComponent,
+      },
+      {
+        path: 'empty',
+        component: EmptyPageComponent,
       },
     ],
   }

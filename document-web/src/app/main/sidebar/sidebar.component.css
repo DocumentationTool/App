@@ -1,7 +1,7 @@
 .left-sidebar {
   position: fixed;
   left: 0;
-  width: 250px;
+  width: 200px;
   height: 100vh;
   background-color: var(--backgroundColor);;
   padding: 20px;
@@ -26,7 +26,7 @@ li a.active {
 }
 
 .nav-admin{
-  color: var(--navbarTextColor);
+  color: var(--textColor);
   font-size: 16pt;
   position: fixed;
   bottom: 15px;
@@ -38,7 +38,7 @@ li a.active {
   font-size: 30px;
   position: fixed;
   bottom: 10px;
-  color: var(--navbarTextColor);
+  color: var(--textColor);
 }
 
 .upload:hover{

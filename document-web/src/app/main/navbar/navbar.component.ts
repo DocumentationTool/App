@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
-import {NgForOf, NgIf} from '@angular/common';
+import {FileService} from '../service/file.service';
 
 @Component({
   selector: 'app-navbar',
@@ -10,20 +10,23 @@ import {NgForOf, NgIf} from '@angular/common';
     RouterLinkActive,
     RouterLink,
     FormsModule,
-    NgIf,
-    NgForOf
   ],
   templateUrl: './navbar.component.html',
   standalone: true,
   styleUrl: './navbar.component.css'
 })
-export class NavbarComponent {
+export class NavbarComponent implements OnInit{
   constructor(public navigationService: NavigationService,
-              private router: Router) {
+              private router: Router,
+              public fileService: FileService) {
   }
 
-  onToggle(){
-    this.navigationService.toggleValue()
+  ngOnInit() {
+    this.fileService.loadFiles();
+  }
+
+  onToggleSidebar() {
+    this.navigationService.toggleSidebar()
   }
 
   isEditorActive(): boolean {
@@ -44,9 +47,11 @@ export class NavbarComponent {
     })
   }
 
+  // Searchbar
   searchTerm: string = '';
-  files: string[] = ['douk1.md', 'doku2.md'];
   filteredFiles: string[] = [];
+  isSearchActive: boolean = false;
+  @ViewChild('searchInput') searchInput!: ElementRef;
 
   search() {
     if (this.searchTerm.trim() === '') {
@@ -54,9 +59,44 @@ export class NavbarComponent {
       return;
     }
 
-    this.filteredFiles = this.files.filter(file =>
+    this.filteredFiles = this.fileService.files().filter(file =>
       file.toLowerCase().includes(this.searchTerm.toLowerCase())
     );
+    this.isSearchActive = this.filteredFiles.length > 0;
   }
 
+  onSearchFocus() {
+    if (this.searchTerm.trim() !== '') {
+      this.isSearchActive = true;
+    }
+    this.searchInput.nativeElement.focus();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onClickOutside(event: Event) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('form.search')) {
+      this.isSearchActive = false;
+    }
+  }
+
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapePress(event: KeyboardEvent) {
+    this.isSearchActive = false;
+    this.searchInput.nativeElement.blur();
+  }
+
+  isDropdownOpen = false;
+
+  toggleDropdown() {
+    this.isDropdownOpen = !this.isDropdownOpen;
+  }
+
+  save() {
+    if (window.confirm("Save changes?")) {
+      //Todo: save
+    } else {
+      //ToDo: dont save
+    }
+  }
 }
