@@ -1,4 +1,4 @@
-package com.wonkglorg.doc.core.db.daos;
+package com.wonkglorg.doc.core.db.daos.mappers;
 
 import com.wonkglorg.doc.core.objects.Resource;
 import org.jdbi.v3.core.mapper.RowMapper;

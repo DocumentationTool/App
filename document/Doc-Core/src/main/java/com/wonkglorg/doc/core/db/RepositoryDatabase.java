@@ -4,6 +4,10 @@ import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.daos.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.daos.ResourceFunctions;
 import com.wonkglorg.doc.core.db.daos.UserFunctions;
+import com.wonkglorg.doc.core.db.daos.factory.GroupIdArgumentFactory;
+import com.wonkglorg.doc.core.db.daos.factory.PathArgumentFactory;
+import com.wonkglorg.doc.core.db.daos.factory.UserIdArgumentFactory;
+import com.wonkglorg.doc.core.db.daos.mappers.ResourceMappers;
 import com.wonkglorg.doc.core.db.dbs.JdbiDatabase;
 import com.wonkglorg.doc.core.db.exception.SQLException;
 import com.wonkglorg.doc.core.objects.GroupId;
@@ -14,15 +18,13 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.Batch;
+import org.jdbi.v3.core.statement.Script;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Represents the database object for a defined repository
@@ -34,6 +36,14 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
     public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
         super(getDataSource(openInPath));
         this.repoProperties = repoProperties;
+        registerArgumentFactories();
+    }
+
+    private void registerArgumentFactories() {
+        registerArgument(new PathArgumentFactory());
+        registerArgument(new GroupIdArgumentFactory());
+        registerArgument(new UserIdArgumentFactory());
+        registerRowMapper(new ResourceMappers.ResourceRowMapper());
     }
 
     public RepositoryDatabase(RepoProperty repoProperties) {
@@ -128,8 +138,19 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
     @Override
     public void insertResource(Resource resource) throws SQLException {
         log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
-        try {
-            voidAttach(ResourceFunctions.class, r -> r.insertResource(resource));
+        try (Handle handle = jdbi().open(); Script script = handle.createScript("""
+                 INSERT INTO Resources(resource_path,created_at,created_by,last_modified_at,last_modified_by,commit_id)
+                    VALUES(:resourcePath,:createdAt,:createdBy,:lastModifiedAt,:lastModifiedBy,:commitId);
+                INSERT INTO FileData(resource_path,data) VALUES(:resourcePath,:data);
+                """)) {
+            script.bind("resourcePath", resource.resourcePath());
+            script.bind("data", resource.data());
+            script.bind("createdAt", resource.createdAt());
+            script.bind("createdBy", resource.createdBy());
+            script.bind("commitId", resource.commitId());
+            script.bind("lastModifiedBy", resource.modifiedBy());
+            script.bind("lastModifiedAt", resource.modifiedAt());
+            script.execute();
         } catch (Exception e) {
             log.error("Error while inserting {} from repo {}", resource, repoProperties.getId(), e);
             throw new SQLException(e);
@@ -170,9 +191,10 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
         }
     }
 
+    /*
     public boolean updateResources(Set<Path> files) {
-        //todo:jmd compare last changes + other info to determin if changes happened, if so rebuild
-        // that particular entry and redo.
+        todo:jmd compare last changes + other info to determin if changes happened, if so rebuild
+        that particular entry and redo.
         boolean filesChanged = false;
 
         log.info("Updating resources for '{}'.", repoProperties.getId());
@@ -197,6 +219,8 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
             }
         }
 
+
+
         //todo:jmd get the commit id
         for (Path path : filesToAdd) {
             //insertResource(path, "default");
@@ -207,7 +231,7 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
         log.info("Deleted: {}", filesToRemove.size());
         return filesChanged;
     }
-
+     */
     @Override
     public int addUser(UserId userId, String password, String createdBy) {
         log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());

@@ -1,8 +1,10 @@
 package com.wonkglorg.doc.core.db.daos;
 
 
+import com.wonkglorg.doc.core.db.daos.factory.PathArgumentFactory;
+import com.wonkglorg.doc.core.db.daos.mappers.ResourceMappers;
 import com.wonkglorg.doc.core.objects.Resource;
-import com.wonkglorg.doc.core.response.DatabaseResponse;
+import org.jdbi.v3.sqlobject.config.RegisterArgumentFactory;
 import org.jdbi.v3.sqlobject.customizer.Bind;
 import org.jdbi.v3.sqlobject.customizer.BindMethods;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
@@ -24,7 +26,7 @@ public interface ResourceFunctions {
      *
      * @param resourcePath the path to the resource
      */
-    @SqlUpdate("DELETE FROM Resources WHERE Resources.resource_path = :resourcePath")
+    @SqlUpdate("DELETE FROM Resources WHERE resource_path = :resourcePath")
     int deleteResource(@Bind("resourcePath") Path resourcePath) throws SQLException;
 
     /**
@@ -53,7 +55,7 @@ public interface ResourceFunctions {
     @SqlQuery("SELECT * FROM Resources WHERE resource_path = :resourcePath")
     @UseRowMapper(ResourceMappers.ResourceRowMapper.class)
     Resource findByPath(@Bind("resourcePath") Path resourcePath) throws SQLException;
-    
+
     //todo:jmd method not working yet find out why
     /*
                 SELECT *
@@ -67,6 +69,7 @@ public interface ResourceFunctions {
                 ELSE data LIKE '%' || 'ab' || '%'
              END;
      */
+
     /**
      * Finds all resources with the matching search term in its data
      *
@@ -114,8 +117,9 @@ public interface ResourceFunctions {
 
     /**
      * Updates a resources data
+     *
      * @param resourcePath the path the resource is at
-     * @param data the data to set it to
+     * @param data         the data to set it to
      * @return 1 if the table was changed 0 if no change, -1 on error
      */
     @SqlUpdate("""

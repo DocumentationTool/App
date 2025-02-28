@@ -72,20 +72,20 @@ public interface DatabaseFunctions {
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupPermissions (
 			                                  group_id TEXT NOT NULL,
-			                                  path TEXT  NOT NULL,
+			                                  resource_path TEXT  NOT NULL,
 			                                  type TEXT,
-			                                  PRIMARY KEY (group_id, path),
+			                                  PRIMARY KEY (group_id, resource_path),
 			                                  FOREIGN KEY (group_id) REFERENCES Groups(group_id),
-			                                  FOREIGN KEY (path) REFERENCES Resources(resource_path),
+			                                  FOREIGN KEY (resource_path) REFERENCES Resources(resource_path),
 			                                  FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS UserPermissions (
 			                                 user_id TEXT NOT NULL,
-			                                 path TEXT NOT NULL,
+			                                 resource_path TEXT NOT NULL,
 			                                 type TEXT,
-			                                 PRIMARY KEY (user_id, path),
+			                                 PRIMARY KEY (user_id, resource_path),
 			                                 FOREIGN KEY (user_id) REFERENCES Users(user_id),
-			                                 FOREIGN KEY (path) REFERENCES Resources(resource_path),
+			                                 FOREIGN KEY (resource_path) REFERENCES Resources(resource_path),
 			                                 FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Permissions (

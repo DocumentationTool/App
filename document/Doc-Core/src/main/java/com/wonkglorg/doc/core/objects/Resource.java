@@ -15,9 +15,10 @@ import java.util.Objects;
  * @param commitId     the commit id of the resource
  * @param data         the data of the resource (null unless explicitly requested)
  */
-public record Resource(Path resourcePath, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt,
-                       String modifiedBy, String commitId,
-                       String data) {
+public record Resource(
+        Path resourcePath, LocalDateTime createdAt, String createdBy, LocalDateTime modifiedAt,
+        String modifiedBy, String commitId,
+        String data) {
 
     public Resource {
         Objects.requireNonNull(resourcePath, "A Resources, path cannot be null");

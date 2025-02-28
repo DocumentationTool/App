@@ -62,7 +62,7 @@ public class FileRepository{
 		
 		Set<Path> foundFiles = gitRepo.getFiles(s -> s.toLowerCase().endsWith(".xml"), UNTRACKED, MODIFIED, ADDED);
 		
-		boolean hasChanged = dataDB.updateResources(foundFiles);
+		boolean hasChanged = false;//dataDB.updateResources(foundFiles);
 		
 		if(hasChanged && !repoProperties.isReadOnly()){
 			gitRepo.addFile(repoProperties.getDbName());

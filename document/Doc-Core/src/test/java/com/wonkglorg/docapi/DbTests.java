@@ -26,7 +26,6 @@ class DbTests {
         repoDB.initialize();
         Resource resource1 = new Resource(Path.of("test.xml"), "System", "TestCommit", "insertedData");
         Resource resource2 = new Resource(Path.of("test2.xml"), "System", "TestCommit", "insertedData2");
-
         repoDB.insertResource(resource1);
         repoDB.insertResource(resource2);
         List<Resource> resources = repoDB.getResources();

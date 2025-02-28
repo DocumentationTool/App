@@ -4,11 +4,12 @@ import com.wonkglorg.doc.core.interfaces.ThrowingConsumer;
 import com.wonkglorg.doc.core.interfaces.ThrowingFunction;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.Jdbi;
+import org.jdbi.v3.core.argument.ArgumentFactory;
+import org.jdbi.v3.core.mapper.RowMapper;
 import org.jdbi.v3.core.statement.Query;
 import org.jdbi.v3.sqlobject.SqlObjectPlugin;
 
 import javax.sql.DataSource;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -142,5 +143,17 @@ public class JdbiDatabase<T extends DataSource> extends Database<T>{
 			throw new RuntimeException(e.getMessage(), e);
 		}
 	}
+
+
+	public void registerArgument(ArgumentFactory argumentFactory){
+		jdbi().registerArgument(argumentFactory);
+	}
+
+	public void registerRowMapper(RowMapper<?> rowMapper){
+		jdbi().registerRowMapper(rowMapper);
+	}
+
+
+
 }
 
