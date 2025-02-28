@@ -20,7 +20,7 @@ public record Resource(Path resourcePath, LocalDateTime createdAt, String create
                        String data) {
 
     public Resource {
-        Objects.requireNonNull(resourcePath,"Resource path cannot be null");
+        Objects.requireNonNull(resourcePath, "A Resources, path cannot be null");
     }
 
     public Resource(Path resourcePath, String creator, String commitId, String data) {

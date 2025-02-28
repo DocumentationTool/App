@@ -14,10 +14,10 @@ public interface DatabaseFunctions {
 			    PRAGMA incremental_vacuum(500);
 			    PRAGMA foreign_keys = OFF;
 			    CREATE TABLE IF NOT EXISTS Roles (
-			                  role_id TEXT PRIMARY KEY,
+			                  role_id TEXT PRIMARY KEY NOT NULL,
 			                  role_name TEXT NOT NULL);
 			    CREATE TABLE IF NOT EXISTS Users (
-			                           user_id TEXT PRIMARY KEY,
+			                           user_id TEXT PRIMARY KEY NOT NULL,
 			                           password_hash TEXT NOT NULL,
 			                           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                           created_by TEXT,
@@ -25,14 +25,14 @@ public interface DatabaseFunctions {
 			                           last_modified_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS UserRoles (
-			                               role_id TEXT,
-			                               user_id TEXT,
+			                               role_id TEXT NOT NULL,
+			                               user_id TEXT NOT NULL,
 			                               PRIMARY KEY (role_id, user_id),
 			                               FOREIGN KEY (role_id) REFERENCES Roles(role_id),
 			                               FOREIGN KEY (user_id) REFERENCES Users(user_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Groups (
-			                            group_id TEXT PRIMARY KEY,
+			                            group_id TEXT PRIMARY KEY NOT NULL,
 			                            group_name TEXT NOT NULL,
 			                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                            created_by TEXT,
@@ -40,20 +40,20 @@ public interface DatabaseFunctions {
 			                            last_modified_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupUsers (
-			                                user_id TEXT,
-			                                group_id TEXT,
+			                                user_id TEXT NOT NULL,
+			                                group_id TEXT NOT NULL,
 			                                PRIMARY KEY (user_id, group_id),
 			                                FOREIGN KEY (user_id) REFERENCES Users(user_id),
 			                                FOREIGN KEY (group_id) REFERENCES Groups(group_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Tags(
-			                              tag_id TEXT PRIMARY KEY,
+			                              tag_id TEXT PRIMARY KEY NOT NULL,
 			                              tag_name TEXT,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS Resources (
-			                              resource_path TEXT PRIMARY KEY,
+			                              resource_path TEXT PRIMARY KEY NOT NULL,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT,
 			                              last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -62,8 +62,8 @@ public interface DatabaseFunctions {
 			                              commit_id TEXT
 			    );
 			    CREATE TABLE IF NOT EXISTS ResourceTags(
-			                              tag_id TEXT,
-			                              resource_path TEXT,
+			                              tag_id TEXT NOT NULL,
+			                              resource_path TEXT NOT NULL,
 			                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 			                              created_by TEXT,
 			                              PRIMARY KEY (tag_id, resource_path),
@@ -71,8 +71,8 @@ public interface DatabaseFunctions {
 			                              FOREIGN KEY (resource_path) REFERENCES Resources(resource_path)
 			    );
 			    CREATE TABLE IF NOT EXISTS GroupPermissions (
-			                                  group_id TEXT,
-			                                  path TEXT,
+			                                  group_id TEXT NOT NULL,
+			                                  path TEXT  NOT NULL,
 			                                  type TEXT,
 			                                  PRIMARY KEY (group_id, path),
 			                                  FOREIGN KEY (group_id) REFERENCES Groups(group_id),
@@ -80,8 +80,8 @@ public interface DatabaseFunctions {
 			                                  FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS UserPermissions (
-			                                 user_id TEXT,
-			                                 path TEXT,
+			                                 user_id TEXT NOT NULL,
+			                                 path TEXT NOT NULL,
 			                                 type TEXT,
 			                                 PRIMARY KEY (user_id, path),
 			                                 FOREIGN KEY (user_id) REFERENCES Users(user_id),
@@ -89,11 +89,11 @@ public interface DatabaseFunctions {
 			                                 FOREIGN KEY (type) REFERENCES Permissions(permission_id)
 			    );
 			    CREATE TABLE IF NOT EXISTS Permissions (
-			                             permission_id TEXT PRIMARY KEY,
+			                             permission_id TEXT PRIMARY KEY NOT NULL,
 			                             weight INTEGER NOT NULL
 			    );
 			    CREATE TABLE IF NOT EXISTS AuditLog (
-			                              log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+			                              log_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
 			                              user_id TEXT,
 			                              action TEXT NOT NULL,
 			                              permission_id TEXT,

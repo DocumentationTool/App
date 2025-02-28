@@ -26,13 +26,13 @@ public class ResourceMappers{
 		private final String commitId;
 		
 		public ResourceRowMapper() {
-			path = "resourcePath";
+			path = "resource_path";
 			createdAt = "created_at";
 			createdBy = "created_by";
 			lastModifiedAt = "last_modified_at";
 			lastModifiedBy = "last_modified_by";
 			data = "data";
-			commitId = "commitId";
+			commitId = "commit_id";
 		}
 		
 		public ResourceRowMapper(String path, String createdAt, String createdBy, String lastModifiedAt, String lastModifiedBy, String commitId,String data) {
