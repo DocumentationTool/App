@@ -69,5 +69,8 @@ public class FileRepository{
 			gitRepo.commit("Updated File DB");
 		}
 	}
-	
+
+	public RepoProperty getRepoProperties() {
+		return repoProperties;
+	}
 }

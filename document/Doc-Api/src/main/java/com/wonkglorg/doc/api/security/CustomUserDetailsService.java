@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.api.security;
 
-import com.wonkglorg.docapi.user.UserProfile;
+import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -28,22 +29,23 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
+		UserId userId = new UserId(id);
 		if (DEV_MODE) {
-			return new User(id, "password_hash",
+			return new User(userId.id(), "password_hash",
 					List.of(new SimpleGrantedAuthority("ROLE_USER"),
 					new SimpleGrantedAuthority("ROLE_ADMIN")));
 		}
 
 
-		UserProfile user = authManager.loadByUserId(id)
+		UserProfile user = authManager.loadByUserId(userId)
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
 		List<GrantedAuthority> authorities =
-				user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.roleID()))
+				user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.roleID().id()))
 						.collect(Collectors.toList());
 
 		//todo:jmd add back password hash
-		return new User(user.getId(), "", authorities);
+		return new User(user.getId().id(), "", authorities);
 	}
 }
 

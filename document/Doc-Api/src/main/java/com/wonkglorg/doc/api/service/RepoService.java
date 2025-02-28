@@ -55,9 +55,9 @@ public class RepoService{
         log.info("Initializing RepoManager");
 
         for (RepoProperty repoProperty : properties.getRepositories()) {
-            log.info("Adding Repo '{}'", repoProperty.getName());
+            log.info("Adding Repo '{}'", repoProperty.getId());
             FileRepository repository = new FileRepository(repoProperty);
-            repositories.put(repoProperty.getName(), repository);
+            repositories.put(repoProperty.getId(), repository);
             operations.initializeRepositoryAsync(repository);
         }
     }
@@ -105,13 +105,15 @@ public class RepoService{
     
     @Cacheable(value = "userPermissions", key = "{#repoId, #userId}")
     public List<Permission<UserId>> getUserPermissions(RepoId repoId, UserId userId) {
-        return getRepo(repoId).getDatabase().getUserPermissions(userId);
+        //return getRepo(repoId).getDatabase().getUserPermissions(userId);
+        return null;
     }
     
     
     @Cacheable(value = "groupPermissions", key = "{#repoId, #groupId}")
     public List<Permission<GroupId>> getGroupPermissions(RepoId repoId, GroupId groupId) {
-        return getRepo(repoId).getDatabase().getGroupPermissions(groupId);
+        //return getRepo(repoId).getDatabase().getGroupPermissions(groupId);
+        return null;
     }
     
     

@@ -1,8 +1,9 @@
 package com.wonkglorg.doc.api.controller;
 
 import com.wonkglorg.doc.api.service.RepoService;
-import com.wonkglorg.docapi.response.UserResponse;
-import com.wonkglorg.docapi.user.UserProfile;
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -34,16 +35,16 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/add")
-    public ResponseEntity<String> addUser(@RequestParam("repo") String repo, @RequestParam("userID") String userId,
+    public ResponseEntity<String> addUser(@RequestParam("repo") RepoId repo, @RequestParam("userID") UserId userId,
                                           @RequestParam("password") String password) {
         log.info("Received PUT request to add user to repo = '{}'with ID='{}'. Password provided: {}", repo, userId,
                 password != null ? "*".repeat(password.length()) : "MISSING");
         if (DEV_MODE) {
-            return new ResponseEntity<>(DEV_USER.toJson(), HttpStatus.OK);
+            return new ResponseEntity<>(DEV_USER.toString(), HttpStatus.OK);
         }
-        UserResponse response = repoManager.addUser(repo, userId, password);
+        repoManager.getRepo(repo).getDatabase().addUser(userId, password, "example");
 
-        return new ResponseEntity<>(response.getUserProfile().toJson(), HttpStatus.SERVICE_UNAVAILABLE);
+        return new ResponseEntity<>("", HttpStatus.SERVICE_UNAVAILABLE);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -56,7 +57,7 @@ public class ApiUserController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("get/{id}")
-    public ResponseEntity<Profile> getUser(@PathVariable("id") String id) {
+    public ResponseEntity<UserProfile> getUser(@PathVariable("id") String id) {
         log.info("Received GET request to retrieve user with userID='{}'", id);
         if (DEV_MODE) {
             log.info("DEVMODE: getting user profile.");

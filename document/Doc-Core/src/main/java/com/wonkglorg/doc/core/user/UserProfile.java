@@ -9,6 +9,9 @@ import com.wonkglorg.doc.core.permissions.Role;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The users profile
+ */
 public class UserProfile{
 	private final Gson gson = new Gson();
 	private final UserId id;

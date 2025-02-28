@@ -1,3 +1,6 @@
 package com.wonkglorg.doc.core.permissions;
 
-public record Role(String roleID, String roleName){}
+import com.wonkglorg.doc.core.objects.RoleId;
+
+public record Role(RoleId roleID, String roleName) {
+}

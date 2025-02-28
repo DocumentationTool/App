@@ -111,12 +111,15 @@ public interface DatabaseFunctions {
 			""")
     void initialize();
 
+	/**
+	 * Rebuilds whole FTS table
+	 */
     @SuppressWarnings("SqlResolve") //fts5 specific command not recognized but is valid
     @SqlUpdate("INSERT INTO FileData(FileData) VALUES ('rebuild')")
     void rebuildFts();
 
     /**
-     * Sets up triggers for various usecases
+     * Sets up triggers
      */
     @SqlUpdate("""
             CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup

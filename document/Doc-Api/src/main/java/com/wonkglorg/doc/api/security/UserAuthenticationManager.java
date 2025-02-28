@@ -1,7 +1,8 @@
 package com.wonkglorg.doc.api.security;
 
 import com.wonkglorg.doc.api.exception.LoginFailedException;
-import com.wonkglorg.docapi.user.UserProfile;
+import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -23,7 +24,7 @@ public class UserAuthenticationManager{
 	 * @param password the users password
 	 * @return true if valid false otherwise
 	 */
-	public Optional<UserProfile> authenticate(final String userId, final String password) throws LoginFailedException {
+	public Optional<UserProfile> authenticate(final UserId userId, final String password) throws LoginFailedException {
 		return Optional.empty();
 	}
 	
@@ -33,7 +34,7 @@ public class UserAuthenticationManager{
 	 * @param userId the user id to load
 	 * @return the user profile if it exists
 	 */
-	public Optional<UserProfile> loadByUserId(final String userId) {
+	public Optional<UserProfile> loadByUserId(final UserId userId) {
 		return Optional.empty();
 	}
 	
@@ -43,7 +44,7 @@ public class UserAuthenticationManager{
 	 * @param userId the user id to check
 	 * @return true if it exists false otherwise
 	 */
-	public boolean exists(final String userId) {
+	public boolean exists(final UserId userId) {
 		return true;
 	}
 	

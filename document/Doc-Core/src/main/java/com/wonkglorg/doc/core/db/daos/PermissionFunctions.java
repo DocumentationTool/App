@@ -8,6 +8,9 @@ import com.wonkglorg.doc.core.permissions.PermissionType;
 import java.nio.file.Path;
 import java.util.List;
 
+/**
+ * Permission related database functions
+ */
 public interface PermissionFunctions{
 	
 	List<Permission<UserId>> getPermissionsForUser(UserId userId);

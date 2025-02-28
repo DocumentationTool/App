@@ -193,7 +193,7 @@ public class GitRepo{
 		try{
 			return git.branchDelete().setBranchNames(branchName).call();
 		} catch(GitAPIException e){
-			log.error("Error while deleting branch '{}' for repo '{}'.", branchName, properties.getName(), e);
+			log.error("Error while deleting branch '{}' for repo '{}'.", branchName, properties.getId(), e);
 		}
 		return new ArrayList<>();
 	}

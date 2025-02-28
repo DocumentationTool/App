@@ -9,9 +9,13 @@ import java.nio.file.Path;
  */
 public class RepoProperty{
 	/**
+	 * If no repo is defined uses this index to generate automatic id's
+	 */
+	private static int idIndex = 0;
+	/**
 	 * Name to visually display the repository with
 	 */
-	private RepoId name = new RepoId("Repository");
+	private RepoId id = RepoId.of("Repository " + idIndex++);
 	/**
 	 * Path to the repository
 	 */
@@ -30,12 +34,12 @@ public class RepoProperty{
 	 */
 	private Path dbStorage = path;
 	
-	public RepoId getName() {
-		return name;
+	public RepoId getId() {
+		return id;
 	}
 	
-	public void setName(RepoId name) {
-		this.name = name;
+	public void setId(RepoId name) {
+		this.id = name;
 	}
 	
 	public Path getPath() {

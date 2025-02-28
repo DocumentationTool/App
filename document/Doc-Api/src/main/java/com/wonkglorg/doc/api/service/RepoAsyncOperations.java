@@ -1,7 +1,7 @@
 package com.wonkglorg.doc.api.service;
 
 import com.wonkglorg.doc.core.FileRepository;
-import com.wonkglorg.docapi.common.Resource;
+import com.wonkglorg.doc.core.objects.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
@@ -19,10 +19,10 @@ public class RepoAsyncOperations{
 	public CompletableFuture<Void> initializeRepositoryAsync(FileRepository repository) {
 		return CompletableFuture.runAsync(() -> {
 			try{
-				log.info("Initializing Repo '{}'", repository.getRepoProperties().getName());
+				log.info("Initializing Repo '{}'", repository.getRepoProperties().getId());
 				repository.initialize();
 			} catch(Exception e){
-				log.error("Failed to initialize repository '{}'", repository.getRepoProperties().getName(), e);
+				log.error("Failed to initialize repository '{}'", repository.getRepoProperties().getId(), e);
 			}
 		});
 	}
@@ -48,10 +48,10 @@ public class RepoAsyncOperations{
 	public CompletableFuture<List<Resource>> getResourcesFromRepositoryAsync(FileRepository repository) {
 		return CompletableFuture.supplyAsync(() -> {
 			try{
-				log.info("Getting resources from Repo '{}'", repository.getRepoProperties().getName());
+				log.info("Getting resources from Repo '{}'", repository.getRepoProperties().getId());
 				return repository.getDatabase().getResources();
 			} catch(Exception e){
-				log.error("Error getting resources from repository '{}'", repository.getRepoProperties().getName(), e);
+				log.error("Error getting resources from repository '{}'", repository.getRepoProperties().getId(), e);
 				return new ArrayList<>();
 			}
 		});

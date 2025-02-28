@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.db.daos.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.daos.ResourceFunctions;
 import com.wonkglorg.doc.core.db.daos.UserFunctions;
 import com.wonkglorg.doc.core.db.dbs.JdbiDatabase;
+import com.wonkglorg.doc.core.db.exception.SQLException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 /**
  * Represents the database object for a defined repository
  */
-public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implements UserFunctions, ResourceFunctions {
+public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implements ResourceFunctions, UserFunctions {
     private static final Logger log = LoggerFactory.getLogger(RepositoryDatabase.class);
     private final RepoProperty repoProperties;
 
@@ -56,62 +57,62 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
      */
     @SuppressWarnings("TextBlockBackwardMigration")
     public void initialize() {
-        log.info("Initialising Database for repo '{}'", repoProperties.getName());
+        log.info("Initialising Database for repo '{}'", repoProperties.getId());
         try {
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
             log.info("Creating triggers");
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::setupTriggers);
         } catch (Exception e) {
-            log.error("Error while initializing Database for repo '{}'", repoProperties.getName(), e);
+            log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
 
-        log.info("Database initialized for repo '{}'", repoProperties.getName());
+        log.info("Database initialized for repo '{}'", repoProperties.getId());
     }
 
     /**
      * Rebuilds the entire ntfs table to remove any unused records
      */
     public void rebuildFts() {
-        log.info("Rebuilding FTS for repo '{}'", repoProperties.getName());
+        log.info("Rebuilding FTS for repo '{}'", repoProperties.getId());
         try {
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::rebuildFts);
-            log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getName());
+            log.info("Finished rebuilding FTS for repo '{}'", repoProperties.getId());
         } catch (Exception e) {
-            log.error("Error while rebuilding FTS for repo '{}'", repoProperties.getName(), e);
+            log.error("Error while rebuilding FTS for repo '{}'", repoProperties.getId(), e);
         }
     }
 
     @Override
     public int deleteResource(Path resourcePath) {
-        log.info("Deleting resource {} for repo {}", resourcePath, repoProperties.getName());
+        log.info("Deleting resource {} for repo {}", resourcePath, repoProperties.getId());
         try {
             return attach(ResourceFunctions.class, r -> r.deleteResource(resourcePath));
-        } catch (RuntimeException e) {
-            log.error("Error while deleting {} from repo {}", resourcePath, repoProperties.getName(), e);
+        } catch (Exception e) {
+            log.error("Error while deleting {} from repo {}", resourcePath, repoProperties.getId(), e);
             return -1;
         }
     }
 
     @Override
     public int deleteData(Path resourcePath) {
-        log.info("Deleting data {} for repo {}", resourcePath, repoProperties.getName());
+        log.info("Deleting data {} for repo {}", resourcePath, repoProperties.getId());
         try {
             return attach(ResourceFunctions.class, r -> r.deleteData(resourcePath));
-        }catch (Exception e) {
-            log.error("Error while deleting data {} from repo {}", resourcePath, repoProperties.getName(), e);
+        } catch (Exception e) {
+            log.error("Error while deleting data {} from repo {}", resourcePath, repoProperties.getId(), e);
             return -1;
         }
     }
 
     @Override
-    public List<Resource> getResources() {
-        log.info("Retrieving resources for repo {}", repoProperties.getName());
+    public List<Resource> getResources() throws SQLException {
+        log.info("Retrieving resources for repo {}", repoProperties.getId());
         try {
             return attach(ResourceFunctions.class, ResourceFunctions::getResources);
         } catch (Exception e) {
-            log.error("Error while retrieving resources from {}", repoProperties.getName());
+            log.error("Error while retrieving resources from {}", repoProperties.getId());
+            throw new SQLException(e);
         }
-        return List.of();
     }
 
     @Override
@@ -125,34 +126,34 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
     }
 
     @Override
-    public int insertResource(Resource resource) {
-        log.info("Inserting resource {} for repo {}", resource, repoProperties.getName());
+    public void insertResource(Resource resource) throws SQLException {
+        log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
         try {
-            return attach(ResourceFunctions.class, r -> r.insertResource(resource));
+            voidAttach(ResourceFunctions.class, r -> r.insertResource(resource));
         } catch (Exception e) {
-            log.error("Error while inserting {} from repo {}", resource, repoProperties.getName(), e);
-            return -1;
+            log.error("Error while inserting {} from repo {}", resource, repoProperties.getId(), e);
+            throw new SQLException(e);
         }
     }
 
     @Override
     public int updatePath(Path oldPath, Path newPath) {
-        log.info("Moving resource '{}' to '{}' in repo '{}'", oldPath, newPath, repoProperties.getName());
+        log.info("Moving resource '{}' to '{}' in repo '{}'", oldPath, newPath, repoProperties.getId());
         try {
             return attach(ResourceFunctions.class, r -> r.updatePath(oldPath, newPath));
         } catch (Exception e) {
-            log.error("Error while moving resource '{}' in repo '{}'", oldPath, repoProperties.getName(), e);
+            log.error("Error while moving resource '{}' in repo '{}'", oldPath, repoProperties.getId(), e);
             return -1;
         }
     }
 
     @Override
     public int updateResource(Path resourcePath, String newData) {
-        log.info("Updating resource '{}' in repo '{}'", resourcePath, repoProperties.getName());
+        log.info("Updating resource '{}' in repo '{}'", resourcePath, repoProperties.getId());
         try {
             return attach(ResourceFunctions.class, db -> db.updateResource(resourcePath, newData));
         } catch (Exception e) {
-            log.error("Error while updating resource '{}' in repo '{}'", resourcePath, repoProperties.getName(), e);
+            log.error("Error while updating resource '{}' in repo '{}'", resourcePath, repoProperties.getId(), e);
             return -1;
         }
     }
@@ -174,7 +175,7 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
         // that particular entry and redo.
         boolean filesChanged = false;
 
-        log.info("Updating resources for '{}'.", repoProperties.getName());
+        log.info("Updating resources for '{}'.", repoProperties.getId());
         Set<Path> existingFiles = getResources().stream().map(Resource::resourcePath).collect(Collectors.toSet());
         Set<Path> modifiedFiles = new HashSet<>(existingFiles);
         modifiedFiles.forEach(path -> {
@@ -192,15 +193,15 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
         try (Handle handle = jdbi().open()) {
             ResourceFunctions resources = handle.attach(ResourceFunctions.class);
             for (Path path : filesToRemove) {
-                resources.deleteResource(path);
+                //resources.deleteResource(path);
             }
         }
 
         //todo:jmd get the commit id
         for (Path path : filesToAdd) {
-            insertResource(path, "default");
+            //insertResource(path, "default");
         }
-        log.info("Finished updating resources for '{}'.", repoProperties.getName());
+        log.info("Finished updating resources for '{}'.", repoProperties.getId());
         log.info("Added: {}", filesToAdd.size());
         log.info("Modified: {}", filesChanged);
         log.info("Deleted: {}", filesToRemove.size());
@@ -209,51 +210,52 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
 
     @Override
     public int addUser(UserId userId, String password, String createdBy) {
-        log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getName());
-        if (getUserById(userId) != null) {
-            log.info("Unable to add new user {}, already exists in repo '{}'", userId, repoProperties.getName());
+        log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
+        if (this.getUser(userId) != null) {
+            log.info("Unable to add new user {}, already exists in repo '{}'", userId, repoProperties.getId());
             return -1;
         }
         try {
             Integer i = attach(UserFunctions.class, r -> r.addUser(userId, password, createdBy));
-            log.info("Added new user {} in repo '{}'", userId, repoProperties.getName());
+            log.info("Added new user {} in repo '{}'", userId, repoProperties.getId());
             return i;
         } catch (Exception e) {
-            log.error("Error while adding user {} in repo '{}'", userId, repoProperties.getName(), e);
+            log.error("Error while adding user {} in repo '{}'", userId, repoProperties.getId(), e);
             return -1;
         }
     }
 
+
     @Override
     public List<UserId> getUsersFromGroup(GroupId groupId) {
-        log.info("Getting users from group '{}' in repO '{}'.", groupId, repoProperties.getName());
+        log.info("Getting users from group '{}' in repO '{}'.", groupId, repoProperties.getId());
         try {
             return attach(UserFunctions.class, db -> db.getUsersFromGroup(groupId));
         } catch (Exception e) {
-            log.error("Error while getting group '{}' in repo '{}'", groupId, repoProperties.getName(), e);
-        }
-        return List.of();
-    }
-
-    @Override
-    public List<GroupId> getGroupsFromUser(UserId userId) {
-        log.info("Getting groups from user '{}' in repo '{}'.", userId, repoProperties.getName());
-        try {
-            return attach(UserFunctions.class, db -> db.getGroupsFromUser(userId));
-        } catch (Exception e) {
-            log.error("Error while getting group '{}' in repo '{}'", userId, repoProperties.getName(), e);
+            log.error("Error while getting group '{}' in repo '{}'", groupId, repoProperties.getId(), e);
             return List.of();
         }
     }
 
     @Override
-    public UserProfile getUserById(UserId userId) {
-        log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getName());
+    public List<GroupId> getGroupsFromUser(UserId userId) {
+        log.info("Getting groups from user '{}' in repo '{}'.", userId, repoProperties.getId());
         try {
-            return attach(UserFunctions.class, db -> db.getUserById(userId));
+            return attach(UserFunctions.class, db -> db.getGroupsFromUser(userId));
         } catch (Exception e) {
-            log.error("Error while Finding user '{}' in repo '{}'", userId, repoProperties.getName(), e);
+            log.error("Error while getting group '{}' in repo '{}'", userId, repoProperties.getId(), e);
+            return List.of();
         }
-        return null;
+    }
+
+    @Override
+    public UserProfile getUser(UserId userId) {
+        log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
+        try {
+            return attach(UserFunctions.class, db -> db.getUser(userId));
+        } catch (Exception e) {
+            log.error("Error while Finding user '{}' in repo '{}'", userId, repoProperties.getId(), e);
+            return null;
+        }
     }
 }

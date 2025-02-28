@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.docapi.user.UserProfile;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;

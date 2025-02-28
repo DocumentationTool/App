@@ -62,7 +62,7 @@ public class ResourceMappers{
 		private <T> T getOrDefault(ResultSet rs, String name, T defaultValue) {
 			try{
 				return (T) rs.getObject(name, defaultValue.getClass());
-			} catch(SQLException e){
+			} catch(Exception e){
 				return defaultValue;
 			}
 		}
@@ -70,7 +70,7 @@ public class ResourceMappers{
 		private <T> T getOrCustom(ResultSet rs, String name, Function<String, T> valueMapper, T defaultValue) {
 			try{
 				return valueMapper.apply(rs.getString(name));
-			} catch(SQLException e){
+			} catch(Exception e){
 				return defaultValue;
 			}
 		}
