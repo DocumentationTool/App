@@ -94,9 +94,9 @@ public interface ResourceFunctions {
      *
      * @param resource the resource to add
      */
-    @SqlScript("""
+    @SqlUpdate("""
             INSERT INTO Resources(resource_path,created_at,created_by,last_modified_at,last_modified_by,commit_id)
-                   VALUES(:resourcePath,:createdAt,:createdBy,:lastModifiedAt,:lastModifiedBy,:commitId);
+                   VALUES(:resourcePath,:createdAt,:createdBy,:modifiedAt,:modifiedBy,:commitId);
             INSERT INTO FileData(resource_path,data) VALUES(:resourcePath,:data);
             """)
     void insertResource(@BindMethods Resource resource) throws Exception; //use bind methods instead of bindBean for records as records are not beans

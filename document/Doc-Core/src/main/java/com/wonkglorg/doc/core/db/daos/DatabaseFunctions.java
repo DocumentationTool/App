@@ -135,11 +135,16 @@ public interface DatabaseFunctions {
                 DELETE FROM FileData WHERE resource_path = OLD.resource_path;
             END;
             
+           
+            """)
+    void deleteResourceTrigger();
+
+	@SqlUpdate("""
             CREATE TRIGGER IF NOT EXISTS update_resource_path
-                AFTER UPDATE ON Resources
-                FOR EACH ROW
-                WHEN OLD.resource_path != NEW.resource_path
-                BEGIN
+            AFTER UPDATE ON Resources
+            FOR EACH ROW
+            WHEN OLD.resource_path != NEW.resource_path
+            BEGIN
                 -- Update related permissions
                 UPDATE GroupPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
                 UPDATE UserPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
@@ -147,7 +152,7 @@ public interface DatabaseFunctions {
                 UPDATE ResourceTags SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
                 -- Update indexed data
                 UPDATE FileData SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
-                END;
+            END;
             """)
-    void setupTriggers();
+	void updateResourceTrigger();
 }

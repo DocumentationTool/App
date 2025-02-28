@@ -4,6 +4,7 @@ import com.github.javafaker.Faker;
 import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.Resource;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.PreparedBatch;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,4 +50,21 @@ class DbSpeedTest {
         }
     }
 
+    @Test
+    void testWriteSpeed() {
+        try (RepositoryDatabase repoDB = new RepositoryDatabase(properties)) {
+            repoDB.initialize();
+            Faker faker = new Faker();
+            for (int i = 0; i < 5000; i++) {
+                repoDB.insertResource(new Resource(Path.of("documents/test/doc%s.xml".formatted(i)), "System", "testCommit", faker.lorem().characters(500, 5000)));
+            }
+
+
+        }
+    }
+
+
+    private Resource createResource(int index){
+        return new Resource(Path.of("documents/test/doc%s.xml".formatted(index)), "System", "testCommit", faker.lorem().characters(500, 5000));
+    }
 }

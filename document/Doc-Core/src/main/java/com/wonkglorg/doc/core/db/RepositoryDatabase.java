@@ -18,7 +18,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jdbi.v3.core.Handle;
 import org.jdbi.v3.core.statement.Batch;
-import org.jdbi.v3.core.statement.Script;
+import org.jdbi.v3.core.statement.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -71,7 +71,8 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
         try {
             voidAttach(DatabaseFunctions.class, DatabaseFunctions::initialize);
             log.info("Creating triggers");
-            voidAttach(DatabaseFunctions.class, DatabaseFunctions::setupTriggers);
+            voidAttach(DatabaseFunctions.class, DatabaseFunctions::deleteResourceTrigger);
+            voidAttach(DatabaseFunctions.class, DatabaseFunctions::updateResourceTrigger);
         } catch (Exception e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
@@ -138,22 +139,51 @@ public class RepositoryDatabase extends JdbiDatabase<HikariDataSource> implement
     @Override
     public void insertResource(Resource resource) throws SQLException {
         log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
-        try (Handle handle = jdbi().open(); Script script = handle.createScript("""
+        try {
+            voidAttach(ResourceFunctions.class, r -> r.insertResource(resource));
+        }
+
+        /*
+        try (Handle handle = jdbi().open(); Update update = handle.createUpdate("""
                  INSERT INTO Resources(resource_path,created_at,created_by,last_modified_at,last_modified_by,commit_id)
                     VALUES(:resourcePath,:createdAt,:createdBy,:lastModifiedAt,:lastModifiedBy,:commitId);
                 INSERT INTO FileData(resource_path,data) VALUES(:resourcePath,:data);
                 """)) {
-            script.bind("resourcePath", resource.resourcePath());
-            script.bind("data", resource.data());
-            script.bind("createdAt", resource.createdAt());
-            script.bind("createdBy", resource.createdBy());
-            script.bind("commitId", resource.commitId());
-            script.bind("lastModifiedBy", resource.modifiedBy());
-            script.bind("lastModifiedAt", resource.modifiedAt());
-            script.execute();
-        } catch (Exception e) {
+            update.bind("resourcePath", resource.resourcePath());
+            update.bind("data", resource.data());
+            update.bind("createdAt", resource.createdAt());
+            update.bind("createdBy", resource.createdBy());
+            update.bind("commitId", resource.commitId());
+            update.bind("lastModifiedBy", resource.modifiedBy());
+            update.bind("lastModifiedAt", resource.modifiedAt());
+            update.execute();
+
+         */ catch (Exception e) {
             log.error("Error while inserting {} from repo {}", resource, repoProperties.getId(), e);
             throw new SQLException(e);
+        }
+    }
+
+
+    public void insertResourceOld(Resource resource) throws SQLException {
+        log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
+        try (Handle handle = jdbi().open(); Update update = handle.createUpdate("""
+                 INSERT INTO Resources(resource_path,created_at,created_by,last_modified_at,last_modified_by,commit_id)
+                    VALUES(:resourcePath,:createdAt,:createdBy,:lastModifiedAt,:lastModifiedBy,:commitId);
+                                    INSERT INTO FileData(resource_path,data) VALUES(:resourcePath,:data);
+                """)
+        ) {
+            update.bind("resourcePath", resource.resourcePath());
+            update.bind("data", resource.data());
+            update.bind("createdAt", resource.createdAt());
+            update.bind("createdBy", resource.createdBy());
+            update.bind("commitId", resource.commitId());
+            update.bind("modifiedBy", resource.modifiedBy());
+            update.bind("modifiedAt", resource.modifiedAt());
+            update.execute();
+
+        } catch (Exception e) {
+            log.error("Error while inserting {} from repo {}", resource, repoProperties.getId(), e);
         }
     }
 
