@@ -11,8 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -29,7 +27,7 @@ public class ResourceFunctions{
 	 *
 	 * @param resourcePath the path to the resource
 	 */
-	int deleteResource(RepositoryDatabase database, Path resourcePath) throws RuntimeSQLException {
+	public int deleteResource(RepositoryDatabase database, Path resourcePath) throws RuntimeSQLException {
 		try{
 			return update("DELETE FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resourcePath)
 																					  .execute(database.getConnection());
@@ -42,12 +40,12 @@ public class ResourceFunctions{
 	/**
 	 * Deletes a specific resource and all its related data in ResourceData, Tags and Permissions
 	 *
-	 * @param connection the connection to the database
+	 * @param database the database to execute the function for
 	 * @param resource the resource to delete
 	 * @return 1 if the resource was deleted, 0 if no resource was deleted, -1 on error
 	 * @throws SQLException if there is an error with the database
 	 */
-	int deleteResource(RepositoryDatabase database, Resource resource) throws RuntimeSQLException {
+	public int deleteResource(RepositoryDatabase database, Resource resource) throws RuntimeSQLException {
 		try{
 			return update("DELETE FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resource.resourcePath())
 																					  .execute(database.getConnection());
@@ -62,13 +60,13 @@ public class ResourceFunctions{
 	 *
 	 * @return a list of resources or an empty list if there are non
 	 */
-	List<Resource> getResources(RepositoryDatabase database) throws SQLException {
+	public List<Resource> getResources(RepositoryDatabase database) throws SQLException {
 		List<Resource> resources = new ArrayList<>();
 		try(ClosingResultSet resultSet = query("""
 				Select resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id From Resources
 				""").execute(database.getConnection())){
 			while(resultSet.next()){
-				resources.add(fromResultSet(resultSet));
+				resources.add(resourceFromResultSet(resultSet, database));
 			}
 		} catch(SQLException e){
 			log.error("Failed to get resources", e);
@@ -77,7 +75,7 @@ public class ResourceFunctions{
 		return resources;
 	}
 	
-	private Resource fromResultSet(ResultSet resultSet, RepositoryDatabase database) throws SQLException {
+	private Resource resourceFromResultSet(ResultSet resultSet, RepositoryDatabase database) throws SQLException {
 		return new Resource(Path.of(resultSet.getString("resource_path")),
 				parseDateTime(resultSet.getString("created_at")),
 				resultSet.getString("created_by"),
@@ -95,34 +93,20 @@ public class ResourceFunctions{
 	 * @param resourcePath the path to search for
 	 * @return the resource found or null
 	 */
-	@SqlQuery("SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = :resourcePath")
-	Resource findByPath(RepositoryDatabase database, Path resourcePath) throws SQLException {
+	public Resource findByPath(RepositoryDatabase database, Path resourcePath) throws SQLException {
 		try(ClosingResultSet resultSet = query(
 				"SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = :resourcePath").param(
 				"resourcePath",
 				resourcePath).execute(database.getConnection())){
-			while(resultSet.next()){
-				return fromResultSet(resultSet);
+			if(resultSet.next()){
+				return resourceFromResultSet(resultSet, database);
 			}
 		} catch(Exception e){
 			log.error("Failed to find resource by path", e);
 			throw new RuntimeSQLException("Failed to find resource by path", e);
 		}
+		return null;
 	}
-	
-	//todo:jmd method not working yet find out why
-    /*
-                SELECT *
-              FROM FileData
-			  JOIN Resources
-			    ON FileData.resource_path = Resources.resource_path
-             WHERE
-              CASE
-                WHEN length('ab') >= 3
-                  THEN data MATCH 'ab'
-                ELSE data LIKE '%' || 'ab' || '%'
-             END;
-     */
 	
 	/**
 	 * Finds all resources with the matching search term in its data
@@ -130,7 +114,7 @@ public class ResourceFunctions{
 	 * @param searchTerm the term to search for
 	 * @return a list of resources matching the content
 	 */
-	List<Resource> findByContent(Connection connection, String searchTerm) throws SQLException {
+	public List<Resource> findByContent(RepositoryDatabase database, String searchTerm) throws SQLException {
 		String sqlScript = """
 				SELECT resource_path, data
 				  FROM FileData
@@ -142,39 +126,66 @@ public class ResourceFunctions{
 				 END
 				""";
 		
-		try(PreparedStatement statement = connection.prepareStatement(sqlScript)){
-			statement.setString(1, searchTerm);
-			statement.setString(2, searchTerm);
-			statement.setString(3, searchTerm);
+		try(ClosingResultSet resultSet = query(sqlScript).param("searchTerm", searchTerm).execute(database.getConnection())){
+			List<Resource> resources = new ArrayList<>();
 			
-			ResultSet resultSet = statement.executeQuery();
 			while(resultSet.next()){
-				//do stuff
+				resources.add(resourceFromResultSet(resultSet, database));
 			}
+			return resources;
+			
+		} catch(Exception e){
+			log.error("Failed to find resource by content", e);
+			throw new RuntimeSQLException("Failed to find resource by content", e);
 		}
 		
-		ResultSet resultSet = prepareNamedStatement(sqlScript).param("searchTerm", searchTerm).executeQuery(connection);
-		
-		while(resultSet.next()){
-			//do stuff
-		}
 	}
 	
 	/**
-	 * Inserts a new resource into the database
+	 * Inserts a new resource into the database also inserts the data into the FileData table if it was set
 	 *
 	 * @param resource the resource to add
 	 */
-	@SqlUpdate("""
-			    WITH insert_resource AS (
-			        INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by, commit_id)
-			        VALUES(:resourcePath, :createdAt, :createdBy, :modifiedAt, :modifiedBy, :commitId)
-			        RETURNING resource_path
-			    )
-			    INSERT INTO FileData(resource_path, data)
-			    SELECT resource_path, :data FROM insert_resource;
-			""")
-	void insertResource(@BindMethods Resource resource) throws Exception; //use bind methods instead of bindBean for records as records are not beans
+	public void insertResource(RepositoryDatabase database, Resource resource) throws Exception {
+		
+		String sqlResourceInsert = """
+				INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by, commit_id)
+				VALUES(:resourcePath, :createdAt, :createdBy, :modifiedAt, :modifiedBy, :commitId)
+				""";
+		try{
+			//@formatter:off
+			update(sqlResourceInsert)
+					.param("resourcePath", resource.resourcePath())
+					.param("createdAt", resource.createdAt())
+					.param("createdBy", resource.createdBy())
+					.param("modifiedAt", resource.modifiedAt())
+					.param("modifiedBy", resource.modifiedBy())
+					.param("commitId", resource.commitId())
+					.execute(database.getConnection());
+			//@formatter:on
+		} catch(Exception e){
+			log.error("Failed to insert resource", e);
+			throw new RuntimeSQLException("Failed to insert resource", e);
+			
+		}
+		
+		if(resource.data() == null){
+			return;
+		}
+		
+		
+		String sqlDataInsert = """
+				INSERT INTO FileData(resource_path, data)
+				VALUES(:resourcePath, :data)
+				""";
+		try{
+			update(sqlDataInsert).param("resourcePath", resource.resourcePath()).param("data", resource.data()).execute(database.getConnection())
+		} catch(Exception e){
+			log.error("Failed to insert resource", e);
+			throw new RuntimeSQLException("Failed to insert resource", e);
+			
+		}
+	}
 	
 	/**
 	 * Updates the path of a resource to the new path (automatically updates all relevant paths duo to triggers generated by {@link DatabaseFunctionsold#setupTriggers()}
