@@ -11,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -21,14 +20,14 @@ import java.util.List;
  * All resource related database functions
  */
 public class ResourceFunctions{
-	private final Logger log = LoggerFactory.getLogger(ResourceFunctions.class);
+	private static final Logger log = LoggerFactory.getLogger(ResourceFunctions.class);
 	
 	/**
 	 * Deletes a specific resource and all its related data in ResourceData, Tags and Permissions
 	 *
 	 * @param resourcePath the path to the resource
 	 */
-	public int deleteResource(RepositoryDatabase database, Path resourcePath) throws RuntimeSQLException {
+	public static int deleteResource(RepositoryDatabase database, Path resourcePath) throws RuntimeSQLException {
 		try{
 			return update("DELETE FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resourcePath)
 																					  .execute(database.getConnection());
@@ -46,7 +45,7 @@ public class ResourceFunctions{
 	 * @return 1 if the resource was deleted, 0 if no resource was deleted, -1 on error
 	 * @throws SQLException if there is an error with the database
 	 */
-	public int deleteResource(RepositoryDatabase database, Resource resource) throws RuntimeSQLException {
+	public static int deleteResource(RepositoryDatabase database, Resource resource) throws RuntimeSQLException {
 		try{
 			return update("DELETE FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resource.resourcePath())
 																					  .execute(database.getConnection());
@@ -61,7 +60,7 @@ public class ResourceFunctions{
 	 *
 	 * @return a list of resources or an empty list if there are non
 	 */
-	public List<Resource> getResources(RepositoryDatabase database) throws SQLException {
+	public static List<Resource> getResources(RepositoryDatabase database) throws SQLException {
 		List<Resource> resources = new ArrayList<>();
 		try(ClosingResultSet resultSet = query("""
 				Select resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id From Resources
@@ -76,7 +75,7 @@ public class ResourceFunctions{
 		return resources;
 	}
 	
-	private Resource resourceFromResultSet(ResultSet resultSet, RepositoryDatabase database) throws SQLException {
+	private static Resource resourceFromResultSet(ResultSet resultSet, RepositoryDatabase database) throws SQLException {
 		return new Resource(Path.of(resultSet.getString("resource_path")),
 				parseDateTime(resultSet.getString("created_at")),
 				resultSet.getString("created_by"),
@@ -94,7 +93,7 @@ public class ResourceFunctions{
 	 * @param resourcePath the path to search for
 	 * @return the resource found or null
 	 */
-	public Resource findByPath(RepositoryDatabase database, Path resourcePath) throws SQLException {
+	public static Resource findByPath(RepositoryDatabase database, Path resourcePath) throws SQLException {
 		try(ClosingResultSet resultSet = query(
 				"SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = :resourcePath").param(
 				"resourcePath",
@@ -115,7 +114,7 @@ public class ResourceFunctions{
 	 * @param searchTerm the term to search for
 	 * @return a list of resources matching the content
 	 */
-	public List<Resource> findByContent(RepositoryDatabase database, String searchTerm) throws SQLException {
+	public static List<Resource> findByContent(RepositoryDatabase database, String searchTerm) throws SQLException {
 		String sqlScript = """
 				SELECT resource_path, data
 				  FROM FileData
@@ -147,7 +146,7 @@ public class ResourceFunctions{
 	 *
 	 * @param resource the resource to add
 	 */
-	public void insertResource(RepositoryDatabase database, Resource resource) throws Exception {
+	public static void insertResource(RepositoryDatabase database, Resource resource) throws Exception {
 		
 		String sqlResourceInsert = """
 				INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by, commit_id)
@@ -194,7 +193,7 @@ public class ResourceFunctions{
 	 * @param newPath the path to change it to
 	 * @return 1 if the table was changed 0 if no change -1 on error
 	 */
-	public int updatePath(RepositoryDatabase database, Path oldPath, Path newPath) throws SQLException {
+	public static int updatePath(RepositoryDatabase database, Path oldPath, Path newPath) throws SQLException {
 		try{
 			// @formatter:off
 			return update("UPDATE Resources SET resource_path = :newPath WHERE resource_path = :oldPath")
@@ -215,7 +214,7 @@ public class ResourceFunctions{
 	 * @param data the data to set it to
 	 * @return 1 if the table was changed 0 if no change, -1 on error
 	 */
-	int updateResource(RepositoryDatabase database, Path resourcePath, String data) throws SQLException {
+	public static int updateResource(RepositoryDatabase database, Path resourcePath, String data) throws SQLException {
 		try{
 			// @formatter:off
 			return update("UPDATE FileData SET data = :data WHERE resource_path = :resourcePath")

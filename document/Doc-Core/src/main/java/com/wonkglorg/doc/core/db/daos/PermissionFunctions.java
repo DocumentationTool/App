@@ -13,12 +13,20 @@ import java.util.List;
  */
 public interface PermissionFunctions{
 	
-	List<Permission<UserId>> getPermissionsForUser(UserId userId);
+	public static List<Permission<UserId>> getPermissionsForUser(UserId userId);{
 	
-	List<Permission<GroupId>> getPermissionsForGroup(GroupId groupId);
+	}
 	
-	PermissionType getPermissionForFolder(UserId userId, Path path);
+	public static List<Permission<GroupId>> getPermissionsForGroup(GroupId groupId){
 	
-	List<PermissionType> getAllPermissions();
+	}
+	
+	public static PermissionType getPermissionForFolder(UserId userId, Path path){
+	
+	}
+	
+	public static List<PermissionType> getAllPermissions(){
+	
+	}
 	
 }
