@@ -1,38 +1,83 @@
 package com.wonkglorg.doc.core.db.daos;
 
+import com.wonkglorg.doc.core.db.RepositoryDatabase;
+import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.user.UserProfile;
-import org.jdbi.v3.sqlobject.customizer.Bind;
-import org.jdbi.v3.sqlobject.statement.SqlQuery;
-import org.jdbi.v3.sqlobject.statement.SqlUpdate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
-public interface UserFunctions{
+public class UserFunctions{
+	private final Logger log = LoggerFactory.getLogger(UserFunctions.class);
 	
-	@SqlUpdate("""
-			INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(:userId,:password,:created_by,:created_by);
-			""")
-	int addUser(@Bind("userId") UserId userId, @Bind("password") String password, @Bind("created_by") String createdBy) throws Exception;
+	public int addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) throws RuntimeSQLException {
+		try(var statement = database.getConnection().prepareStatement(
+				"INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")){
+			statement.setString(1, userId.toString());
+			statement.setString(2, password);
+			statement.setString(3, createdBy);
+			statement.setString(4, createdBy);
+			return statement.executeUpdate();
+		} catch(Exception e){
+			log.error("Failed to add user", e);
+			throw new RuntimeSQLException("Failed to add user", e);
+		}
+	}
 	
-	@SqlQuery("""
-			SELECT user_id FROM GroupUsers WHERE group_id = :groupId
-			""")
-	List<UserId> getUsersFromGroup(@Bind("groupId") GroupId groupId) throws Exception;
+	public List<UserId> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) throws RuntimeSQLException {
+		try(var statement = database.getConnection().prepareStatement("SELECT user_id FROM GroupUsers WHERE group_id = ?")){
+			statement.setString(1, groupId.toString());
+			try(var rs = statement.executeQuery()){
+				List<UserId> users = new ArrayList<>();
+				while(rs.next()){
+					users.add(new UserId(rs.getString("user_id")));
+				}
+				return users;
+			}
+		} catch(Exception e){
+			log.error("Failed to get users from group", e);
+			throw new RuntimeSQLException("Failed to get users from group", e);
+			
+		}
+	}
 	
-	@SqlQuery("""
-			SELECT group_id FROM GroupUsers WHERE user_id = :userId
-			""")
-	List<GroupId> getGroupsFromUser(UserId userId) throws Exception;
-
-	@SqlQuery("""
-		SELECT * FROM Users WHERE user_id = :userId
-		""")
-	UserProfile getUser(@Bind("userId") UserId userId) throws Exception;
-
-
-
+	List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) throws RuntimeSQLException {
+		try(var statement = database.getConnection().prepareStatement("SELECT group_id FROM GroupUsers WHERE user_id = ?")){
+			statement.setString(1, userId.toString());
+			try(var rs = statement.executeQuery()){
+				List<GroupId> groups = new ArrayList<>();
+				while(rs.next()){
+					groups.add(new GroupId(rs.getString("group_id")));
+				}
+				return groups;
+			}
+		} catch(Exception e){
+			log.error("Failed to get groups from user", e);
+			throw new RuntimeSQLException("Failed to get groups from user", e);
+		}
+	}
+	
+	UserProfile getUser(RepositoryDatabase database, UserId userId) throws RuntimeSQLException {
+		try(var statement = database.getConnection().prepareStatement("SELECT * FROM Users WHERE user_id = ?")){
+			statement.setString(1, userId.toString());
+			try(var rs = statement.executeQuery()){
+				if(rs.next()){
+					//todo:jmd get the permissions properly
+					return new UserProfile(new UserId(rs.getString("user_id")),
+							rs.getString("password_hash"),
+							rs.getString("created_by"),
+							rs.getString("last_modified_by"));
+				}
+				return null;
+			}
+		} catch(Exception e){
+			log.error("Failed to get user", e);
+			throw new RuntimeSQLException("Failed to get user", e);
+		}
+	}
 	
 }
