@@ -4,6 +4,7 @@ import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,7 @@ import java.util.List;
 public class UserFunctions{
 	private static final Logger log = LoggerFactory.getLogger(UserFunctions.class);
 	
-	public static int addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) throws RuntimeSQLException {
+	public static UpdateDatabaseResponse addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) {
 		try(var statement = database.getConnection().prepareStatement(
 				"INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")){
 			statement.setString(1, userId.toString());
@@ -28,7 +29,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static List<UserId> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) throws RuntimeSQLException {
+	public static List<UserId> getUsersFromGroup(RepositoryDatabase database, GroupId groupId){
 		try(var statement = database.getConnection().prepareStatement("SELECT user_id FROM GroupUsers WHERE group_id = ?")){
 			statement.setString(1, groupId.toString());
 			try(var rs = statement.executeQuery()){
@@ -45,7 +46,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) throws RuntimeSQLException {
+	public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId){
 		try(var statement = database.getConnection().prepareStatement("SELECT group_id FROM GroupUsers WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){
@@ -61,7 +62,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static UserProfile getUser(RepositoryDatabase database, UserId userId) throws RuntimeSQLException {
+	public static UserProfile getUser(RepositoryDatabase database, UserId userId){
 		try(var statement = database.getConnection().prepareStatement("SELECT * FROM Users WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){

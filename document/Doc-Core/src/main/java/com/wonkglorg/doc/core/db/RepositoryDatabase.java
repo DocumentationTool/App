@@ -58,8 +58,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         try {
             DatabaseFunctions.initializeDatabase(getConnection());
             log.info("Creating triggers");
-            DatabaseFunctions.setupUpdateResourceTrigger(getConnection());
-            DatabaseFunctions.setupRemoveResourceTriggers(getConnection());
+            DatabaseFunctions.initializeResourceUpdateTrigger(getConnection());
+            DatabaseFunctions.initializeResourceDeleteTrigger(getConnection());
         } catch (RuntimeException e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
