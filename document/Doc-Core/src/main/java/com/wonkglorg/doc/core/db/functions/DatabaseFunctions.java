@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.core.db.functions;
 
+import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.response.ScriptDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
@@ -213,6 +214,15 @@ public class DatabaseFunctions {
             String errorResponse = "Error while setting up resource remove trigger";
             log.error(errorResponse, e);
             return ScriptDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+        }
+    }
+
+
+
+    //todo:jmd implement
+    public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
+        try(var statement = database.getConnection().prepareStatement("")) {
+
         }
     }
 
