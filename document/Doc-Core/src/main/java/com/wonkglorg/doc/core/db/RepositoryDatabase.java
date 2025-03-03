@@ -9,8 +9,11 @@ import com.wonkglorg.doc.core.db.functions.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
 import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.objects.GroupId;
+import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
+import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import com.wonkglorg.doc.core.user.UserProfile;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -84,32 +87,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * @param resourcePath the path to the resource (should it also delete it from the repo itself?)
      * @return the row count affected, -1 if an error occurred
      */
-    public int deleteResource(Path resourcePath) {
+    public UpdateDatabaseResponse deleteResource(Path resourcePath) {
         log.info("Deleting resource {} for repo {}", resourcePath, repoProperties.getId());
-        try {
-            return ResourceFunctions.deleteResource(this, resourcePath);
-        } catch (Exception e) {
-            log.error("Error while deleting {} from repo {}", resourcePath, repoProperties.getId(), e);
-            return -1;
-        }
-    }
-
-
-    //todo:jmd think about if I need this method.
-
-    /**
-     * @param resourcePath
-     * @return
-     */
-    public int deleteData(Path resourcePath) {
-        log.info("Deleting data {} for repo {}", resourcePath, repoProperties.getId());
-        try {
-            //return attach(ResourceFunctions.class, r -> r.deleteData(resourcePath));
-            return -1;
-        } catch (Exception e) {
-            log.error("Error while deleting data {} from repo {}", resourcePath, repoProperties.getId(), e);
-            return -1;
-        }
+        return ResourceFunctions.deleteResource(this, resourcePath);
     }
 
     /**
@@ -118,31 +98,37 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * @return
      * @throws RuntimeSQLException
      */
-    public List<Resource> getResources() {
+    public QueryDatabaseResponse<List<Resource>> getResources() {
         log.info("Retrieving resources for repo {}", repoProperties.getId());
-        try {
-            return ResourceFunctions.getResources(this);
-        } catch (Exception e) {
-            log.error("Error while retrieving resources from {}", repoProperties.getId());
-            return List.of();
-        }
+        return ResourceFunctions.getResources(this);
     }
 
-    public List<Resource> findByAntPath(String antPath) {
-
-
+    /**
+     * Searches the database files by their ant path search query and finds any that match the search term
+     *
+     * @param antPath the ant path search query
+     * @return a list of resources that match the search term or an empty list
+     */
+    public QueryDatabaseResponse<List<Resource>> findByAntPath(String antPath) {
+        log.info("Ant path searching resources for repo {}", repoProperties.getId());
+        return ResourceFunctions.findByPath()
     }
 
-    public DatabaseResponse<Resource> findByPath(Path resourcePath) throws {
+    public QueryDatabaseResponse<Resource> findByPath(Path resourcePath) throws {
         return ResourceFunctions.findByPath(this, resourcePath);
     }
 
-    @Override
-    public List<Resource> findByContent(String searchTerm) {
-        return List.of();
+    /**
+     * Searches the database files by their content and finds any that match the search term
+     *
+     * @param searchTerm the term to search for
+     * @return a list of resources that match the search term or an empty list
+     */
+    public QueryDatabaseResponse<List<Resource>> findByContent(String searchTerm) {
+        log.info("Searching resources for repo {}", repoProperties.getId());
+        return ResourceFunctions.findByContent(this, searchTerm);
     }
 
-    @Override
     public void insertResource(Resource resource) throws RuntimeSQLException {
         log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
         try {
@@ -297,6 +283,10 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             log.error("Error while Finding user '{}' in repo '{}'", userId, repoProperties.getId(), e);
             return null;
         }
+    }
+
+    public RepoId getRepoId() {
+        return repoProperties.getId();
     }
 
     public RepoProperty getRepoProperties() {

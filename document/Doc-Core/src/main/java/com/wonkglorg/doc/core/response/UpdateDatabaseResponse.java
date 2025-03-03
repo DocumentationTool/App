@@ -46,8 +46,8 @@ public class UpdateDatabaseResponse extends Response {
     /**
      * Constructs a new Failed response with the causing exception
      *
-     * @param causingRepo  the repo this response originated from
-     * @param e   the exception that causes the error
+     * @param causingRepo the repo this response originated from
+     * @param e           the exception that causes the error
      * @param <T>
      * @return the constructed reponse
      */

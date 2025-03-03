@@ -7,8 +7,6 @@ import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.script;
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.update;
 
@@ -28,7 +26,7 @@ public class DatabaseFunctions {
      *
      * @return {@link ScriptDatabaseResponse}
      */
-    public static ScriptDatabaseResponse initializeDatabase(Connection connection) {
+    public static ScriptDatabaseResponse initializeDatabase(RepositoryDatabase database) {
         String sqlScript = """
                     PRAGMA auto_vacuum = INCREMENTAL;
                     PRAGMA incremental_vacuum(500);
@@ -130,27 +128,27 @@ public class DatabaseFunctions {
 
         try {
             //noinspection LanguageMismatch
-            script(sqlScript).execute(connection);
-            return ScriptDatabaseResponse.success();
+            script(sqlScript).execute(database.getConnection());
+            return ScriptDatabaseResponse.success(database.getRepoId());
         } catch (Exception e) {
             String errorResponse = "Error while initializing the database";
             log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
     /**
      * Rebuilds the FTS table when called, this is a slow operation and should only be done when there is a specific need to do so
      */
-    public static UpdateDatabaseResponse rebuildFts(Connection connection) {
+    public static UpdateDatabaseResponse rebuildFts(RepositoryDatabase database) {
         try {
             //noinspection SqlResolve
-            Integer i = update("INSERT INTO FileData(FileData) VALUES ('rebuild')").execute(connection);
-            return UpdateDatabaseResponse.success(i);
+            Integer i = update("INSERT INTO FileData(FileData) VALUES ('rebuild')").execute(database.getConnection());
+            return UpdateDatabaseResponse.success(database.getRepoId(), i);
         } catch (Exception e) {
             String errorResponse = "Error while rebuilding FTS";
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
@@ -159,7 +157,7 @@ public class DatabaseFunctions {
      *
      * @return {@link ScriptDatabaseResponse}
      */
-    public static ScriptDatabaseResponse initializeResourceUpdateTrigger(Connection connection) {
+    public static ScriptDatabaseResponse initializeResourceUpdateTrigger(RepositoryDatabase database) {
         String sqlScript = """
                 CREATE TRIGGER IF NOT EXISTS update_resource_path
                 AFTER UPDATE ON Resources
@@ -177,12 +175,12 @@ public class DatabaseFunctions {
                 """;
         try {
             //noinspection ConstantExpression,LanguageMismatch
-            script(sqlScript).execute(connection);
-            return ScriptDatabaseResponse.success();
+            script(sqlScript).execute(database.getConnection());
+            return ScriptDatabaseResponse.success(database.getRepoId());
         } catch (Exception e) {
             String errorResponse = "Error while setting up resource update trigger";
             log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
@@ -191,7 +189,7 @@ public class DatabaseFunctions {
      *
      * @return {@link ScriptDatabaseResponse}
      */
-    public static ScriptDatabaseResponse initializeResourceDeleteTrigger(Connection connection) {
+    public static ScriptDatabaseResponse initializeResourceDeleteTrigger(RepositoryDatabase database) {
         String sqlScript = """
                 CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
                 AFTER DELETE ON Resources
@@ -208,20 +206,19 @@ public class DatabaseFunctions {
                 """;
         try {
             //noinspection ConstantExpression,LanguageMismatch
-            script(sqlScript).execute(connection);
-            return ScriptDatabaseResponse.success();
+            script(sqlScript).execute(database.getConnection());
+            return ScriptDatabaseResponse.success(database.getRepoId());
         } catch (Exception e) {
             String errorResponse = "Error while setting up resource remove trigger";
             log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
 
-
     //todo:jmd implement
     public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
-        try(var statement = database.getConnection().prepareStatement("")) {
+        try (var statement = database.getConnection().prepareStatement("")) {
 
         }
     }

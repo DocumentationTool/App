@@ -40,10 +40,10 @@ public class ResourceFunctions {
     public static UpdateDatabaseResponse deleteResource(RepositoryDatabase database, Path resourcePath) {
         try {
             Integer i = update("DELETE FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resourcePath).execute(database.getConnection());
-            return UpdateDatabaseResponse.success(i);
+            return UpdateDatabaseResponse.success(database.getRepoId(), i);
         } catch (Exception e) {
             log.error("Failed to delete resource", e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException("Failed to delete resource", e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to delete resource", e));
         }
     }
 
@@ -52,7 +52,7 @@ public class ResourceFunctions {
      *
      * @return {@link QueryDatabaseResponse}
      */
-    public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database) throws SQLException {
+    public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database){
         List<Resource> resources = new ArrayList<>();
         try (ClosingResultSet resultSet = query("""
                 Select resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id From Resources
@@ -60,10 +60,10 @@ public class ResourceFunctions {
             while (resultSet.next()) {
                 resources.add(resourceFromResultSet(resultSet, database));
             }
-            return QueryDatabaseResponse.success(resources);
+            return QueryDatabaseResponse.success(database.getRepoId(), resources);
         } catch (SQLException e) {
             log.error("Failed to get resources", e);
-            return QueryDatabaseResponse.fail(new RuntimeSQLException("Failed to get resources", e));
+            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
         }
     }
 
@@ -89,13 +89,13 @@ public class ResourceFunctions {
     public static QueryDatabaseResponse<Resource> findByPath(RepositoryDatabase database, Path resourcePath) {
         try (ClosingResultSet resultSet = query("SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resourcePath).execute(database.getConnection())) {
             if (resultSet.next()) {
-                return QueryDatabaseResponse.success(resourceFromResultSet(resultSet, database));
+                return QueryDatabaseResponse.success(database.getRepoId(), resourceFromResultSet(resultSet, database));
             }
         } catch (Exception e) {
             log.error("Failed to find resource by path", e);
-            return QueryDatabaseResponse.fail(new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
+            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
         }
-        return QueryDatabaseResponse.success("No resource matching path %s".formatted(resourcePath), null);
+        return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
     }
 
     /**
@@ -126,14 +126,14 @@ public class ResourceFunctions {
             }
 
             if (resources.isEmpty()) {
-                return QueryDatabaseResponse.success("No files found matching search term: '%s'".formatted(searchTerm), resources);
+                return QueryDatabaseResponse.success(database.getRepoId(), "No files found matching search term: '%s'".formatted(searchTerm), resources);
             }
 
-            return QueryDatabaseResponse.success(resources);
+            return QueryDatabaseResponse.success(database.getRepoId(), resources);
 
         } catch (Exception e) {
             log.error("Failed to find resource by content", e);
-            return QueryDatabaseResponse.fail(new RuntimeSQLException("Failed to find resource by text '%s'".formatted(searchTerm), e));
+            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to find resource by text '%s'".formatted(searchTerm), e));
         }
 
     }
@@ -161,11 +161,11 @@ public class ResourceFunctions {
             affectedRows = statement.executeUpdate();
         } catch (Exception e) {
             log.error("Failed to insert resource", e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException("Failed to insert resource", e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to insert resource", e));
         }
 
         if (resource.data() == null) { //no data to insert so we skip the next part
-            return UpdateDatabaseResponse.success(affectedRows);
+            return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
         }
 
         String sqlDataInsert = """
@@ -178,9 +178,9 @@ public class ResourceFunctions {
             affectedRows += statement.executeUpdate();
         } catch (Exception e) {
             log.error("Failed to insert resource data", e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException("Failed to insert resource data", e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to insert resource data", e));
         }
-        return UpdateDatabaseResponse.success(affectedRows);
+        return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
     }
 
     /**
@@ -195,11 +195,11 @@ public class ResourceFunctions {
         try (PreparedStatement statement = database.getConnection().prepareStatement("UPDATE Resources SET resource_path = ? WHERE resource_path = ?")) {
             statement.setString(1, newPath.toString());
             statement.setString(2, oldPath.toString());
-            return UpdateDatabaseResponse.success(statement.executeUpdate());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorResponse = "Failed to update resource path from '%s' to '%s'".formatted(oldPath, newPath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
@@ -214,11 +214,11 @@ public class ResourceFunctions {
         try (var statement = database.getConnection().prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")) {
             statement.setString(1, data);
             statement.setString(2, resourcePath.toString());
-            return UpdateDatabaseResponse.success(statement.executeUpdate());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorResponse = "Failed to update resource data at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 

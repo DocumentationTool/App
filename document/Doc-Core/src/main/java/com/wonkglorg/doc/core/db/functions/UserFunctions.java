@@ -32,11 +32,11 @@ public class UserFunctions {
             statement.setString(2, password);
             statement.setString(3, createdBy);
             statement.setString(4, createdBy);
-            return UpdateDatabaseResponse.success(statement.executeUpdate());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorResponse = "Failed to add user";
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
@@ -53,22 +53,24 @@ public class UserFunctions {
         try (var statement = database.getConnection().prepareStatement("INSERT INTO GroupUsers(user_id, group_id) VALUES(?,?)")) {
             statement.setString(1, userId.id());
             statement.setString(2, groupId.id());
-            return UpdateDatabaseResponse.success(statement.executeUpdate());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorResponse = "Failed to add user '%s' to group '%s'".formatted(userId, groupId);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 
 
     public static UpdateDatabaseResponse removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
         try (var statement = database.getConnection().prepareStatement("DELETE FROM GroupUsers WHERE user_id = ? and group_id = ?")) {
-
+            statement.setString(1, userId.id());
+            statement.setString(2, groupId.id());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorReponse = "Error in repository '%s' while removing user '%s' from group '%s'".formatted(database.getRepoProperties().getId(), userId, groupId);
             log.error(errorReponse, e);
-            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorReponse, e));
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorReponse, e));
         }
     }
 
@@ -87,7 +89,7 @@ public class UserFunctions {
                 while (rs.next()) {
                     users.add(new UserId(rs.getString("user_id")));
                 }
-                return QueryDatabaseResponse.success(users);
+                return QueryDatabaseResponse.success(database.getRepoId(), users);
             }
         } catch (Exception e) {
             log.error("Failed to get users from group", e);
