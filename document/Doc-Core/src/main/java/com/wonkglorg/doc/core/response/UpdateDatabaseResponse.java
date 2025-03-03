@@ -1,7 +1,13 @@
 package com.wonkglorg.doc.core.response;
 
+/**
+ * A response for a update database operation, indicating its success or failure with an optional message for more information, alongside a count of rows affected
+ */
 public class UpdateDatabaseResponse extends Response {
 
+    /**
+     * How many rows were affected by the operation
+     */
     private final int rowsAffected;
 
     private UpdateDatabaseResponse(String response, Exception exception, int rowsAffected) {

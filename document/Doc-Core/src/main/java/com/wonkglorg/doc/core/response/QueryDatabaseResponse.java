@@ -2,6 +2,10 @@ package com.wonkglorg.doc.core.response;
 
 import java.util.Optional;
 
+/**
+ * A response for a database query operation, indicating its success or failure with an optional message for more information, alongside the data returned by the query
+ * @param <T>
+ */
 public class QueryDatabaseResponse<T> extends Response {
     /**
      * The data returned by this query

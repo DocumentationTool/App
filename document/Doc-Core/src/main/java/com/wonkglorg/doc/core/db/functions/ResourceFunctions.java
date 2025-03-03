@@ -27,10 +27,15 @@ import static com.wonkglorg.doc.core.objects.Resource.parseDateTime;
 public class ResourceFunctions {
     private static final Logger log = LoggerFactory.getLogger(ResourceFunctions.class);
 
+    private ResourceFunctions() {
+        //Utility Class
+    }
+
     /**
      * Deletes a specific resource and all its related data in ResourceData, Tags and Permissions
      *
      * @param resourcePath the path to the resource
+     * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse deleteResource(RepositoryDatabase database, Path resourcePath) {
         try {
@@ -43,9 +48,9 @@ public class ResourceFunctions {
     }
 
     /**
-     * Retrieves a list of all resources (without its content attached)
+     * Retrieves a list of all resources contained in the given repository databases table(without its content attached)
      *
-     * @return a list of resources or an empty list if there are non
+     * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database) throws SQLException {
         List<Resource> resources = new ArrayList<>();
@@ -63,14 +68,23 @@ public class ResourceFunctions {
     }
 
     private static Resource resourceFromResultSet(ResultSet resultSet, RepositoryDatabase database) throws SQLException {
-        return new Resource(Path.of(resultSet.getString("resource_path")), parseDateTime(resultSet.getString("created_at")), resultSet.getString("created_by"), parseDateTime(resultSet.getString("last_modified_at")), resultSet.getString("last_modified_by"), database.getRepoProperties().getId(), resultSet.getString("commit_id"), database.getRepoProperties().isReadOnly(), null);
+        return new Resource(
+                Path.of(resultSet.getString("resource_path")),
+                parseDateTime(resultSet.getString("created_at")),
+                resultSet.getString("created_by"),
+                parseDateTime(resultSet.getString("last_modified_at")),
+                resultSet.getString("last_modified_by"),
+                database.getRepoProperties().getId(), resultSet.getString("commit_id"),
+                database.getRepoProperties().isReadOnly(),
+                resultSet.getString("category"),
+                null);
     }
 
     /**
      * Finds a resource by its fully Qualified path
      *
      * @param resourcePath the path to search for
-     * @return the resource found or null
+     * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<Resource> findByPath(RepositoryDatabase database, Path resourcePath) {
         try (ClosingResultSet resultSet = query("SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = :resourcePath").param("resourcePath", resourcePath).execute(database.getConnection())) {
@@ -88,12 +102,14 @@ public class ResourceFunctions {
      * Finds all resources with the matching search term in its data
      *
      * @param searchTerm the term to search for
-     * @return a list of resources matching the content
+     * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<List<Resource>> findByContent(RepositoryDatabase database, String searchTerm) {
         String sqlScript = """
-                SELECT resource_path, data
+                SELECT Resources.resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id, data
                   FROM FileData
+                  JOIN Resources
+                    ON FileData.resource_path = Resources.resource_path
                  WHERE
                   CASE
                     WHEN length(:searchTerm) >= 3
@@ -126,6 +142,7 @@ public class ResourceFunctions {
      * Inserts a new resource into the database also inserts the data into the FileData table if it was set
      *
      * @param resource the resource to add
+     * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) throws Exception {
         int affectedRows = 0;
@@ -171,7 +188,7 @@ public class ResourceFunctions {
      *
      * @param oldPath the path to change
      * @param newPath the path to change it to
-     * @return 1 if the table was changed 0 if no change -1 on error
+     * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse updatePath(RepositoryDatabase database, Path oldPath, Path newPath) {
         log.info("Updating resource path '{}' to '{}'", oldPath, newPath);
@@ -191,7 +208,7 @@ public class ResourceFunctions {
      *
      * @param resourcePath the path the resource is at
      * @param data         the data to set it to
-     * @return 1 if the table was changed 0 if no change, -1 on error
+     * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse updateResource(RepositoryDatabase database, Path resourcePath, String data) {
         try (var statement = database.getConnection().prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")) {

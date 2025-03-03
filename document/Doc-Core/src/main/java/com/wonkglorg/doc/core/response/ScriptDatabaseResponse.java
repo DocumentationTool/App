@@ -1,5 +1,8 @@
 package com.wonkglorg.doc.core.response;
 
+/**
+ * A response for a script database operation, indicating its success or failure with an optional message for more information
+ */
 public class ScriptDatabaseResponse extends Response {
 
     protected ScriptDatabaseResponse(String response, Exception exception) {

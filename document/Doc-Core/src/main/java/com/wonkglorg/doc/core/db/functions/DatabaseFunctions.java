@@ -2,6 +2,7 @@ package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.response.ScriptDatabaseResponse;
+import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,14 +11,21 @@ import java.sql.Connection;
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.script;
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.update;
 
+/**
+ * Holds generic setup and usage Database functions
+ */
+@SuppressWarnings("UnusedReturnValue")
 public class DatabaseFunctions {
     private static final Logger log = LoggerFactory.getLogger(DatabaseFunctions.class);
+
+    private DatabaseFunctions() {
+        //utility class
+    }
 
     /**
      * Initializes the database with the required tables
      *
-     * @param connection The connection to the database
-     * @throws RuntimeSQLException If an error occurs while initializing the database
+     * @return {@link ScriptDatabaseResponse}
      */
     public static ScriptDatabaseResponse initializeDatabase(Connection connection) {
         String sqlScript = """
@@ -130,15 +138,26 @@ public class DatabaseFunctions {
         }
     }
 
-    public static void rebuildFts(Connection connection) throws RuntimeSQLException {
+    /**
+     * Rebuilds the FTS table when called, this is a slow operation and should only be done when there is a specific need to do so
+     */
+    public static UpdateDatabaseResponse rebuildFts(Connection connection) {
         try {
             //noinspection SqlResolve
-            update("INSERT INTO FileData(FileData) VALUES ('rebuild')").execute(connection);
+            Integer i = update("INSERT INTO FileData(FileData) VALUES ('rebuild')").execute(connection);
+            return UpdateDatabaseResponse.success(i);
         } catch (Exception e) {
-            throw new RuntimeSQLException("Error while rebuilding the FTS", e);
+            String errorResponse = "Error while rebuilding FTS";
+            log.error(errorResponse, e);
+            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
         }
     }
 
+    /**
+     * Creates a trigger that updates related resource paths when the main "Resources" Table is updated
+     *
+     * @return {@link ScriptDatabaseResponse}
+     */
     public static ScriptDatabaseResponse initializeResourceUpdateTrigger(Connection connection) {
         String sqlScript = """
                 CREATE TRIGGER IF NOT EXISTS update_resource_path
@@ -166,6 +185,11 @@ public class DatabaseFunctions {
         }
     }
 
+    /**
+     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
+     *
+     * @return {@link ScriptDatabaseResponse}
+     */
     public static ScriptDatabaseResponse initializeResourceDeleteTrigger(Connection connection) {
         String sqlScript = """
                 CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
