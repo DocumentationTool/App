@@ -1,4 +1,4 @@
-package com.wonkglorg.doc.core.db.daos;
+package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;

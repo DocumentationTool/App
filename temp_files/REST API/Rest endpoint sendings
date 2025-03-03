@@ -20,3 +20,17 @@ Baum Struktur ans frontend schicken
 
 
 
+
+All Responses are built up from:
+
+
+{
+    "response" = "Some text indicating additional info or null",
+    "errorMessage" = "Some text or null if no error happened",
+    "content" {
+    //actual content of the response
+
+    }
+}
+
+

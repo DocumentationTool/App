@@ -1,13 +1,15 @@
-package com.wonkglorg.doc.core.db.daos;
+package com.wonkglorg.doc.core.db.functions;
 
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.script;
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.update;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 
 public class DatabaseFunctions{
-	
 	/**
 	 * Initializes the database with the required tables
 	 *
@@ -122,7 +124,7 @@ public class DatabaseFunctions{
 		}
 	}
 	
-	public void rebuildFts(Connection connection) throws RuntimeSQLException {
+	public static void rebuildFts(Connection connection) throws RuntimeSQLException {
 		try{
 			//noinspection SqlResolve
 			update("INSERT INTO FileData(FileData) VALUES ('rebuild')").execute(connection);
