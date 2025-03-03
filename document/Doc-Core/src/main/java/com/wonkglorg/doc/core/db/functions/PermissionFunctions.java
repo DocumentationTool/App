@@ -3,6 +3,7 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.objects.GroupId;
+import com.wonkglorg.doc.core.objects.ResourcePath;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.PermissionType;
@@ -21,6 +22,13 @@ import java.util.List;
 public class PermissionFunctions {
     private static final Logger log = LoggerFactory.getLogger(PermissionFunctions.class);
 
+    /**
+     * Get all permissions for a user
+     *
+     * @param database the database to execute the function for
+     * @param userId   the user to get permissions for
+     * @return a list of permissions for the user
+     */
     public static QueryDatabaseResponse<List<Permission<UserId>>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
         try (PreparedStatement statement = database.getConnection().prepareStatement("SELECT * FROM UserPermissions WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
@@ -28,25 +36,30 @@ public class PermissionFunctions {
                 List<Permission<UserId>> permissions = new ArrayList<>();
                 while (rs.next()) {
                     permissions.add(new Permission<>(new UserId(rs.getString("user_id")),
-                            Path.of(rs.getString("path")),
-                            PermissionType.valueOf(rs.getString("permission"))));
+                            PermissionType.valueOf(rs.getString("permission")),
+                            new ResourcePath(rs.getString("path")),
+                            database.getRepoId())
+                    );
                 }
-                return QueryDatabaseResponse.success(permissions);
+                return QueryDatabaseResponse.success(database.getRepoId(), permissions);
             }
         } catch (Exception e) {
             String errorResponse = "Failed to get permissions for user";
             log.error(errorResponse, e);
-            throw new RuntimeSQLException(errorResponse, e);
-
+            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
 
     }
 
-    public static QueryDatabaseResponse<List<Permission<GroupId>>> getPermissionsForGroup(GroupId groupId) {
+    public static QueryDatabaseResponse<List<Permission<GroupId>>> getPermissionsForGroup(RepositoryDatabase database, GroupId groupId) {
+        try(var statement = database.getConnection().prepareStatement("SELECT * FROM GroupPermissions WHERE group_id = ?")) {
+            statement.setString(1, groupId.toString());
+        }
+
 
     }
 
-    public static QueryDatabaseResponse<PermissionType> getPermissionForFolder(UserId userId, Path path) {
+    public static QueryDatabaseResponse<PermissionType> getPermissionForFolder(RepositoryDatabase database, UserId userId, Path path) {
 
     }
 

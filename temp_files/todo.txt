@@ -110,3 +110,6 @@ Ant Path matching
     * matches zero or more characters
     ** matches zero or more directories in a path
     {spring:[a-z]+} matches the regexp [a-z]+ as a path variable named "spring"
+
+
+https://stackoverflow.com/questions/2952196/ant-path-style-patterns

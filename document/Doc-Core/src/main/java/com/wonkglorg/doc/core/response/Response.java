@@ -27,6 +27,10 @@ public abstract class Response {
         return exception == null;
     }
 
+    public boolean isError() {
+        return exception != null;
+    }
+
     public String getResponseText() {
         return responseText;
     }

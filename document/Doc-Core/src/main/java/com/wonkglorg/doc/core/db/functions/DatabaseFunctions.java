@@ -4,6 +4,7 @@ import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.response.ScriptDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
+import jdk.jshell.spi.ExecutionControl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,12 +216,12 @@ public class DatabaseFunctions {
         }
     }
 
-
     //todo:jmd implement
     public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
-        try (var statement = database.getConnection().prepareStatement("")) {
-
-        }
+        /*
+        try (var statement = database.getConnection().prepareStatement("")) {}
+        */
+        return UpdateDatabaseResponse.fail(database.getRepoId(), new ExecutionControl.NotImplementedException("Method not implemented yet"));
     }
 
 }

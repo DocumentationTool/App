@@ -98,7 +98,7 @@ public class UserFunctions {
         }
     }
 
-    public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) {
+    public static QueryDatabaseResponse<List<GroupId>> getGroupsFromUser(RepositoryDatabase database, UserId userId) {
         try (var statement = database.getConnection().prepareStatement("SELECT group_id FROM GroupUsers WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
@@ -114,22 +114,33 @@ public class UserFunctions {
         }
     }
 
-    public static UserProfile getUser(RepositoryDatabase database, UserId userId) {
+    /**
+     * Gets a user from the database or null if no user was found
+     *
+     * @param database the database to get the user from
+     * @param userId   the id of the user to get
+     * @return {@link QueryDatabaseResponse}
+     */
+    public static QueryDatabaseResponse<UserProfile> getUser(RepositoryDatabase database, UserId userId) {
         try (var statement = database.getConnection().prepareStatement("SELECT * FROM Users WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
                 if (rs.next()) {
                     //todo:jmd get the permissions properly
-                    return new UserProfile(new UserId(rs.getString("user_id")),
+                    UserProfile userProfile = new UserProfile(new UserId(rs.getString("user_id")),
                             rs.getString("password_hash"),
                             rs.getString("created_by"),
                             rs.getString("last_modified_by"));
+
+
+                    return QueryDatabaseResponse.success(database.getRepoId(), userProfile);
                 }
-                return null;
+                return QueryDatabaseResponse.success(database.getRepoId(), null);
             }
         } catch (Exception e) {
-            log.error("Failed to get user", e);
-            throw new RuntimeSQLException("Failed to get user", e);
+            String errorResponse = "Failed to get user";
+            log.error(errorResponse, e);
+            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
     }
 

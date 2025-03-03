@@ -10,10 +10,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.wonkglorg.doc.core.db.builder.StatementBuilder.query;
@@ -52,7 +54,7 @@ public class ResourceFunctions {
      *
      * @return {@link QueryDatabaseResponse}
      */
-    public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database){
+    public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database) {
         List<Resource> resources = new ArrayList<>();
         try (ClosingResultSet resultSet = query("""
                 Select resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id From Resources
@@ -97,6 +99,15 @@ public class ResourceFunctions {
         }
         return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
     }
+
+    public static QueryDatabaseResponse<List<Resource>> findByCategory(RepositoryDatabase database, String category) {
+        return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+    }
+
+    public static QueryDatabaseResponse<List<Resource>> findByAntPath(RepositoryDatabase database, String antPath) {
+        return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+    }
+
 
     /**
      * Finds all resources with the matching search term in its data
@@ -144,7 +155,7 @@ public class ResourceFunctions {
      * @param resource the resource to add
      * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) throws Exception {
+    public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) {
         int affectedRows = 0;
         String sqlResourceInsert = """
                 INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category, commit_id)
@@ -219,6 +230,63 @@ public class ResourceFunctions {
             String errorResponse = "Failed to update resource data at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        }
+    }
+
+    //todo:jmd check commits, if the commit matches the current commit then ignore as its already the same
+
+    /**
+     * Batch inserts a list of resources into the database
+     * @param database the database to insert the resources into
+     * @param resources the resources to insert
+     * @return {@link UpdateDatabaseResponse}
+     */
+    public static UpdateDatabaseResponse batchInsertResources(RepositoryDatabase database, List<Resource> resources) {
+        Connection connection = database.getConnection();
+        try {
+            int affectedRows = 0;
+            try (var statement = connection.prepareStatement("INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category, commit_id)VALUES(?, ?, ?, ?, ?, ?, ?)")) {
+                connection.setAutoCommit(false);
+                for (var resource : resources) {
+                    statement.setString(1, resource.resourcePath().toString());
+                    statement.setString(2, fromDateTime(resource.createdAt()));
+                    statement.setString(3, resource.createdBy());
+                    statement.setString(4, fromDateTime(resource.modifiedAt()));
+                    statement.setString(5, resource.modifiedBy());
+                    statement.setString(6, resource.category());
+                    statement.setString(7, resource.commitId());
+                    statement.addBatch();
+                }
+                affectedRows += Arrays.stream(statement.executeBatch()).sum();
+            }
+
+            try (var statement = connection.prepareStatement("INSERT INTO FileData(resource_path, data )VALUES(?, ?)")) {
+                for (var resource : resources) {
+                    if (resource.data() == null) {
+                        continue;
+                    }
+                    statement.setString(1, resource.resourcePath().toString());
+                    statement.setString(2, resource.data());
+                    statement.addBatch();
+                }
+                affectedRows += Arrays.stream(statement.executeBatch()).sum();
+                connection.commit();
+                return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
+            }
+        } catch (Exception e) {
+            try {
+                connection.rollback();
+            } catch (SQLException ex) {
+                log.error("This should not happen", ex);
+            }
+            log.error("Failed to batch insert resources", e);
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to batch insert resources", e));
+        } finally {
+            try {
+                connection.setAutoCommit(true);
+            } catch (SQLException e) {
+                log.error("This should never happen", e);
+            }
         }
     }
 
