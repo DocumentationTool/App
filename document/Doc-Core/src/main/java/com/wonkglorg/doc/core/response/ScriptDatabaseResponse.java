@@ -1,12 +1,14 @@
 package com.wonkglorg.doc.core.response;
 
+import com.wonkglorg.doc.core.objects.RepoId;
+
 /**
  * A response for a script database operation, indicating its success or failure with an optional message for more information
  */
 public class ScriptDatabaseResponse extends Response {
 
-    protected ScriptDatabaseResponse(String response, Exception exception) {
-        super(response, exception);
+    protected ScriptDatabaseResponse(RepoId causingRepo, String response, Exception exception) {
+        super(causingRepo, response, exception);
     }
 
     /**
@@ -15,8 +17,8 @@ public class ScriptDatabaseResponse extends Response {
      * @param <T>
      * @return the constructed response
      */
-    public static ScriptDatabaseResponse success() {
-        return new ScriptDatabaseResponse(null, null);
+    public static ScriptDatabaseResponse success(RepoId causingRepo) {
+        return new ScriptDatabaseResponse(causingRepo, null, null);
     }
 
     /**
@@ -25,8 +27,8 @@ public class ScriptDatabaseResponse extends Response {
      * @param <T>
      * @return the constructed response
      */
-    public static ScriptDatabaseResponse success(String message) {
-        return new ScriptDatabaseResponse(message, null);
+    public static ScriptDatabaseResponse success(RepoId causingRepo, String message) {
+        return new ScriptDatabaseResponse(causingRepo, message, null);
     }
 
     /**
@@ -36,8 +38,8 @@ public class ScriptDatabaseResponse extends Response {
      * @param <T>
      * @return the constructed reponse
      */
-    public static ScriptDatabaseResponse fail(Exception e) {
-        return new ScriptDatabaseResponse(null, e);
+    public static ScriptDatabaseResponse fail(RepoId causingRepo, Exception e) {
+        return new ScriptDatabaseResponse(causingRepo, null, e);
     }
 
 

@@ -1,5 +1,7 @@
 package com.wonkglorg.doc.core.response;
 
+import com.wonkglorg.doc.core.objects.RepoId;
+
 /**
  * A generic response
  */
@@ -13,9 +15,12 @@ public abstract class Response {
      */
     private final Exception exception;
 
-    protected Response(String response, Exception exception) {
+    protected final RepoId causingRepo;
+
+    protected Response(RepoId causingRepo, String response, Exception exception) {
         this.responseText = response;
         this.exception = exception;
+        this.causingRepo = causingRepo;
     }
 
     public boolean isSuccess() {
@@ -32,5 +37,9 @@ public abstract class Response {
 
     public Exception getException() {
         return exception;
+    }
+
+    public RepoId getCausingRepo() {
+        return causingRepo;
     }
 }

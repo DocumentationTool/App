@@ -18,9 +18,10 @@ public class UserFunctions {
 
     /**
      * Adds a new User to the Database
-     * @param database the database to add the user to
-     * @param userId the users id
-     * @param password their hashed password
+     *
+     * @param database  the database to add the user to
+     * @param userId    the users id
+     * @param password  their hashed password
      * @param createdBy the admin or system who created this user
      * @return {@link UpdateDatabaseResponse}
      */
@@ -40,16 +41,42 @@ public class UserFunctions {
     }
 
 
+    /**
+     * Adds a user to a specific group
+     *
+     * @param database the database to add the user to
+     * @param userId   the user to add
+     * @param groupId  the group to add them to
+     * @return {@link UpdateDatabaseResponse}
+     */
     public static UpdateDatabaseResponse addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
-        try(var statement = database.getConnection().prepareStatement("INSERT INTO GroupUsers(user_id, group_id) VALUES()")) {
+        try (var statement = database.getConnection().prepareStatement("INSERT INTO GroupUsers(user_id, group_id) VALUES(?,?)")) {
+            statement.setString(1, userId.id());
+            statement.setString(2, groupId.id());
+            return UpdateDatabaseResponse.success(statement.executeUpdate());
+        } catch (Exception e) {
+            String errorResponse = "Failed to add user '%s' to group '%s'".formatted(userId, groupId);
+            log.error(errorResponse, e);
+            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorResponse, e));
+        }
+    }
 
+
+    public static UpdateDatabaseResponse removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
+        try (var statement = database.getConnection().prepareStatement("DELETE FROM GroupUsers WHERE user_id = ? and group_id = ?")) {
+
+        } catch (Exception e) {
+            String errorReponse = "Error in repository '%s' while removing user '%s' from group '%s'".formatted(database.getRepoProperties().getId(), userId, groupId);
+            log.error(errorReponse, e);
+            return UpdateDatabaseResponse.fail(new RuntimeSQLException(errorReponse, e));
         }
     }
 
     /**
      * Gets the ids of all users contained within a specific group
+     *
      * @param database the database to add the user from / to
-     * @param groupId the groups id
+     * @param groupId  the groups id
      * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<List<UserId>> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) {
@@ -103,5 +130,6 @@ public class UserFunctions {
             throw new RuntimeSQLException("Failed to get user", e);
         }
     }
+
 
 }
