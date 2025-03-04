@@ -1,7 +1,6 @@
 package com.wonkglorg.doc.core.user;
 
 import com.google.gson.Gson;
-import com.wonkglorg.doc.core.objects.Identifyable;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
@@ -16,7 +15,7 @@ public class UserProfile{
 	private final Gson gson = new Gson();
 	private final UserId id;
 	private final String passwordHash;
-	private final List<Permission<Identifyable>> permissionNodes;
+	private final List<Permission<UserId>> permissionNodes;
 	private final List<Role> roles;
 	
 	public UserProfile(UserId id, String passwordHash) {
@@ -26,7 +25,7 @@ public class UserProfile{
 		this.passwordHash = passwordHash;
 	}
 	
-	public UserProfile(UserId id, String passwordHash, List<Permission<Identifyable>> permissionNodes, List<Role> roles) {
+	public UserProfile(UserId id, String passwordHash, List<Permission<UserId>> permissionNodes, List<Role> roles) {
 		this.id = id;
 		this.permissionNodes = permissionNodes;
 		this.roles = roles;
@@ -41,7 +40,7 @@ public class UserProfile{
 		return passwordHash;
 	}
 	
-	public List<Permission<Identifyable>> getPermissions() {
+	public List<Permission<UserId>> getPermissions() {
 		return permissionNodes;
 	}
 	

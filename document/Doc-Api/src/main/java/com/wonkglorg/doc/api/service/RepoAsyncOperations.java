@@ -2,12 +2,12 @@ package com.wonkglorg.doc.api.service;
 
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -45,16 +45,8 @@ public class RepoAsyncOperations{
 	 */
 	
 	@Async
-	public CompletableFuture<List<Resource>> getResourcesFromRepositoryAsync(FileRepository repository) {
-		return CompletableFuture.supplyAsync(() -> {
-			try{
-				log.info("Getting resources from Repo '{}'", repository.getRepoProperties().getId());
-				return repository.getDatabase().getResources();
-			} catch(Exception e){
-				log.error("Error getting resources from repository '{}'", repository.getRepoProperties().getId(), e);
-				return new ArrayList<>();
-			}
-		});
+	public CompletableFuture<QueryDatabaseResponse<List<Resource>>> getResourcesFromRepositoryAsync(FileRepository repository) {
+		return CompletableFuture.supplyAsync(() -> repository.getDatabase().getResources());
 	}
 	
 }

@@ -37,5 +37,5 @@ public record Resource(Path resourcePath, LocalDateTime createdAt, String create
     public static String fromDateTime(LocalDateTime dateTime) {
         return dateTime.format(formatter);
     }
-
+    
 }

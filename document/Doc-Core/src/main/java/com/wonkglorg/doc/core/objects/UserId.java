@@ -7,4 +7,9 @@ public record UserId(String id) implements Identifyable {
     public static UserId of(String id) {
         return new UserId(id);
     }
+    
+    @Override
+    public String toString() {
+        return id;
+    }
 }
