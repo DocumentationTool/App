@@ -19,8 +19,6 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 @Component
 @Service
@@ -112,7 +110,29 @@ public class RepoService{
 	
 	@Cacheable(value = "allResources", key = "{#repoId}")
 	public QueryDatabaseResponse<List<Resource>> getResources(RepoId repoId) {
+		try{
+			validateRepoId(repoId);
+		} catch(IllegalArgumentException e){
+			return QueryDatabaseResponse.fail(null, e);
+		}
+		
 		return getRepo(repoId).getDatabase().getResources();
+	}
+	
+	/**
+	 * Validates if the repo id is valid abd exists
+	 *
+	 * @param repoId the repo id to validate
+	 * @throws IllegalArgumentException if the repo id is not valid
+	 */
+	private void validateRepoId(RepoId repoId) throws IllegalArgumentException {
+		if(repoId == null){
+			throw new IllegalArgumentException("RepoId cannot be null");
+		}
+		
+		if(!repositories.containsKey(repoId)){
+			throw new IllegalArgumentException("RepoId '%s' does not exist".formatted(repoId));
+		}
 	}
 	
 }
