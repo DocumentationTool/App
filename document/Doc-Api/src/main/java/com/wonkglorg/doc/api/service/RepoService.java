@@ -9,6 +9,7 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
+import com.wonkglorg.doc.core.permissions.Role;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import jakarta.annotation.PostConstruct;
@@ -22,8 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.ALL_RESOURCES;
-import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.REPO_RESOURCES;
+import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.*;
 
 @Component
 @Service
@@ -150,6 +150,19 @@ public class RepoService {
         //todo:jmd add user permissions
         //return resourceFutures.stream().map(CompletableFuture::join).flatMap(List::stream).collect(Collectors.toList());
         return resouces;
+    }
+
+
+    /**
+     * Gets all roles from a specified repository
+     * @param repoId the repository to get roles from
+     * @param userId the user to get roles for
+     * @return a list of all roles in the repository
+     */
+    @Cacheable(value = "roles", key = "{#repoId, #userId}")
+    public QueryDatabaseResponse<List<Role>> getRoles(RepoId repoId, UserId userId) {
+        //return getRepo(repoId).getDatabase().getRoles(userId);
+        return null;
     }
 
     /**
