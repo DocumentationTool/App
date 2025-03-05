@@ -29,24 +29,6 @@ export class NavbarComponent implements OnInit{
     this.navigationService.toggleSidebar()
   }
 
-  isEditorActive(): boolean {
-    return this.router.isActive('/main/editor', {
-      paths: 'exact',
-      queryParams: 'ignored',
-      fragment: 'ignored',
-      matrixParams: 'ignored',
-    });
-  }
-
-  isPreviewActive(): boolean {
-    return this.router.isActive('/main/preview', {
-      paths: 'exact',
-      queryParams: 'ignored',
-      fragment: 'ignored',
-      matrixParams: 'ignored',
-    })
-  }
-
   // Searchbar
   searchTerm: string = '';
   filteredFiles: string[] = [];
@@ -90,13 +72,5 @@ export class NavbarComponent implements OnInit{
 
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
-  }
-
-  save() {
-    if (window.confirm("Save changes?")) {
-      //Todo: save
-    } else {
-      //ToDo: dont save
-    }
   }
 }

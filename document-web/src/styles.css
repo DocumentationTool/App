@@ -5,3 +5,12 @@
   font-family: "Segoe UI", serif;
   font-style: normal;
 }
+
+.ace-tm{
+  /*background-color: black;*/
+
+}
+
+.ace-tm .ace_gutter{
+  /*background-color: #64b32c;*/
+}

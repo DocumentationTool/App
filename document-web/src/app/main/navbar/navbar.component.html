@@ -4,18 +4,18 @@
   </div>
 
   <div class="box">
-    <a routerLink="/main/editor" routerLinkActive="active" class="editor"
+    <a (click)="this.navigationService.onEditor()" routerLink="/main/editor" routerLinkActive="active" class="editor"
        [routerLinkActiveOptions]="{ exact: true }">
       Editor
     </a>
 
-    @if (isEditorActive() || isPreviewActive()) {
-      <a routerLink="/main/preview" routerLinkActive="active" class="preview"
+    @if (this.navigationService.isEditorActive() || this.navigationService.isPreviewActive()) {
+      <a (click)="this.navigationService.onPreview()"  routerLinkActive="active" class="preview"
          [routerLinkActiveOptions]="{ exact: true }">
         Preview
       </a>
     }
-    <i class="ri-save-line" (click)="save()"></i>
+    <i class="ri-save-line" (click)="this.fileService.saveFile()"></i>
   </div>
 
   <form class="search" (click)="onSearchFocus()">

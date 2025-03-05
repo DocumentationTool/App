@@ -1,5 +1,21 @@
-<div class="file-preview"
-     *ngIf="this.fileService.selectedFile()">
-  <p>Aktivierte Datei: {{ this.fileService.selectedFile() }}</p>
-  <markdown [src]="'assets/' + fileService.selectedFile()"></markdown>
-</div>
+@if (this.fileService.selectedFile()) {
+  <md-editor name="Content"
+             [upload]="doUpload"
+             [(ngModel)]="fileService.fileContent"
+             [height]="'637px'"
+             [mode]="this.navigationService.mode()"
+             [preRender]="preRenderFunc"
+             [postRender]="postRenderFunc"
+             (onEditorLoaded)="onEditorLoaded($event)"
+             (onPreviewDomChanged)="onPreviewDomChanged($event)"
+  >
+    <div custom-btns>
+      <input #imgInput type="file" style="display: none" (change)="uploadImg($event)"/>
+      <button type="button" class="btn btn-sm btn-default" (click)="imgInput.click()">Upload Img</button>
+    </div>
+  </md-editor>
+
+} @else {
+    <app-empty-page></app-empty-page>
+}
+

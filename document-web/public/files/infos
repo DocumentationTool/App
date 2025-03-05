@@ -8,11 +8,11 @@ lacy load -> in router
 
 Ordern anlegen?
 
-Speichrn conformation
-
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 
 bei jeder Navigation weg von editor prüfen ob änderung
+
+Files Abwählen
 
 -----------------------------------------------------------------
 NPM:
@@ -20,7 +20,11 @@ npm install ngx-markdown marked@^15.0.0 --save
 
 npm i remixicon
 
-https://www.npmjs.com/package/ngx-markdown-editor ????
+npm i ngx-markdown-editor --save
+npm i ace-builds bootstrap font-awesome --save
+Wichtig: angular json und index.html einträge
+Options Einbauen Bsp.: [options]="{resizable: true}"
+
 
 -----------------------------------------------------------------
 -----------------------Projekmanagement--------------------------

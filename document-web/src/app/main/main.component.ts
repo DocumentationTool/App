@@ -4,7 +4,7 @@ import {SidebarComponent} from './sidebar/sidebar.component';
 import {FileService} from './service/file.service';
 import {MarkdownModule} from 'ngx-markdown';
 import {RouterOutlet} from '@angular/router';
-import {NgStyle} from '@angular/common';
+import {NgClass} from '@angular/common';
 import {NavigationService} from './service/navigation.service';
 
 @Component({
@@ -14,7 +14,7 @@ import {NavigationService} from './service/navigation.service';
     SidebarComponent,
     MarkdownModule,
     RouterOutlet,
-    NgStyle
+    NgClass
   ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'
@@ -29,7 +29,4 @@ export class MainComponent implements OnInit{
     this.fileService.loadFiles();
   }
 
-  selectFile(file: string): void {
-    this.fileService.setSelectedFile(file);
-  }
 }

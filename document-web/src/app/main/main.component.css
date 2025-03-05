@@ -1,12 +1,52 @@
+.main-sidebar {
+  position: absolute;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 10px;
+  overflow-y: auto;
+
+  border: 1px solid #ccc;
+  padding: 50px;
+  margin: 20px 20px 20px 230px;
+
+}
+
 .main {
   position: absolute;
   top: 50px;
   bottom: 0;
   left: 0;
-  right: 5px;
+  right: 10px;
   overflow-y: auto;
 
   border: 1px solid #ccc;
   padding: 50px;
   margin: 20px;
 }
+
+.editor-sidebar {
+  position: absolute;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  margin-left: 200px;
+}
+
+.editor {
+  position: absolute;
+  top: 50px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  overflow-y: auto;
+
+  border: 1px solid #ccc;
+}
+
+
+
