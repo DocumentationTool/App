@@ -8,6 +8,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -21,7 +22,7 @@ import java.util.Map;
  * JSON response containing relevant error details.
  * </p>
  */
-@RestController
+@Controller
 public class CustomErrorController implements ErrorController {
 	private static final Logger log = LoggerFactory.getLogger(CustomErrorController.class);
 	private final ErrorAttributes errorAttributes;

@@ -1,0 +1,5 @@
+{
+  "message": "${message}",
+  "error": "${error}",
+  "content": --content--
+}

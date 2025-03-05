@@ -5,13 +5,18 @@ import {Injectable, signal} from '@angular/core';
 })
 
 export class NavigationService{
-  toggle = signal<boolean>(false);
+  toggle = signal<boolean>(true);
+  isAdmin= signal<boolean>(false)
 
-  setToggle(value: boolean) {
-    this.toggle.set(value);
+  logAdminIn() {
+    this.isAdmin.set(true);
   }
 
-  toggleValue() {
+  logUserIn() {
+    this.isAdmin.set(false);
+  }
+
+  toggleSidebar() {
     this.toggle.update(current => !current);
   }
 }

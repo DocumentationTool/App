@@ -37,5 +37,14 @@ public record Resource(Path resourcePath, LocalDateTime createdAt, String create
     public static String fromDateTime(LocalDateTime dateTime) {
         return dateTime.format(formatter);
     }
-    
+
+    public String getModifiedAt() {
+        return fromDateTime(modifiedAt);
+    }
+
+    public String getCreatedAt() {
+        return fromDateTime(createdAt);
+    }
+
+
 }

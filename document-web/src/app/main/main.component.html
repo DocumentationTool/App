@@ -1,10 +1,8 @@
 <app-navbar></app-navbar>
-<app-sidebar></app-sidebar>
-<div [ngStyle]="{'margin-left': this.navigationService.toggle() ? '250px' : '0'}">
-
-  <div class="file-preview" *ngIf="this.fileService.selectedFile()">
-    <p>Aktivierte Datei: {{ this.fileService.selectedFile() }}</p>
-      <markdown [src]="'assets/' + fileService.selectedFile()"></markdown>
+<div style="padding-top: 40px">
+  <app-sidebar></app-sidebar>
+  <div class="main" [ngStyle]="{'margin-left': this.navigationService.toggle() ? '270px' : '20px'}">
+    <router-outlet></router-outlet>
   </div>
 </div>
 

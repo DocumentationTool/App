@@ -13,9 +13,9 @@ doc:
         - "/favicon.ico"
   git:
     repositories:
-      - id: "First Repo"
+      - id: "repo1"
         path: temp/git/repo1
-      - id: "Second Repo"
+      - id: "repo2"
         path: temp/git/repo2
       #- name: "Read only Repo"
       #  path: temp/git/readOnlyRepo

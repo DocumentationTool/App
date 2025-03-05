@@ -62,7 +62,7 @@ public class ResourceFunctions{
 			return QueryDatabaseResponse.success(database.getRepoId(), resources);
 		} catch(SQLException e){
 			log.error("Failed to get resources", e);
-			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
+			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
 		}
 	}
 	
@@ -95,18 +95,18 @@ public class ResourceFunctions{
 			}
 		} catch(Exception e){
 			log.error("Failed to find resource by path", e);
-			return QueryDatabaseResponse.fail(database.getRepoId(),
+			return QueryDatabaseResponse.error(database.getRepoId(),
 					new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
 		}
 		return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
 	}
 	
 	public static QueryDatabaseResponse<List<Resource>> findByCategory(RepositoryDatabase database, String category) {
-		return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+		return QueryDatabaseResponse.error(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
 	}
 	
 	public static QueryDatabaseResponse<List<Resource>> findByAntPath(RepositoryDatabase database, String antPath) {
-		return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+		return QueryDatabaseResponse.error(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
 	}
 	
 	/**
@@ -150,7 +150,7 @@ public class ResourceFunctions{
 			
 		} catch(Exception e){
 			log.error("Failed to find resource by content", e);
-			return QueryDatabaseResponse.fail(database.getRepoId(),
+			return QueryDatabaseResponse.error(database.getRepoId(),
 					new RuntimeSQLException("Failed to find resource by text '%s'".formatted(searchTerm), e));
 		}
 		
