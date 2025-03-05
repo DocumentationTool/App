@@ -54,6 +54,8 @@ export class FileService {
   saveFile() {
     if (window.confirm("Save changes?")) {
       //Todo: save
+      this.fileContentBeforeChanges = this._fileContent();
+
     } else {
       return
     }
