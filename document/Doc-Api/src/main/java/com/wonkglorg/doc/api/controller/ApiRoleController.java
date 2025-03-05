@@ -1,6 +1,5 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -31,17 +30,13 @@ public class ApiRoleController {
 
     @GetMapping("/get")
     public ResponseEntity<RestResponse<List<Role>>> getRoles(@RequestParam("repoId") RepoId repoId, @RequestParam("userId") UserId userId) {
-        try {
-            repoService.getRepo(repoId)
-        } catch (NotaRepoException e) {
-            throw new RuntimeException();
+        if (repoService.isValidRepo(repoId)) {
+            return RestResponse.<List<Role>>error("Invalid Repo").toResponse();
         }
         if (DEV_MODE) {
-
-
             Map<UserId, UserProfile> userProfileMap = DEV_USERS.get(repoId);
             if (userProfileMap == null) {
-                return RestResponse.error("No users in repo found").toResponse();
+                return RestResponse.<List<Role>>error("No users in repo found").toResponse();
             }
             UserProfile userProfile = userProfileMap.get(userId);
             return RestResponse.success(userProfile.getRoles()).toResponse();

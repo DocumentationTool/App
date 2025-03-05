@@ -23,7 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.*;
+import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.ALL_RESOURCES;
+import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.REPO_RESOURCES;
 
 @Component
 @Service
@@ -69,6 +70,19 @@ public class RepoService {
 
         return repositories.get(repoId);
     }
+
+    /**
+     * Checks if a repository is valid
+     * @param repoId the repo id to check
+     * @return true if the repo is valid
+     */
+    public boolean isValidRepo(RepoId repoId) {
+        if (repoId == null) {
+            return false;
+        }
+        return repositories.containsKey(repoId);
+    }
+
 
     @PostConstruct
     public void initialize() {
@@ -137,13 +151,13 @@ public class RepoService {
     @Cacheable(value = ALL_RESOURCES, key = "{#repoId, #userId}")
     public QueryDatabaseResponse<List<Resource>> getResources(RepoId repoId, UserId userId) {
         QueryDatabaseResponse<List<Resource>> resouces;
-        if(repoId == null) {
+        if (repoId == null) {
             resouces = getResources(repoId);
-        }else{
+        } else {
             resouces = null;//;
         }
 
-        if(resouces.isError()){
+        if (resouces.isError()) {
             return resouces;
         }
 
@@ -155,6 +169,7 @@ public class RepoService {
 
     /**
      * Gets all roles from a specified repository
+     *
      * @param repoId the repository to get roles from
      * @param userId the user to get roles for
      * @return a list of all roles in the repository
