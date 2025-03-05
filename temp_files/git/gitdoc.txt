@@ -12,7 +12,7 @@ A file in Git can be in one of several states:
 
 
 
-2025-02-12T08:59:35.120+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\folder\subfolderDoc.xml
-2025-02-12T08:59:35.163+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\baseDoc.xml
-2025-02-12T08:59:35.202+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Inserting resource baseDoc.xml
-2025-02-12T08:59:35.225+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepoDB           : Inserting resource folder\subfolderDoc.xml
+2025-02-12T08:59:35.120+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepositoryDatabase           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\folder\subfolderDoc.xml
+2025-02-12T08:59:35.163+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepositoryDatabase           : Deleting resource E:\Users\p10209\IdeaProjects\DocumentationTool\temp\git\repo1\baseDoc.xml
+2025-02-12T08:59:35.202+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepositoryDatabase           : Inserting resource baseDoc.xml
+2025-02-12T08:59:35.225+01:00  INFO 23900 --- [Doc-Api] [           main] com.wonkglorg.docapi.db.RepositoryDatabase           : Inserting resource folder\subfolderDoc.xml

@@ -1,0 +1,40 @@
+Baum Struktur ans frontend schicken
+
+
+{
+	"REPO1":{
+		"Path": {
+			"File1" {
+			some file info
+			},
+			"File2"{
+			file 2 info
+			}
+			},
+			"to"{
+
+			}
+		}
+	}
+
+	"REPO2":{
+
+	}
+}
+
+
+
+
+All Responses are built up from:
+
+
+{
+    "response" = "Some text indicating additional info or null",
+    "errorMessage" = "Some text or null if no error happened",
+    "content" {
+    //actual content of the response
+
+    }
+}
+
+

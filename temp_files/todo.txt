@@ -93,6 +93,23 @@ automatically create new repo based on configs defined.
 
 
 
+//todo:jmd how to handle permissions /admins if each repo is its own self contained entity with permissions etc perhaps just a globally defined admin in the config that can manage all repos permissions?
 
 
 
+
+
+
+//converter dependency docx .xml
+https://www.convertapi.com/doc-to-xml/java
+
+
+Ant Path matching
+
+    ? matches one character
+    * matches zero or more characters
+    ** matches zero or more directories in a path
+    {spring:[a-z]+} matches the regexp [a-z]+ as a path variable named "spring"
+
+
+https://stackoverflow.com/questions/2952196/ant-path-style-patterns
