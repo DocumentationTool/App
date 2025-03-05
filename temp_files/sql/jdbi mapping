@@ -1,0 +1,5 @@
+New values can be added under the com.wonkglorh.doc.core.db.daos
+
+factory und mappers
+
+die werden benutzt um werte in sql tabellen zu mappen

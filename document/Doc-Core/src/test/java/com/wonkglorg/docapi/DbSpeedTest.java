@@ -1,9 +1,13 @@
 package com.wonkglorg.docapi;
 
 import com.github.javafaker.Faker;
-import com.wonkglorg.docapi.db.RepoDB;
-import com.wonkglorg.docapi.git.RepoProperties;
-import org.junit.jupiter.api.Assertions;
+import com.wonkglorg.doc.core.RepoProperty;
+import com.wonkglorg.doc.core.db.RepositoryDatabase;
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.Resource;
+import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
+import org.jdbi.v3.core.Handle;
+import org.jdbi.v3.core.statement.PreparedBatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -12,79 +16,52 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
-import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
-
-class DbSpeedTest {
+class DbSpeedTest{
 	private static final Logger log = LoggerFactory.getLogger(DbSpeedTest.class);
-	private static RepoProperties properties;
-
+	private static RepoProperty properties;
+	private final Faker faker = new Faker();
+	
 	@BeforeEach
 	void setUp() throws IOException {
-		properties = new RepoProperties();
+		properties = new RepoProperty();
 		properties.setPath(Path.of("temp", "test", "repo"));
-		properties.setName("Test Repo");
+		properties.setId(RepoId.of("Test Repo"));
 		properties.setReadOnly(false);
 		deleteDirecory(properties.getPath());
 		Files.createDirectories(properties.getPath());
 	}
-
+	
 	@Test
-	void testReadWriteSpeed() throws SQLException {
-		RepoDB repoDB = new RepoDB(properties, properties.getPath().resolve(properties.getDbName()));
-
-		//tokenize splits up text by tokens to search for
-
-		try (var statement = repoDB.getConnection().prepareStatement(
-				"CREATE VIRTUAL TABLE FileData USING fts5(resourcePath, data, tokenize='trigram');")) { //store the actual data in it too (used for quick lookups, otherwise it takes alot for full text searches)
-			statement.execute();
-		} catch (Exception e) {
-			log.error("Error creating virtual table", e);
-		}
-
-		Faker faker = new Faker();
-
-
-		try (var statement = repoDB.getConnection()
-				.prepareStatement("INSERT INTO renderedPages(resourcePath, data) VALUES(?,?)")) {
-			repoDB.getConnection().setAutoCommit(false);
-
-			System.out.println("Started adding");
-			for (int i = 0; i < 5000; i++) {
-				statement.setString(1, "documents/test/doc%s.xml".formatted(i));
-				statement.setString(2, faker.lorem().characters(300, 9000));
-				statement.addBatch();
+	void testReadWriteSpeed() {
+		try(RepositoryDatabase repoDB = new RepositoryDatabase(properties)){
+			repoDB.initialize();
+			try(Handle handle = repoDB.jdbi().open(); PreparedBatch preparedBatch = handle.prepareBatch(
+					"insert into FileData (resource_path,data) values (:path, :data)")){
+				for(int i = 0; i < 5000; i++){
+					preparedBatch.bind("path", "documents/test/doc%s.xml".formatted(i))//
+								 .bind("data", faker.lorem().characters(300, 9000)).add();
+				}
+				preparedBatch.execute();
+				
 			}
-			System.out.println("Finished adding");
-			statement.executeBatch();
-			System.out.println("Executed batch");
-			repoDB.getConnection().commit();
-			System.out.println("Commited");
-		} catch (SQLException e) {
-			repoDB.getConnection().rollback();
-			System.out.println("Rollback" + e);
-			Assertions.fail(e);
-		} finally {
-			System.out.println("Auto committing");
-			repoDB.getConnection().setAutoCommit(true);
 		}
-
-
-		try (var statement = repoDB.getConnection()
-				.prepareStatement("SELECT COUNT(*) FROM renderedPages")) {
-			ResultSet resultSet = statement.executeQuery();
-			if (resultSet.next()) {
-				System.out.println("Found %s page".formatted(resultSet.getInt(1)));
-			} else {
-				System.out.println("No Data");
-			}
-		} catch (Exception e) {
-			log.error("Error creating virtual table", e);
-		}
-
-		repoDB.close();
 	}
-
+	
+	@Test
+	void testWriteSpeed() {
+        log.info("Starting testWriteSpeed");
+        long start = System.currentTimeMillis();
+		try(RepositoryDatabase repoDB = new RepositoryDatabase(properties)){
+			repoDB.initialize();
+			for(int i = 0; i < 5000; i++){
+				repoDB.insertResource(createResource(i));
+			}
+		}
+        log.info("testWriteSpeed took {}ms", System.currentTimeMillis() - start);
+	}
+	
+	private Resource createResource(int index) {
+		return new Resource(Path.of("documents/test/doc%s.xml".formatted(index)), "System", "testCommit", faker.lorem().characters(500, 5000));
+	}
 }
