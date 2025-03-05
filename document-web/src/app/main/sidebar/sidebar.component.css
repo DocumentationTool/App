@@ -1,10 +1,9 @@
 .left-sidebar {
   position: fixed;
-  top: 60px;
   left: 0;
-  width: 250px;
+  width: 200px;
   height: 100vh;
-  background-color: #566367;
+  background-color: var(--backgroundColor);;
   padding: 20px;
   overflow-y: auto;
 }
@@ -25,8 +24,28 @@ li a.active {
   background-color: #64b32c;
   border-radius: 4px;
 }
-.file-preview {
-  margin-top: 20px;
-  padding: 10px;
-  border: 1px solid #ddd;
+
+.nav-admin{
+  color: var(--textColor);
+  font-size: 16pt;
+  position: fixed;
+  bottom: 15px;
+  left: 100px;
+  text-decoration: none;
+}
+
+.upload{
+  font-size: 30px;
+  position: fixed;
+  bottom: 10px;
+  color: var(--textColor);
+}
+
+.upload:hover{
+  cursor: pointer;
+}
+
+.bottom{
+  position: fixed;
+  bottom: 10px;
 }

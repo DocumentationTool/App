@@ -6,14 +6,33 @@ markdown files?
 
 lacy load -> in router
 
+Ordern anlegen?
+
+Speichrn conformation
+
+bei suchleiste weiter Informationen bei ergenis -> pfad, datei
+
+bei jeder Navigation weg von editor prüfen ob änderung
+
+-----------------------------------------------------------------
+NPM:
+npm install ngx-markdown marked@^15.0.0 --save
+
+npm i remixicon
+
+https://www.npmjs.com/package/ngx-markdown-editor ????
+
+-----------------------------------------------------------------
+-----------------------Projekmanagement--------------------------
+
+Warum unser TOol?! wieso warum abgrenzung
+
 Performance testes? im PSP -> beim Pflichtenheft erweiterung ?
+
+Netzplan -> nur "Kritischer Pfad" !
 
 SWOT Analyse
 
+Definition of done ?
 
-
-
----------------------------------------------
-NPM:
-npm install ngx-markdown marked@^15.0.0 --save
-npm i bootstrap@5.3.3
+Zusammengehörende Tabellen im Projekthandbuch zusammenführen

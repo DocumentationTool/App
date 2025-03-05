@@ -1,1 +1,7 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  --textColor: #ffffff;
+  --secondaryTextColor: rgba(255, 255, 255, 0.49);
+  --backgroundColor: #2d3337;
+  font-family: "Segoe UI", serif;
+  font-style: normal;
+}

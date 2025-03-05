@@ -1,16 +1,52 @@
-<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #566367;">
-  <button class="btn ms-3" type="button" (click)="onToggle()" style="background-color: #566367"><span
-    class="navbar-toggler-icon"></span></button>
-  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-    <li class="nav-item">
-      <a routerLink="/login" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Login
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="toggle">
+    <i class="ri-menu-line" (click)="onToggleSidebar()"></i>
+  </div>
+
+  <div class="box">
+    <a routerLink="/main/editor" routerLinkActive="active" class="editor"
+       [routerLinkActiveOptions]="{ exact: true }">
+      Editor
+    </a>
+
+    @if (isEditorActive() || isPreviewActive()) {
+      <a routerLink="/main/preview" routerLinkActive="active" class="preview"
+         [routerLinkActiveOptions]="{ exact: true }">
+        Preview
       </a>
-    </li>
-    <li class="nav-item">
-      <a routerLink="/test" routerLinkActive="active" class="nav-link" [routerLinkActiveOptions]="{ exact: true }">
-        Test login
-      </a>
-    </li>
-  </ul>
+    }
+    <i class="ri-save-line" (click)="save()"></i>
+  </div>
+
+  <form class="search" (click)="onSearchFocus()">
+    <span class="ri-search-line" (click)="onSearchFocus()"></span>
+    <input class="search-input" #searchInput (focus)="onSearchFocus()" name="search" placeholder="Search"
+           autocomplete="off"
+           [(ngModel)]="searchTerm" (input)="search()">
+  </form>
+
+  @if (isSearchActive && filteredFiles.length > 0) {
+    <div class="search-results">
+      @for (file of filteredFiles; track file) {
+        <div class="search-box" (click)="this.fileService.setSelectedFile(file)">
+          {{ file }}
+        </div>
+      }
+    </div>
+  }
+
+
+  <div class="profile" (click)="toggleDropdown()">
+    Profile
+    @if (isDropdownOpen) {
+      <div class="dropdown-menu">
+        <div class="dropdown-item" (click)="this.navigationService.logAdminIn()">
+          Admin
+        </div>
+        <div class="dropdown-item" (click)="this.navigationService.logUserIn()">
+          User1
+        </div>
+      </div>
+    }
+  </div>
 </nav>

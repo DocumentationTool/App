@@ -1,9 +1,151 @@
-.navbar{
+
+.navbar {
+  background-color: var(--backgroundColor);
   box-shadow: 0 10px 10px 0 rgba(0, 0, 0, .2);
   font-size: 16pt;
 
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1;
+  height: 50px;
 }
 
-span.navbar-toggler-icon{
-  font-size: 18pt;
+
+.toggle {
+  font-size: 25pt;
+  color: var(--textColor);
+  cursor: pointer;
+  position: fixed;
+  top: 3px;
+  left: 7px;
+}
+
+.box {
+  position: fixed;
+  left: 18%;
+  top: 5px;
+  white-space: nowrap;
+  display: flex;
+  gap: 5px;
+}
+
+.editor, .preview {
+  text-decoration: none;
+  padding: 5px 10px;
+  color: var(--secondaryTextColor);
+  cursor: pointer;
+}
+
+.editor.active, .preview.active {
+  color: var(--textColor);
+}
+
+.ri-save-line {
+  color: var(--secondaryTextColor);
+  cursor: pointer;
+  margin-top: 7px;
+  font-size: 25px;
+  /*  ToDo: wenn änderungen weis sonst grau und kein pointer mit ngStyle*/
+}
+
+.editor:hover, .preview:hover, .ri-save-line:hover {
+  color: var(--textColor);
+}
+
+
+.search {
+  position: fixed;
+  left: 30%;
+  top: 7px;
+
+  margin-left: 15%;
+  border-radius: 16px;
+  border: 1px solid var(--textColor);
+  width: 350px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14), 0 0 2px rgba(0, 0, 0, 0.12);
+}
+
+.ri-search-line {
+  color: var(--textColor);
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.ri-search-line:hover {
+  opacity: 50%;
+  cursor: pointer;
+}
+
+.search-input {
+  font-size: 12pt;
+  background-color: var(--backgroundColor);;
+  border: none;
+  outline: none;
+  color: var(--secondaryTextColor);
+  padding-bottom: 5px;
+}
+
+.search-input:focus {
+  color: var(--textColor);
+}
+
+.search-results {
+  position: fixed;
+  left: 30%;
+  top: 55px;
+  margin-left: 15%;
+  border-radius: 10px;
+  width: 350px;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.search-box {
+  padding: 5px;
+  font-size: 12pt;
+}
+
+.search-box:hover {
+  background: lightgray;
+  cursor: pointer;
+}
+
+.profile {
+  position: fixed;
+  top: 10px;
+  right: 5px;
+  color: var(--textColor);
+  cursor: pointer;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 90%;
+  left: -10px;
+  background-color: var(--textColor);
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  min-width: 80px;
+  z-index: 1;
+  display: block;
+  margin-top: 10px;
+  color: black;
+}
+
+.dropdown-item {
+  padding: 10px;
+  font-size: 10pt;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background-color: #f1f1f1;
+  border-radius: 16px;
+}
+
+.profile:hover .dropdown-menu {
+  display: block;
+  border-radius: 16px;
 }
