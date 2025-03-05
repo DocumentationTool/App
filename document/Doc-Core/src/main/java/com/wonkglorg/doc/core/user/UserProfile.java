@@ -5,8 +5,8 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The users profile
@@ -15,17 +15,17 @@ public class UserProfile{
 	private final Gson gson = new Gson();
 	private final UserId id;
 	private final String passwordHash;
-	private final List<Permission<UserId>> permissionNodes;
-	private final List<Role> roles;
+	private final Set<Permission<UserId>> permissionNodes;
+	private final Set<Role> roles;
 	
 	public UserProfile(UserId id, String passwordHash) {
 		this.id = id;
-		this.permissionNodes = new ArrayList<>();
-		this.roles = new ArrayList<>();
+		this.permissionNodes = new HashSet<>();
+		this.roles = new HashSet<>();
 		this.passwordHash = passwordHash;
 	}
 	
-	public UserProfile(UserId id, String passwordHash, List<Permission<UserId>> permissionNodes, List<Role> roles) {
+	public UserProfile(UserId id, String passwordHash, Set<Permission<UserId>> permissionNodes, Set<Role> roles) {
 		this.id = id;
 		this.permissionNodes = permissionNodes;
 		this.roles = roles;
@@ -40,11 +40,11 @@ public class UserProfile{
 		return passwordHash;
 	}
 	
-	public List<Permission<UserId>> getPermissions() {
+	public Set<Permission<UserId>> getPermissions() {
 		return permissionNodes;
 	}
 	
-	public List<Role> getRoles() {
+	public Set<Role> getRoles() {
 		return roles;
 	}
 	
