@@ -32,8 +32,8 @@ public class ApiDocumentController {
 
     @GetMapping("/get")
     public ResponseEntity<RestResponse<List<JsonResource>>> getResources(
-            @RequestParam(value = "repo", required = false) String repo,
-            @RequestParam(value = "user", required = false) String user) {
+            @RequestParam(value = "repo", required = false) String repoId,
+            @RequestParam(value = "user", required = false) String userId) {
         log.info("Received PUT request to get resources");
         RepoId repoId = new RepoId(repo);
         UserId userId = new UserId(user);
