@@ -3,6 +3,7 @@ package com.wonkglorg.doc.api.controller;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
 import static com.wonkglorg.doc.api.DocApiApplication.DEV_RESOURCES;
@@ -36,10 +38,21 @@ public class ApiDocumentController {
         log.info("Received PUT request to get resources");
         RepoId repoId = new RepoId(repo);
         UserId userId = new UserId(user);
-        if (DEV_MODE) {
-            return RestResponse.success(JsonResource.of(DEV_RESOURCES)).toResponse();
+        List<Resource> resources = null;
+
+        try {
+            repoService.getRepo(repoId);
+        } catch (Exception e) {
+            return RestResponse.<List<JsonResource>>error(e.getMessage()).toResponse();
         }
-        return RestResponse.success(JsonResource.of(repoService.getResources(repoId, userId).get())).toResponse();
+
+        if (DEV_MODE) {
+            resources = DEV_RESOURCES;
+        } else {
+            resources = repoService.getResources(repoId, userId).get();
+        }
+        resources = resources.stream().filter(r -> r.repoId().filter().test(repoId)).collect(Collectors.toList());
+        return RestResponse.success(JsonResource.of(resources)).toResponse();
     }
 
 

@@ -1,0 +1,4 @@
+Resources
+wenn repo nicht angegeben ist kommen daten von allen repos zurück
+wenn user nicht angegeben ist kommen alle daten zurück ohne user permission einschränkungen
+http://localhost:8080/api/document/get?repo=repo1&user=dev_p10209
