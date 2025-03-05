@@ -1,16 +1,21 @@
 package com.wonkglorg.doc.api.controller;
 
+import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Role;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
-import static com.wonkglorg.doc.api.DocApiApplication.DEV_USER;
+import static com.wonkglorg.doc.api.DocApiApplication.DEV_USERS;
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_ROLE;
 
 @RestController
@@ -26,17 +31,32 @@ public class ApiRoleController {
 
     @GetMapping("/get")
     public ResponseEntity<RestResponse<List<Role>>> getRoles(@RequestParam("repoId") RepoId repoId, @RequestParam("userId") UserId userId) {
-
-        if (DEV_MODE) {
-            return RestResponse.success(DEV_USER.getRoles()).toResponse();
+        try {
+            repoService.getRepo(repoId)
+        } catch (NotaRepoException e) {
+            throw new RuntimeException();
         }
+        if (DEV_MODE) {
 
-        //return RestResponse.success(List.of(Role.values())).toResponse();
-        return repoService.getUserPermissions();
+
+            Map<UserId, UserProfile> userProfileMap = DEV_USERS.get(repoId);
+            if (userProfileMap == null) {
+                return RestResponse.error("No users in repo found").toResponse();
+            }
+            UserProfile userProfile = userProfileMap.get(userId);
+            return RestResponse.success(userProfile.getRoles()).toResponse();
+        }
+        //return repoService.getUserPermissions(repoId,userId);
+        return null;
     }
 
     @PostMapping("/add")
-    public ResponseEntity<RestResponse<Void>> addRole(@RequestParam String userId, @RequestParam Role role) {
+    public ResponseEntity<RestResponse<Void>> addRole(@RequestParam("repoID") RepoId repoId, @RequestParam UserId userId, @RequestParam Role role) {
+        if (DEV_MODE) {
+            DEV_USERS.putIfAbsent(repoId, new HashMap<>()).putIfAbsent(userId, new ArrayList<>()).add(role);
+            return RestResponse.<Void>success("Added Role to user'", null).toResponse();
+        }
+
         //return RestResponse.success("Role added").toResponse();
         return null;
     }

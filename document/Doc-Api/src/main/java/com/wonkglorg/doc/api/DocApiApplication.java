@@ -13,7 +13,9 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SpringBootApplication
 @EnableAsync
@@ -24,6 +26,9 @@ public class DocApiApplication {
      */
     public static final boolean DEV_MODE = true;
     public static final UserProfile DEV_USER = new UserProfile(new UserId("dev_p10209"), "dev_hash", List.of(), List.of(new Role(new RoleId("ADMIN"), "Admin")));
+    public static final Map<RepoId, Resource> DEV_RESOURCES = new HashMap<>();
+    public static final Map<RepoId, Map<UserId, UserProfile>> DEV_USERS = new HashMap<>();
+
     /**
      * Test resources for development
      */
