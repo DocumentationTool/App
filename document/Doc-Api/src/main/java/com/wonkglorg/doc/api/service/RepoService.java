@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.ALL_RESOURCES;
+import static com.wonkglorg.doc.api.service.CacheConstants.CacheResourceConstant.REPO_RESOURCES;
+
 @Component
 @Service
 public class RepoService {
@@ -34,16 +37,25 @@ public class RepoService {
     private final Map<RepoId, FileRepository> repositories = new HashMap<>();
 
     private final RepoProperties properties;
+    private final RepoAsyncOperations repoAsyncOperations;
 
-    public RepoService(RepoProperties properties, RepoAsyncOperations operations) {
+    public RepoService(RepoProperties properties, RepoAsyncOperations operations, RepoAsyncOperations repoAsyncOperations) {
         this.properties = properties;
         this.operations = operations;
+        this.repoAsyncOperations = repoAsyncOperations;
     }
 
     public Map<RepoId, FileRepository> getRepositories() {
         return repositories;
     }
 
+    /**
+     * Gets a repository by its id
+     *
+     * @param repoId the id of the repository
+     * @return the repository
+     * @throws NotaRepoException if the repository does not exist or null is passed
+     */
     public FileRepository getRepo(RepoId repoId) throws NotaRepoException {
         if (repoId == null) {
             log.error("RepoId cannot be null");
@@ -80,17 +92,6 @@ public class RepoService {
 	}
 	 */
 
-    /**
-     * Gets all resources from all repositories
-     *
-     * @return a list of all resources
-     */
-    public QueryDatabaseResponse<List<Resource>> getResources() {
-        var resourceFutures = repositories.values().stream().map(operations::getResourcesFromRepositoryAsync).toList();
-
-        //return resourceFutures.stream().map(CompletableFuture::join).flatMap(List::stream).collect(Collectors.toList());
-        return null;
-    }
 
     /**
      * Gets all users from a specified group
@@ -100,12 +101,20 @@ public class RepoService {
      */
     @Cacheable(value = "groupUsers", key = "{#repoId, #groupId}")
     public QueryDatabaseResponse<List<UserId>> getUsersFromGroup(RepoId repoId, GroupId groupId) {
-        return getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
+        try {
+            return getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
+        } catch (NotaRepoException e) {
+            return QueryDatabaseResponse.error(null, e);
+        }
     }
 
     @Cacheable(value = "userGroups", key = "{#repoId, #userId}")
     public QueryDatabaseResponse<List<GroupId>> getGroupsFromUser(RepoId repoId, UserId userId) {
-        return getRepo(repoId).getDatabase().getGroupsFromUser(userId);
+        try {
+            return getRepo(repoId).getDatabase().getGroupsFromUser(userId);
+        } catch (NotaRepoException e) {
+            return QueryDatabaseResponse.error(null, e);
+        }
     }
 
     @Cacheable(value = "userPermissions", key = "{#repoId, #userId}")
@@ -120,18 +129,52 @@ public class RepoService {
         return null;
     }
 
-    @Cacheable(value = "allResources", key = "{#repoId}")
-    public QueryDatabaseResponse<List<Resource>> getResources(RepoId repoId) {
-        try {
-            validateRepoId(repoId);
-        } catch (IllegalArgumentException e) {
-            return QueryDatabaseResponse.fail(null, e);
+    /**
+     * Gets all resources from all repositories
+     *
+     * @return a list of all resources
+     */
+    @Cacheable(value = ALL_RESOURCES, key = "{#repoId, #userId}")
+    public QueryDatabaseResponse<List<Resource>> getResources(RepoId repoId, UserId userId) {
+        QueryDatabaseResponse<List<Resource>> resouces;
+        if(repoId == null) {
+            resouces = getResources(repoId);
+        }else{
+            resouces = null;//;
         }
 
-        return getRepo(repoId).getDatabase().getResources();
+        if(resouces.isError()){
+            return resouces;
+        }
+
+        //todo:jmd add user permissions
+        //return resourceFutures.stream().map(CompletableFuture::join).flatMap(List::stream).collect(Collectors.toList());
+        return resouces;
     }
 
-    public UpdateDatabaseResponse insertResource(RepoId repoId,) {
+    /**
+     * Gets all resources from a specified repository
+     *
+     * @param repoId the repository to get resources from
+     * @return a list of all resources in the repository
+     */
+    @Cacheable(value = REPO_RESOURCES)
+    public QueryDatabaseResponse<List<Resource>> getResources(RepoId repoId) {
+        try {
+            return getRepo(repoId).getDatabase().getResources();
+        } catch (NotaRepoException e) {
+            return QueryDatabaseResponse.error(null, e);
+        }
+
+    }
+
+    /**
+     * Inserts a new resource into a repository
+     *
+     * @param repoId
+     * @return
+     */
+    public UpdateDatabaseResponse insertResource(RepoId repoId) {
         FileRepository repo = null;
         try {
             repo = getRepo(repoId);
@@ -139,23 +182,7 @@ public class RepoService {
             throw new RuntimeException(e);
         }
 
-        return repo.getDatabase().insertResource();
+        return null;
+        // return repo.getDatabase().insertResource();
     }
-
-    /**
-     * Validates if the repo id is valid abd exists
-     *
-     * @param repoId the repo id to validate
-     * @throws IllegalArgumentException if the repo id is not valid
-     */
-    private void validateRepoId(RepoId repoId) throws IllegalArgumentException {
-        if (repoId == null) {
-            throw new IllegalArgumentException("RepoId cannot be null");
-        }
-
-        if (!repositories.containsKey(repoId)) {
-            throw new IllegalArgumentException("RepoId '%s' does not exist".formatted(repoId));
-        }
-    }
-
 }

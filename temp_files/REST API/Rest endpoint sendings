@@ -4,10 +4,14 @@ Baum Struktur ans frontend schicken
 {
 	"REPO1":{
 		"Path": {
-			"File1",
-			"File2"
+			"File1" {
+			some file info
 			},
-			"Path2"{
+			"File2"{
+			file 2 info
+			}
+			},
+			"to"{
 
 			}
 		}

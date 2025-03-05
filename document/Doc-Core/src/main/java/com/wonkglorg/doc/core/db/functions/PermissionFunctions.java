@@ -46,7 +46,7 @@ public class PermissionFunctions{
 		} catch(Exception e){
 			String errorResponse = "Failed to get permissions for user";
 			log.error(errorResponse, e);
-			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 		
 	}
@@ -68,7 +68,7 @@ public class PermissionFunctions{
 		} catch(Exception e){
 			String errorResponse = "Failed to get permissions for group";
 			log.error(errorResponse, e);
-			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 	}
 	
@@ -85,7 +85,7 @@ public class PermissionFunctions{
 		} catch(Exception e){
 			String errorResponse = "Failed to get roles for user";
 			log.error(errorResponse, e);
-			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 	}
 }

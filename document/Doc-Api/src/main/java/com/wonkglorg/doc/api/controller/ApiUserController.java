@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.api.controller;
 
+import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -42,7 +43,11 @@ public class ApiUserController {
         if (DEV_MODE) {
             return new ResponseEntity<>(DEV_USER.toString(), HttpStatus.OK);
         }
-        repoManager.getRepo(repo).getDatabase().addUser(userId, password, "example");
+        try {
+            repoManager.getRepo(repo).getDatabase().addUser(userId, password, "example");
+        } catch (NotaRepoException e) {
+            throw new RuntimeException(e);
+        }
 
         return new ResponseEntity<>("", HttpStatus.SERVICE_UNAVAILABLE);
     }
