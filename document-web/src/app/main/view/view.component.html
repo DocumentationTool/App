@@ -1,5 +1,4 @@
 <div
   *ngIf="this.fileService.selectedFile()">
-  <p>Aktivierte Datei: {{ this.fileService.selectedFile() }}</p>
   <markdown [src]="'assets/' + fileService.selectedFile()"></markdown>
 </div>
