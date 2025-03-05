@@ -35,8 +35,7 @@ public class ApiDocumentController {
             @RequestParam(value = "repo", required = false) String repoId,
             @RequestParam(value = "user", required = false) String userId) {
         log.info("Received PUT request to get resources");
-        RepoId repoId = new RepoId(repo);
-        UserId userId = new UserId(user);
+        /*
         List<Resource> resources = null;
 
         try {
@@ -54,6 +53,9 @@ public class ApiDocumentController {
         }
         resources = resources.stream().filter(r -> r.repoId().filter().test(repoId)).collect(Collectors.toList());
         return RestResponse.success(JsonResource.of(resources)).toResponse();
+        
+         */
+        return null;
     }
 
 
