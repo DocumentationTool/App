@@ -5,6 +5,7 @@ import static com.wonkglorg.doc.api.DocApiApplication.DEV_USERS;
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_ROLE;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.RoleId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Role;
 import com.wonkglorg.doc.core.user.UserProfile;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping(API_ROLE)
@@ -31,20 +33,19 @@ public class ApiRoleController{
 	
 	@GetMapping("/get")
 	public ResponseEntity<RestResponse<List<Role>>> getRoles(@RequestParam("repoId") String repoId, @RequestParam("userId") String userId) {
-		RepoId id = new RepoId(repoId);
-		if(repoService.isValidRepo(id)){
-			return RestResponse.<List<Role>>error("Invalid Repo").toResponse();
-		}
+		RepoId rId = new RepoId(repoId);
+		UserId uId = new UserId(userId);
+		
 		if(DEV_MODE){
-			Map<UserId, UserProfile> userProfileMap = DEV_USERS.get(id);
+			Map<UserId, UserProfile> userProfileMap = DEV_USERS.get(rId);
 			if(userProfileMap == null){
 				return RestResponse.<List<Role>>error("No users in repo found").toResponse();
 			}
-			UserProfile userProfile = userProfileMap.get(new UserId(userId));
+			UserProfile userProfile = userProfileMap.get(uId);
 			return RestResponse.success(userProfile.getRoles().stream().toList()).toResponse();
 		}
-		//return repoService.getUserPermissions(repoId,userId);
-		return null;
+		
+		return RestResponse.of(repoService.getRoles(rId, uId)).toResponse();
 	}
 	
 	@GetMapping("/get/all")
@@ -58,7 +59,7 @@ public class ApiRoleController{
 			if(userProfileMap == null){
 				return RestResponse.<List<Role>>error("No users in repo found").toResponse();
 			}
-			List<Role> roles = userProfileMap.values().stream().map(UserProfile::getRoles).flatMap(List::stream).toList();
+			List<Role> roles = userProfileMap.values().stream().map(UserProfile::getRoles).flatMap(Set::stream).toList();
 			return RestResponse.success(roles).toResponse();
 		}
 		//return repoService.getAllRoles(repoId);
@@ -69,16 +70,17 @@ public class ApiRoleController{
 	public ResponseEntity<RestResponse<Void>> addRole(@RequestParam("repoId") String repoId,
 													  @RequestParam("userId") String userId,
 													  @RequestParam("roleId") String roleId) {
-		if(repoService.isValidRepo(repoId)){
+		RepoId id = new RepoId(repoId);
+		if(repoService.isValidRepo(id)){
 			return RestResponse.<Void>error("Invalid Repo").toResponse();
 		}
 		
 		if(DEV_MODE){
-			UserProfile userProfile = DEV_USERS.putIfAbsent(repoId, new HashMap<>()).get(userId);
+			UserProfile userProfile = DEV_USERS.putIfAbsent(id, new HashMap<>()).get(new UserId(userId));
 			if(userProfile == null){
 				return RestResponse.<Void>error("User doesn't exist").toResponse();
 			}
-			userProfile.getRoles().add(role);
+			userProfile.getRoles().add(new Role(new RoleId(roleId), "Role"));
 			return RestResponse.<Void>success("Added Role to user'", null).toResponse();
 		}
 		
@@ -87,11 +89,12 @@ public class ApiRoleController{
 	}
 	
 	@PostMapping("/remove")
-	public ResponseEntity<RestResponse<Void>> removeRole(@RequestParam("repoID") RepoId repoId,
-														 @RequestParam UserId userId,
-														 @RequestParam Role role) {
+	public ResponseEntity<RestResponse<Void>> removeRole(@RequestParam("repoId") String repoId,
+														 @RequestParam("userId") String userId,
+														 @RequestParam("roleId") String role) {
+		RepoId id = new RepoId(repoId);
 		//return RestResponse.success("Role removed").toResponse();
-		if(repoService.isValidRepo(repoId)){
+		if(repoService.isValidRepo(id)){
 			return RestResponse.<Void>error("Invalid Repo").toResponse();
 		}
 		
