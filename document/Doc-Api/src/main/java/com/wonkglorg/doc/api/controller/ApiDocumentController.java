@@ -8,7 +8,6 @@ import com.wonkglorg.doc.core.objects.UserId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,7 +20,7 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_DOC
 /**
  * Handles all api document specific requests
  */
-@Controller
+@RestController
 @RequestMapping(API_DOCUMENT)
 public class ApiDocumentController {
     private static final Logger log = LoggerFactory.getLogger(ApiDocumentController.class);
@@ -41,7 +40,9 @@ public class ApiDocumentController {
         List<Resource> resources = null;
 
         try {
-            repoService.getRepo(repoId);
+            if (repoId.id() != null) {
+                repoService.getRepo(repoId);
+            }
         } catch (Exception e) {
             return RestResponse.<List<JsonResource>>error(e.getMessage()).toResponse();
         }
@@ -80,6 +81,12 @@ public class ApiDocumentController {
         }
 
          */
+        return null;
+    }
+
+
+    @PutMapping("/update")
+    public ResponseEntity<RestResponse<Void>> updateResource() {
         return null;
     }
 }

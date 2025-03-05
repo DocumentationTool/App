@@ -21,7 +21,7 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USE
 /**
  * Handles all api user specific requests
  */
-@Controller
+@RestController
 @RequestMapping(API_USER)
 public class ApiUserController {
     //todo, setup specific api key to bypass role permissions (when the app itself needs to make
