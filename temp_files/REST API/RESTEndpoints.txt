@@ -1,4 +1,5 @@
-Resources
-wenn repo nicht angegeben ist kommen daten von allen repos zurück
-wenn user nicht angegeben ist kommen alle daten zurück ohne user permission einschränkungen
-http://localhost:8080/api/document/get?repo=repo1&user=dev_p10209
+Dokumentation automatisch über swagger, mit link: http://localhost:8080/swagger-ui/index.html
+
+
+
+implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
