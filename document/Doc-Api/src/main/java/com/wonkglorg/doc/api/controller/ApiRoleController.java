@@ -47,6 +47,10 @@ public class ApiRoleController {
 
     @PostMapping("/add")
     public ResponseEntity<RestResponse<Void>> addRole(@RequestParam("repoID") RepoId repoId, @RequestParam UserId userId, @RequestParam Role role) {
+        if (repoService.isValidRepo(repoId)) {
+            return RestResponse.<Void>error("Invalid Repo").toResponse();
+        }
+
         if (DEV_MODE) {
             DEV_USERS.putIfAbsent(repoId, new HashMap<>()).putIfAbsent(userId, new ArrayList<>()).add(role);
             return RestResponse.<Void>success("Added Role to user'", null).toResponse();
@@ -57,8 +61,18 @@ public class ApiRoleController {
     }
 
     @PostMapping("/remove")
-    public ResponseEntity<RestResponse<Void>> removeRole(@RequestParam String userId, @RequestParam Role role) {
+    public ResponseEntity<RestResponse<Void>> removeRole(@RequestParam("repoID") RepoId repoId, @RequestParam UserId userId, @RequestParam Role role) {
         //return RestResponse.success("Role removed").toResponse();
+        if (repoService.isValidRepo(repoId)) {
+            return RestResponse.<Void>error("Invalid Repo").toResponse();
+        }
+
+        if (DEV_MODE) {
+            //DEV_USERS.get(userId).remove(role);
+            return RestResponse.<Void>success("Role removed", null).toResponse();
+        }
+
+
         return null;
     }
 
