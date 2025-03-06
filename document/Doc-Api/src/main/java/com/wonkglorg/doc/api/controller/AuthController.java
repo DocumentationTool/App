@@ -30,6 +30,8 @@ public class AuthController{
 	public AuthController(UserAuthenticationManager authManager) {
 		this.authManager = authManager;
 	}
+	
+	//@formatter:off
 	@Operation(
 			summary = "Test login endpoint",
 			description = "Returns a token when DEV_MODE is enabled, otherwise returns a 403."
@@ -72,5 +74,6 @@ public class AuthController{
 			return new ResponseEntity<>(new AuthResponse(null, e.getMessage()), e.getStatusCode());
 		}
 	}
+	//@formatter:on
 	
 }

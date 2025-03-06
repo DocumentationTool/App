@@ -14,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
  * Handles all api user specific requests
  */
@@ -29,6 +27,7 @@ public class ApiUserController{
 		this.repoService = repoService;
 	}
 	
+	//@formatter:off
 	@Operation(
 			summary = "Get a user",
 			description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository."
@@ -67,4 +66,5 @@ public class ApiUserController{
 			@RequestParam("userId") String userId) {
 		return null;
 	}
+	//@formatter:on
 }

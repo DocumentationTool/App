@@ -7,8 +7,6 @@ import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.service.RepoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -16,8 +14,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 //todo:jmd give descriptions to the rest endpoints
 
@@ -27,13 +23,13 @@ import java.util.List;
 @RestController
 @RequestMapping(API_RESOURCE)
 public class ApiResourceController{
-	private static final Logger log = LoggerFactory.getLogger(ApiResourceController.class);
 	private final RepoService repoService;
 	
 	public ApiResourceController(RepoService repoService) {
 		this.repoService = repoService;
 	}
 	
+	//@formatter:off
 	@Operation(summary = "Gets a resource", description = "Returns a resource or resources if no repository is given. If a repository is given, only resources for that repository will be returned, if no userId is given returns all resources in this repository without permission checks.")
 	@GetMapping("/get")
 	public ResponseEntity<RestResponse<JsonRepos<JsonResource>>> getResourcesByUser(
@@ -83,4 +79,5 @@ public class ApiResourceController{
 															 @RequestBody String content) {
 		return null;
 	}
+	//@formatter:on
 }
