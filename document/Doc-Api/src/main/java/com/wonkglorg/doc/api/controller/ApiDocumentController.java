@@ -2,21 +2,18 @@ package com.wonkglorg.doc.api.controller;
 
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.service.RepoService;
-import com.wonkglorg.doc.core.objects.RepoId;
-import com.wonkglorg.doc.core.objects.Resource;
-import com.wonkglorg.doc.core.objects.UserId;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
-import static com.wonkglorg.doc.api.DocApiApplication.DEV_RESOURCES;
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_DOCUMENT;
 
+//todo:jmd give descriptions to the rest endpoints
 /**
  * Handles all api document specific requests
  */
@@ -47,7 +44,7 @@ public class ApiDocumentController {
         }
 
         if (DEV_MODE) {
-            resources = DEV_RESOURCES;
+            resources = DEV_RESOURCES.stream().toList();
         } else {
             resources = repoService.getResources(repoId, userId).get();
         }
