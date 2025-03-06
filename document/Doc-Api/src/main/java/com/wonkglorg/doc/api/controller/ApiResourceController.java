@@ -42,7 +42,9 @@ public class ApiResourceController{
 			@Parameter(description = "The userId to search for, if none is given, returns all resources in the repository.")
 			@RequestParam(value = "userId", required = false) String userId,
 			@Parameter(description = "The path to search for, if none is given, returns all resources in the repository.")
-			@RequestParam(value = "path", required = false) String path) {
+			@RequestParam(value = "path", required = false) String path,
+			@Parameter(description = "If true only returns editable resources.")
+			@RequestParam(value = "isEditable", required = false) Boolean isEditable) {
 		return null;
 	}
 	
@@ -54,7 +56,9 @@ public class ApiResourceController{
 			@Parameter(description = "The userId to search for, if none is given, returns all resources in the repository.")
 			@RequestParam(value = "userId", required = false) String userId,
 			@Parameter(description = "The path to search for, if none is given, returns all resources in the repository.")
-			@RequestParam(value = "path", required = false) String path) {
+			@RequestParam(value = "path", required = false) String path,
+			@Parameter(description = "If true only returns editable resources.")
+			@RequestParam(value = "isEditable", required = false) Boolean isEditable) {
 		return null;
 	}
 	
