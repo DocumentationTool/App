@@ -1,34 +1,40 @@
 package com.wonkglorg.doc.api.controller;
 
+import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_PERMISSION;
 import com.wonkglorg.doc.api.json.JsonPermissions;
 import com.wonkglorg.doc.api.json.JsonRepos;
+import com.wonkglorg.doc.api.service.RepoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_PERMISSION;
-
 @RestController
 @RequestMapping(API_PERMISSION)
-public class ApiPermissionController {
-
-    @Operation(
-            summary = "Get a user's Permissions",
-            description = "Returns a list of permissions the user has. If a repository is given, only returns permissions for that repository. If none is given, returns permissions for all repositories."
-    )
+public class ApiPermissionController{
+	
+	private final RepoService repoService;
+	
+	public ApiPermissionController(RepoService repoService) {
+		this.repoService = repoService;
+	}
+	//@formatter:off
+    /* can be added if specific info for swagger should be shown what to expect
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Retrieved Data"),
             @ApiResponse(responseCode = "404", description = "Error occurred during execution")
     })
+     */
+    @Operation(
+            summary = "Get a user's Permissions",
+            description = "Returns a list of permissions the user has. If a repository is given, only returns permissions for that repository. If none is given, returns permissions for all repositories."
+    )
     @GetMapping("user/get")
     public ResponseEntity<RestResponse<JsonRepos<JsonPermissions>>> getUserPermissions(
-            @Parameter(description = "The repoId to search the user's permissions in. If none is given, returns permissions for all currently loaded repos.")
+            @Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
             @RequestParam(value = "repoId", required = false) String repoId,
             @Parameter(description = "The userId to retrieve the permissions for. If none or an invalid one is given, returns an error code.")
             @RequestParam("userId") String userId) {
@@ -39,13 +45,9 @@ public class ApiPermissionController {
             summary = "Add a new user permission",
             description = "Adds a new user permission to a repository. If none is specified, adds the user permission to all repositories."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully applied the permission"),
-            @ApiResponse(responseCode = "404", description = "Error occurred during execution")
-    })
     @GetMapping("user/add")
     public ResponseEntity<RestResponse<Void>> addUserPermission(
-            @Parameter(description = "The repoId to add the user's permission to. If none is given, adds the permission to all repositories.")
+            @Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
             @RequestParam(value = "repoId", required = false) String repoId,
             @Parameter(description = "The userId to assign the permission to.")
             @RequestParam("userId") String userId,
@@ -60,10 +62,6 @@ public class ApiPermissionController {
             summary = "Remove a user's permission",
             description = "Removes a specific user's permission from a repository. If none is specified, removes the permission from all repositories."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully removed the permission"),
-            @ApiResponse(responseCode = "404", description = "Error occurred during execution")
-    })
     @GetMapping("user/remove")
     public ResponseEntity<RestResponse<Void>> removeUserPermission(
             @Parameter(description = "The repoId to remove the user's permission from.")
@@ -81,10 +79,6 @@ public class ApiPermissionController {
             summary = "Get group permissions",
             description = "Returns the list of permissions a specific group has in a given repository."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Retrieved Data"),
-            @ApiResponse(responseCode = "404", description = "Error occurred during execution")
-    })
     @GetMapping("group/get")
     public ResponseEntity<RestResponse<JsonPermissions>> getGroupPermissions(
             @Parameter(description = "The repoId to search the group's permissions in.")
@@ -98,10 +92,6 @@ public class ApiPermissionController {
             summary = "Add group permission",
             description = "Adds a new group permission to a repository. If none is specified, adds the group permission to all repositories."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully added the permission"),
-            @ApiResponse(responseCode = "404", description = "Error occurred during execution")
-    })
     @GetMapping("group/add")
     public ResponseEntity<RestResponse<Void>> addGroupPermission(
             @Parameter(description = "The repoId to add the group's permission to.")
@@ -119,10 +109,6 @@ public class ApiPermissionController {
             summary = "Remove group permission",
             description = "Removes a specific group's permission from a repository. If none is specified, removes the permission from all repositories."
     )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully removed the permission"),
-            @ApiResponse(responseCode = "404", description = "Error occurred during execution")
-    })
     @GetMapping("group/remove")
     public ResponseEntity<RestResponse<Void>> removeGroupPermission(
             @Parameter(description = "The repoId to remove the group's permission from.")
@@ -135,5 +121,6 @@ public class ApiPermissionController {
             @RequestParam("path") String path) {
         return null;
     }
-
+	//@formatter:on
+	
 }

@@ -4,6 +4,8 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USE
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.core.permissions.Role;
 import com.wonkglorg.doc.core.user.UserProfile;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -30,48 +32,42 @@ public class ApiUserController{
 	public ApiUserController(RepoService repoService) {
 		this.repoService = repoService;
 	}
-	
-	/*
+	@Operation(
+			summary = "Get a user's Roles",
+			description = "Returns a list of Roles the user has. If a repository is given, only returns roles for that repository. If none is given, returns roles for all repositories."
+	)
 	@GetMapping("/get")
-	public ResponseEntity<UserProfile> getUser(@RequestParam("repoId") String repoId, @RequestParam("userId") String userId) {
-		RepoId id = if(repoService.validateRepoId(repoId)){
-			return RestResponse.<List<Role>>error("Invalid Repo").toResponse();
-		}
-		if(DEV_MODE){
-			Map<UserId, UserProfile> userProfileMap = DEV_USERS.get(id);
-			if(userProfileMap == null){
-				return RestResponse.<List<Role>>error("No users in repo found").toResponse();
-			}
-			UserProfile userProfile = userProfileMap.get(new UserId(userId));
-			return RestResponse.success(userProfile.getRoles().stream().toList()).toResponse();
-		}
-		//return repoService.getUserPermissions(repoId,userId);
+	public ResponseEntity<List<Role>> getUser(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("repoId") String repoId,
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("userId") String userId) {
 		return null;
 	}
-	
-	 */
-	
-	@GetMapping("/get")
-	public ResponseEntity<List<Role>> getUser(@RequestParam("repoId") String repoId, @RequestParam("userId") String userId) {
-		return null;
-	}
-	
+	@Operation(
+			summary = "Get a user's Roles",
+			description = "Returns a list of Roles the user has. If a repository is given, only returns roles for that repository. If none is given, returns roles for all repositories."
+	)
 	@PutMapping("/add")
-	public ResponseEntity<String> addUser(@RequestParam("repo") String repoId,
-										  @RequestParam("userID") String userId,
-										  @RequestParam("password") String password) {
+	public ResponseEntity<String> addUser(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("repoId") String repoId,
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("userId") String userId,
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("password") String password) {
 		return null;
 	}
-	
+	@Operation(
+			summary = "Get a user's Roles",
+			description = "Returns a list of Roles the user has. If a repository is given, only returns roles for that repository. If none is given, returns roles for all repositories."
+	)
 	@PutMapping("/remove")
-	public ResponseEntity<Profile> deleteUser(@RequestParam("userID") String userId) {
-		log.info("Received PUT request to delete user with userID='{}'", userId);
-		return ResponseEntity.ok(null);
-	}
-	
-	@PutMapping("/update")
-	public ResponseEntity<Profile> updateUser(@RequestBody UserProfile userId) {
+	public ResponseEntity<Profile> deleteUser(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("repoId") String repoId,
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam("userId") String userId) {
 		return null;
 	}
-	
 }
