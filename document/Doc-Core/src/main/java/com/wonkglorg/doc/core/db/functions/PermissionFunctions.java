@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Permission related database functions
@@ -30,11 +32,11 @@ public class PermissionFunctions{
 	 * @param userId the user to get permissions for
 	 * @return a list of permissions for the user
 	 */
-	public static QueryDatabaseResponse<List<Permission<UserId>>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
+	public static QueryDatabaseResponse<Set<Permission<UserId>>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
 		try(PreparedStatement statement = database.getConnection().prepareStatement("SELECT * FROM UserPermissions WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){
-				List<Permission<UserId>> permissions = new ArrayList<>();
+				Set<Permission<UserId>> permissions = new HashSet<>();
 				while(rs.next()){
 					permissions.add(new Permission<>(new UserId(rs.getString("user_id")),
 							PermissionType.valueOf(rs.getString("permission")),
@@ -72,11 +74,11 @@ public class PermissionFunctions{
 		}
 	}
 	
-	public static QueryDatabaseResponse<List<Role>> getRolesForUser(RepositoryDatabase database, UserId userId) {
+	public static QueryDatabaseResponse<Set<Role>> getRolesForUser(RepositoryDatabase database, UserId userId) {
 		try(var statement = database.getConnection().prepareStatement("SELECT * FROM UserRoles WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){
-				List<Role> roles = new ArrayList<>();
+				Set<Role> roles = new HashSet<>();
 				while(rs.next()){
 					roles.add(new Role(RoleId.of(rs.getString("role_id")), rs.getString("role")));
 				}

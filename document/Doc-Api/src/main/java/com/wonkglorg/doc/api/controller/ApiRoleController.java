@@ -1,33 +1,39 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.core.permissions.Role;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_ROLE;
+import com.wonkglorg.doc.api.json.JsonRepos;
+import com.wonkglorg.doc.api.json.JsonRoles;
+import com.wonkglorg.doc.api.service.RepoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping(API_ROLE)
-public class ApiRoleController {
-
-    @GetMapping("/get")
-    public ResponseEntity<RestResponse<List<Role>>> getRoles(@RequestParam String userId) {
-        //return RestResponse.success(List.of(Role.values())).toResponse();
-        return null;
-    }
-
-    @PostMapping("/add")
-    public ResponseEntity<RestResponse<Void>> addRole(@RequestParam String userId, @RequestParam Role role) {
-        //return RestResponse.success("Role added").toResponse();
-        return null;
-    }
-
-    @PostMapping("/remove")
-    public ResponseEntity<RestResponse<Void>> removeRole(@RequestParam String userId, @RequestParam Role role) {
-        //return RestResponse.success("Role removed").toResponse();
-        return null;
-    }
-
+public class ApiRoleController{
+	
+	private final RepoService repoService;
+	
+	public ApiRoleController(RepoService repoService) {
+		this.repoService = repoService;
+	}
+	
+	//@formatter:off
+	@Operation(
+			summary = "Get a user's Roles",
+			description = "Returns a list of Roles the user has. If a repository is given, only returns roles for that repository. If none is given, returns roles for all repositories."
+	)
+	@GetMapping("/get")
+	public ResponseEntity<RestResponse<JsonRepos<JsonRoles>>> getRoles(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam(value = "repoId",required = false) String repoId,
+			@Parameter(description = "The userId to search roles for, can be null to find all existing roles.")
+			@RequestParam(value = "userId",required = false) String userId) {
+		return null;
+	}
+	//@formatter:on
 }
