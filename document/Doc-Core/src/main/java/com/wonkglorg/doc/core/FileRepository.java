@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.git.GitRepo;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.ADDED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.MODIFIED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.UNTRACKED;
+import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
@@ -74,15 +75,10 @@ public class FileRepository{
 		
 		Set<Path> foundFiles = gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED);
 		
-		boolean hasChanged = checkFileChanges(foundFiles);//dataDB.updateResources(foundFiles);
-		
-		if(hasChanged){
-			gitRepo.addFile(repoProperties.getDbName());
-			gitRepo.commit("Updated File DB");
-		}
+		checkFileChanges(foundFiles);
 	}
 	
-	private boolean checkFileChanges(Set<Path> foundFiles) {
+	private void checkFileChanges(Set<Path> foundFiles) {
 		log.info("Checking for changes in {} files", foundFiles.size());
 		
 		ResourceRequest request = new ResourceRequest();
@@ -93,7 +89,7 @@ public class FileRepository{
 		QueryDatabaseResponse<List<Resource>> resourceRequest = dataDB.getResources(request);
 		if(resourceRequest.isError()){
 			log.error("Error while checking for changes: {}", resourceRequest.getErrorMessage());
-			return false;
+			return;
 		}
 		
 		List<Resource> resources = resourceRequest.get();
@@ -105,16 +101,34 @@ public class FileRepository{
 											   .toList();
 		List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 		
-		int  existingFilesChanged= updateMatchingResources(matchingResources, resourceMap);
-		addNewFiles(newResources);
-		deleteOldResources(deletedResources);
+		if(newResources.isEmpty() && deletedResources.isEmpty() && matchingResources.isEmpty()){
+			log.info("No changes detected in repo '{}'", repoProperties.getId());
+			return;
+		}
+		
+		UserBranch branch = gitRepo.createBranch("system");
+		
+		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap, branch);
+		addNewFiles(newResources, branch);
+		deleteOldResources(deletedResources, branch);
 		log.info("--------Report for repo '{}--------", repoProperties.getId());
 		log.info("New resources: {}", newResources.size());
 		log.info("Deleted resources: {}", deletedResources.size());
 		log.info("Updated resources: {}", existingFilesChanged);
 		log.info("--------End of report--------");
 		
-		return !newResources.isEmpty() || !deletedResources.isEmpty() || existingFilesChanged > 0;
+		branch.addFile(Path.of(repoProperties.getDbName()));
+		branch.commit("Startup: Updated resources info: New: %s, Deleted: %s, Updated: %s".formatted(newResources.size(),
+				deletedResources.size(),
+				existingFilesChanged));
+		try{
+			branch.mergeIntoMain();
+			branch.closeBranch();
+		} catch(GitAPIException e){
+			log.error("Error while merging branch into main", e);
+		} catch(IOException e){
+			throw new RuntimeException(e);
+		}
 	}
 	
 	/**
@@ -122,7 +136,7 @@ public class FileRepository{
 	 *
 	 * @param newFiles the files to add
 	 */
-	private void addNewFiles(List<Path> newFiles) {
+	private void addNewFiles(List<Path> newFiles, UserBranch branch) {
 		List<Resource> resources = new ArrayList<>();
 		for(Path file : newFiles){
 			RevCommit lastCommitDetailsForFile = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -141,6 +155,7 @@ public class FileRepository{
 						content);
 			}
 			resources.add(newResource);
+			branch.addFile(file);
 		}
 		
 		dataDB.batchInsert(resources);
@@ -152,7 +167,7 @@ public class FileRepository{
 	 * @param matchingResources the resources to update
 	 * @return true if the resources have changed
 	 */
-	private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) {
+	private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources, UserBranch branch) {
 		List<Resource> resources = new ArrayList<>();
 		for(Path file : matchingResources){
 			RevCommit fileCommit = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -186,6 +201,7 @@ public class FileRepository{
 					existingResource.category(),
 					readData(gitRepo, file));
 			resources.add(newResource);
+			branch.addFile(file);
 		}
 		dataDB.batchUpdate(resources);
 		return resources.size();
@@ -201,9 +217,10 @@ public class FileRepository{
 		}
 	}
 	
-	private void deleteOldResources(List<Path> deletedResources) {
+	private void deleteOldResources(List<Path> deletedResources, UserBranch branch) {
 		for(Path file : deletedResources){
 			log.error("Deleting resource '{}'", file);
+			branch.updateFileDeleted(file);
 		}
 		dataDB.batchDelete(deletedResources);
 	}

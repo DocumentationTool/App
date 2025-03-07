@@ -16,10 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -98,6 +96,73 @@ public class GitRepo{
 		} else {
 			openDatabaseRepository(pathToDB);
 		}
+		
+		ensureInitialCommit(pathToLocalRepo);
+	}
+	
+	private boolean repoHasCommits() {
+		try {
+			// Try to get the HEAD reference. If HEAD doesn't exist, there are no commits yet.
+			Ref head = git.getRepository().exactRef("HEAD");
+			return head != null;
+		} catch (IOException e) {
+			return false;
+		}
+	}
+	
+	// Create an initial commit if the repository is empty
+	private void ensureInitialCommit(Path repoPath) throws GitAPIException {
+		try {
+			// Check if the repository has any commits
+			if (!repoHasCommits()) {
+				createInitialCommit(repoPath);
+			}
+		} catch (IOException e) {
+			throw new GitAPIException("Failed to check repository commits", e);
+		}
+	}
+	
+	private void createInitialCommit(Path repoPath) throws GitAPIException {
+		Git git = this.git;
+		
+		// Create a file to stage for the commit
+		Path initialFilePath = repoPath.resolve("initial-file.txt");
+		try {
+			// Create an empty file for the initial commit
+			Files.createFile(initialFilePath);
+		} catch (IOException e) {
+			throw new RuntimeException("Failed to create initial file", e);
+		}
+		
+		// Stage the file
+		try {
+			git.add().addFilepattern("initial-file.txt").call();
+		} catch (GitAPIException e) {
+			throw new GitAPIException("Failed to add file for initial commit", e);
+		}
+		
+		// Commit the file
+		try {
+			git.commit().setMessage("Initial commit").setAuthor("system", "system@example.com").call();
+		} catch (GitAPIException e) {
+			throw new GitAPIException("Failed to commit initial file", e);
+		}
+	}
+	
+	public UserBranch createBranch(String userId){
+		UserBranch branch = null;
+		try{
+			branch = new UserBranch(this, userId);
+		} catch(GitAPIException e){
+			log.error("Error while creating branch for user: " + userId, e);
+			return null;
+		}
+		currentUserBranches.put(userId, branch);
+		return branch;
+	}
+	
+	public UserBranch getBranch(String userId) {
+		return currentUserBranches.get(userId);
 	}
 	
 	private void handleMissingRepository(Path path, boolean isReadOnly) throws GitAPIException {
@@ -161,19 +226,6 @@ public class GitRepo{
 		}
 		return Optional.empty();
 	}
-	
-	public void addFile(Path file) throws GitAPIException {
-		git.add().addFilepattern(file.toString()).call();
-	}
-	
-	public void addFile(String file) throws GitAPIException {
-		git.add().addFilepattern(file).call();
-	}
-	
-	public void commit(String message) throws GitAPIException {
-		git.commit().setMessage(message).call();
-	}
-	
 	/**
 	 * @param filter
 	 * @param stages
@@ -272,4 +324,11 @@ public class GitRepo{
 	public Git getDatabaseGit() {
 		return databaseGit;
 	}
+	
+	
+	public String getMasterBranchName() {
+		Repository repository = git.getRepository();
+		return repository.getConfig().getString("remote", "origin", "HEAD");
+	}
+	
 }
