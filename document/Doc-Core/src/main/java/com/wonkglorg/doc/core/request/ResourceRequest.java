@@ -13,6 +13,7 @@ public class ResourceRequest {
     public List<String> whiteListTags = new ArrayList<>();
     public List<String> blacklistListTags = new ArrayList<>();
     public boolean withData;
+    public int returnLimit = 999999999;
 
 
     private boolean isWhiteListEnabled() {

@@ -48,6 +48,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      */
     private static HikariDataSource getDataSource(Path openInPath) {
         HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setLeakDetectionThreshold(1000);
         hikariConfig.setJdbcUrl(SQLITE.driver() + openInPath.toString());
         return new HikariDataSource(hikariConfig);
     }

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,17 +34,17 @@ public class ApiResourceController {
     //@formatter:off
 	@Operation(summary = "Gets a resource", description = "Returns a resource or resources if no repository is given. If a repository is given, only resources for that repository will be returned, if no userId is given returns all resources in this repository without permission checks.")
 	@PostMapping("/get")
-	public ResponseEntity<RestResponse<Map<String,JsonResource>>> getResources(@RequestBody ResourceRequest request) {
+	public ResponseEntity<RestResponse<Map<String,List<JsonResource>>>> getResources(@RequestBody ResourceRequest request) {
 		try{
-			Map<String,JsonResource> jsonResources = new HashMap<>();
+			Map<String, List<JsonResource>> jsonResources = new HashMap<>();
 			List<Resource> resources = repoService.getResources(request);
 			for(var resource: resources){
-				jsonResources.put(resource.repoId().id(),JsonResource.of(resource));
+				jsonResources.computeIfAbsent(resource.repoId().id(),s ->new ArrayList<>()).add(JsonResource.of(resource));
 			}
 			return RestResponse.success(jsonResources).toResponse();
 
 		}catch (Exception e) {
-			return RestResponse.<Map<String,JsonResource>>error(e.getMessage()).toResponse();
+			return RestResponse.<Map<String,List<JsonResource>>>error(e.getMessage()).toResponse();
 		}
 	}
 	

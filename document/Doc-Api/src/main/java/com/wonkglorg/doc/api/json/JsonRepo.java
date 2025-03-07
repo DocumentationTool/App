@@ -9,7 +9,7 @@ public class JsonRepo {
     public String id;
     public String path;
     public String dbName;
-    private String dbStorage;
+    public String dbStorage;
     public boolean isReadOnly;
 
     public JsonRepo(RepoProperty property) {

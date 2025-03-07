@@ -56,42 +56,50 @@ public class ResourceFunctions {
      */
     public static QueryDatabaseResponse<List<Resource>> getResources(RepositoryDatabase database, ResourceRequest request) {
         List<Resource> resources;
+        Connection connection = database.getConnection();
+
         try {
-            resources = fetchResources(database, request.path);
-
-            String resourceData = request.withData ? fetchResourceData(database, request.path) : null;
-
-            List<Tag> tags = fetchTagsForResources(database, request.path);
+            resources = fetchResources(connection, database, request.path, request.returnLimit);
 
             for (Resource resource : resources) {
+                String resourceData = request.withData ? fetchResourceData(connection, resource.resourcePath().toString()) : null;
+
+                List<Tag> tags = fetchTagsForResources(connection, resource.resourcePath().toString());
+
                 populateResourceInfo(resource, tags, resourceData);
             }
+
 
             return QueryDatabaseResponse.success(database.getRepoId(), resources);
         } catch (SQLException e) {
             log.error("Failed to get resources", e);
             return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
+        } finally {
         }
     }
 
-    private static List<Resource> fetchResources(RepositoryDatabase database, String path) throws SQLException {
+    private static List<Resource> fetchResources(Connection connection, RepositoryDatabase database, String path, int limit) throws SQLException {
+        int currentFetchIndex = 0;
         List<Resource> resources = new ArrayList<>();
         String query = "SELECT resource_path, created_at, created_by, last_modified_at, last_modified_by, category, commit_id " +
-                "FROM Resources WHERE resource_path = ?";
-        try (PreparedStatement statement = database.getConnection().prepareStatement(query)) {
-            statement.setString(1, path);
+                "FROM Resources WHERE resource_path LIKE ?";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, path == null ? "%" : path);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
+                if (currentFetchIndex++ > limit) {
+                    return resources;
+                }
                 resources.add(resourceFromResultSet(resultSet, null, null, database));
             }
         }
         return resources;
     }
 
-    private static String fetchResourceData(RepositoryDatabase database, String path) throws SQLException {
+    private static String fetchResourceData(Connection connection, String path) throws SQLException {
         String resourceData = null;
         String query = "SELECT data FROM FileData WHERE resource_path = ?";
-        try (PreparedStatement statement = database.getConnection().prepareStatement(query)) {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, path);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
@@ -101,14 +109,14 @@ public class ResourceFunctions {
         return resourceData;
     }
 
-    private static List<Tag> fetchTagsForResources(RepositoryDatabase database, String path) throws SQLException {
+    private static List<Tag> fetchTagsForResources(Connection connection, String path) throws SQLException {
         List<Tag> tags = new ArrayList<>();
         String query = """
-            SELECT Tags.tag_id, tag_name
-            FROM ResourceTags
-            JOIN Tags ON ResourceTags.tag_id = Tags.tag_id
-            WHERE resource_path = ?""";
-        try (PreparedStatement statement = database.getConnection().prepareStatement(query)) {
+                SELECT Tags.tag_id, tag_name
+                FROM ResourceTags
+                JOIN Tags ON ResourceTags.tag_id = Tags.tag_id
+                WHERE resource_path = ?""";
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, path);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
