@@ -10,7 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.ServletWebRequest;
 
 import java.util.Map;
@@ -23,10 +22,10 @@ import java.util.Map;
  * </p>
  */
 @Controller
-public class CustomErrorController implements ErrorController {
+public class CustomErrorController implements ErrorController{
 	private static final Logger log = LoggerFactory.getLogger(CustomErrorController.class);
 	private final ErrorAttributes errorAttributes;
-
+	
 	/**
 	 * Constructs a new {@code CustomErrorController} with the provided {@code ErrorAttributes}.
 	 *
@@ -35,7 +34,7 @@ public class CustomErrorController implements ErrorController {
 	public CustomErrorController(ErrorAttributes errorAttributes) {
 		this.errorAttributes = errorAttributes;
 	}
-
+	
 	/**
 	 * Handles errors and provides a JSON response instead of redirecting to the default `/error`
 	 * page.
@@ -50,19 +49,23 @@ public class CustomErrorController implements ErrorController {
 	 */
 	@RequestMapping("/error")
 	public ResponseEntity<Map<String, Object>> handleError(HttpServletRequest request) {
-
-		var errorDetails = errorAttributes.getErrorAttributes(new ServletWebRequest(request),
-				ErrorAttributeOptions.defaults());
-
+		
+		var errorDetails = errorAttributes.getErrorAttributes(new ServletWebRequest(request), ErrorAttributeOptions.defaults());
+		
 		// Determine the appropriate HTTP status code (default to 500 if not provided)
 		HttpStatus status = HttpStatus.valueOf((Integer) errorDetails.getOrDefault("status", 500));
-
-		Map<String, Object> response =
-				Map.of("message", errorDetails.get("error"), "status", status.value(), "timestamp",
-						errorDetails.get("timestamp"), "path", errorDetails.get("path"));
-
+		
+		Map<String, Object> response = Map.of("message",
+				errorDetails.get("error"),
+				"status",
+				status.value(),
+				"timestamp",
+				errorDetails.get("timestamp"),
+				"path",
+				errorDetails.get("path"));
+		
 		log.error("Error occurred: {}", response);
-
+		
 		return new ResponseEntity<>(response, status);
 	}
 }
