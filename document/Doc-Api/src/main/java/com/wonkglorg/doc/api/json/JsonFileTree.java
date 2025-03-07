@@ -5,7 +5,6 @@ import java.util.List;
 
 //todo:jmd build up json tree to return
 public class JsonFileTree {
-    private final List<JsonRepos<Object>> repo = new ArrayList<>();
 
 
 
