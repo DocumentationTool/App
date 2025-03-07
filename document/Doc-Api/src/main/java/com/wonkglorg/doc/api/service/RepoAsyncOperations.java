@@ -49,7 +49,8 @@ public class RepoAsyncOperations{
 	
 	@Async
 	public CompletableFuture<QueryDatabaseResponse<List<Resource>>> getResourcesFromRepositoryAsync(FileRepository repository) {
-		return CompletableFuture.supplyAsync(() -> repository.getDatabase().getResources());
+		//return CompletableFuture.supplyAsync(() -> repository.getDatabase().getResources());
+		return null;
 	}
 	
 }
