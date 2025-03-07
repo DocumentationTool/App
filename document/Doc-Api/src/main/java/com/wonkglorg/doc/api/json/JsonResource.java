@@ -2,7 +2,9 @@ package com.wonkglorg.doc.api.json;
 
 import com.wonkglorg.doc.core.objects.Resource;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -14,10 +16,11 @@ public class JsonResource {
     public String createdBy;
     public String createdAt;
     public String category;
+    public Map<String, String> tags = new HashMap<>();
     public String lastModifiedBy;
     public String lastModifiedAt;
     public boolean isEditable;
-    public String content;
+    public String data;
 
     private JsonResource(Resource resource) {
         path = resource.resourcePath().toString();
@@ -27,8 +30,11 @@ public class JsonResource {
         category = resource.category();
         lastModifiedBy = resource.modifiedBy();
         lastModifiedAt = resource.getModifiedAt();
-        content = resource.data();
+        data = resource.data();
         isEditable = resource.isEditable();
+        for(var tag : resource.resourceTags()){
+            tags.put(tag.tagId(),tag.tagName());
+        }
     }
 
     public static JsonResource of(Resource resource) {
