@@ -150,48 +150,19 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         log.info("Batch inserting resources for repo '{}'", repoProperties.getId());
         return ResourceFunctions.batchInsertResources(this, resources);
     }
-
-    /*
-    public boolean updateResources(Set<Path> files) {
-        todo:jmd compare last changes + other info to determin if changes happened, if so rebuild
-        that particular entry and redo.
-        boolean filesChanged = false;
-
-        log.info("Updating resources for '{}'.", repoProperties.getId());
-        Set<Path> existingFiles = getResources().stream().map(Resource::resourcePath).collect(Collectors.toSet());
-        Set<Path> modifiedFiles = new HashSet<>(existingFiles);
-        modifiedFiles.forEach(path -> {
-        });
-
-        Set<Path> filesToAdd = new HashSet<>(files);
-        filesToAdd.removeAll(existingFiles);
-
-        Set<Path> filesToRemove = new HashSet<>(existingFiles);
-        filesToRemove.removeAll(files);
-
-        if (!filesToRemove.isEmpty() || !filesToAdd.isEmpty()) {
-            filesChanged = true;
-        }
-        try (Handle handle = jdbi().open()) {
-            ResourceFunctions resources = handle.attach(ResourceFunctions.class);
-            for (Path path : filesToRemove) {
-                //resources.deleteResource(path);
-            }
-        }
-
-
-
-        //todo:jmd get the commit id
-        for (Path path : filesToAdd) {
-            //insertResource(path, "default");
-        }
-        log.info("Finished updating resources for '{}'.", repoProperties.getId());
-        log.info("Added: {}", filesToAdd.size());
-        log.info("Modified: {}", filesChanged);
-        log.info("Deleted: {}", filesToRemove.size());
-        return filesChanged;
+    
+    
+    public UpdateDatabaseResponse batchUpdate(List<Resource> resources) {
+        log.info("Batch updating resources for repo '{}'", repoProperties.getId());
+        return ResourceFunctions.batchUpdateResources(this, resources);
     }
-     */
+    
+    public UpdateDatabaseResponse batchDelete(List<Path> resources) {
+        log.info("Batch deleting resources for repo '{}'", repoProperties.getId());
+        return ResourceFunctions.batchDeleteResources(this, resources);
+    }
+    
+    
     public UpdateDatabaseResponse addUser(UserId userId, String password, String createdBy) {
         log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
         QueryDatabaseResponse<UserProfile> response = UserFunctions.getUser(this, userId);
