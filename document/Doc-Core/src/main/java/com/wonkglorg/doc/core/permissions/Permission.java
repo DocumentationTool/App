@@ -60,4 +60,12 @@ public class Permission<T extends Identifyable> {
     public void setRepoId(RepoId repoId) {
         this.repoId = repoId;
     }
+
+    public RepoId getRepoId() {
+        return repoId;
+    }
+
+    public ResourcePath getPath() {
+        return path;
+    }
 }

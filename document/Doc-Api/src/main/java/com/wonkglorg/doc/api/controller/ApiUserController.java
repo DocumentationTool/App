@@ -1,82 +1,70 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.exception.NotaRepoException;
-import com.wonkglorg.doc.api.service.RepoService;
-import com.wonkglorg.doc.core.objects.RepoId;
-import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.doc.core.user.UserProfile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
-
-import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
-import static com.wonkglorg.doc.api.DocApiApplication.DEV_USER;
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
+import com.wonkglorg.doc.api.json.JsonRepos;
+import com.wonkglorg.doc.api.json.JsonUsers;
+import com.wonkglorg.doc.api.service.RepoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Handles all api user specific requests
  */
 @RestController
 @RequestMapping(API_USER)
-public class ApiUserController {
-    //todo, setup specific api key to bypass role permissions (when the app itself needs to make
-    // changes / be setup for new admins)
-    private static final Logger log = LoggerFactory.getLogger(ApiUserController.class);
-
-    private final RepoService repoManager;
-
-    public ApiUserController(RepoService repoManager) {
-        this.repoManager = repoManager;
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/add")
-    public ResponseEntity<String> addUser(@RequestParam("repo") RepoId repo, @RequestParam("userID") UserId userId,
-                                          @RequestParam("password") String password) {
-        log.info("Received PUT request to add user to repo = '{}'with ID='{}'. Password provided: {}", repo, userId,
-                password != null ? "*".repeat(password.length()) : "MISSING");
-        if (DEV_MODE) {
-            return new ResponseEntity<>(DEV_USER.toString(), HttpStatus.OK);
-        }
-        try {
-            repoManager.getRepo(repo).getDatabase().addUser(userId, password, "example");
-        } catch (NotaRepoException e) {
-            throw new RuntimeException(e);
-        }
-
-        return new ResponseEntity<>("", HttpStatus.SERVICE_UNAVAILABLE);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/remove")
-    public ResponseEntity<Profile> deleteUser(@RequestParam("userID") String userId) {
-        log.info("Received PUT request to delete user with userID='{}'", userId);
-        return ResponseEntity.ok(null);
-    }
-
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @GetMapping("get/{id}")
-    public ResponseEntity<UserProfile> getUser(@PathVariable("id") String id) {
-        log.info("Received GET request to retrieve user with userID='{}'", id);
-        if (DEV_MODE) {
-            log.info("DEVMODE: getting user profile.");
-            return new ResponseEntity<>(DEV_USER, HttpStatus.OK);
-        }
-        return ResponseEntity.ok(null);
-    }
-
-    @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/update")
-    public ResponseEntity<Profile> updateUser(@RequestBody UserProfile userId) {
-        log.info("Received PUT request to update user profile for userID='{}'", userId.getId());
-        return ResponseEntity.ok(null);
-    }
-
-
+public class ApiUserController{
+	
+	private final RepoService repoService;
+	
+	public ApiUserController(RepoService repoService) {
+		this.repoService = repoService;
+	}
+	
+	//@formatter:off
+	@Operation(
+			summary = "Get a user",
+			description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository."
+	)
+	@GetMapping("/get")
+	public ResponseEntity<RestResponse<JsonRepos<JsonUsers>>> getUser(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam(value = "repoId",required = false) String repoId,
+			@Parameter(description = "The userId to search for, if none is given, returns all users in the repository.")
+			@RequestParam(value = "userId",required = false) String userId) {
+		return null;
+	}
+	@Operation(
+			summary = "Adds a new user",
+			description = "Adds a new user to the system. If a repository is given, only adds the user to that repository. If none is given, adds the user to all repositories."
+	)
+	@PutMapping("/add")
+	public ResponseEntity<String> addUser(
+			@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
+			@RequestParam(value = "repoId",required = false) String repoId,
+			@Parameter(description = "The user's id.")
+			@RequestParam("userId") String userId,
+			@Parameter(description = "The user's password.")
+			@RequestParam("password") String password) {
+		return null;
+	}
+	@Operation(
+			summary = "Removes a User",
+			description = "Removes a user from the system."
+	)
+	@PutMapping("/remove")
+	public ResponseEntity<Profile> deleteUser(
+			@Parameter(description = "The repoId to search in.")
+			@RequestParam("repoId") String repoId,
+			@Parameter(description = "The users id to remove.")
+			@RequestParam("userId") String userId) {
+		return null;
+	}
+	//@formatter:on
 }
