@@ -4,15 +4,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Configuration
 @ConfigurationProperties("doc.web.api")
 public class ApiProperties {
-    private Map<String, List<CorsData>> crossOrigin = new HashMap<>();
 
+    //private Map<String, List<CorsData>> crossOrigin = new HashMap<>();
+
+    private List<CorsData> crossOrigin = new ArrayList<>();
     /**
      * All whitelisted pages that can be accessed without user permissions
      */
@@ -27,18 +27,19 @@ public class ApiProperties {
         this.whitelist = whitelist;
     }
 
-    public Map<String, List<CorsData>> getCrossOrigin() {
+    public List<CorsData> getCrossOrigin() {
         return crossOrigin;
     }
 
-    public void setCrossOrigin(Map<String, List<CorsData>> crossOrigin) {
+    public void setCrossOrigin(List<CorsData> crossOrigin) {
         this.crossOrigin = crossOrigin;
     }
 
-    public static class CorsData{
+    public static class CorsData {
+        private String path;
         private String origin;
-        private List<String> allowedHeaders = List.of("*");
-        private List<String> allowedMethods = List.of("GET", "POST", "PUT", "DELETE");
+        private List<String> allowedHeaders = new ArrayList<>(List.of("*"));
+        private List<String> allowedMethods = new ArrayList<>(List.of("GET", "POST", "PUT", "DELETE"));
 
         public String getOrigin() {
             return origin;
@@ -62,6 +63,14 @@ public class ApiProperties {
 
         public void setAllowedMethods(List<String> allowedMethods) {
             this.allowedMethods = allowedMethods;
+        }
+
+        public String getPath() {
+            return path;
+        }
+
+        public void setPath(String path) {
+            this.path = path;
         }
     }
 

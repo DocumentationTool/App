@@ -3,16 +3,10 @@ doc:
     api:
       #Defines which cross origin urls can access what link
       crossOrigin:
-        "/**":
-          - origin: http://localhost:4200
-
-          - origin: http://localhost:8080
-      #Defines all resources accessible by anyone without role or authentication needed
-      whitelist:
-        - "/auth/login"
-        - "/error"
-        - "/public/**"
-        - "/favicon.ico"
+        - origin: "http://localhost:8080"
+          path: "/**"
+        - origin: "http://localhost:4200"
+          path: "/**"
   git:
     repositories:
       - id: "repo1"
