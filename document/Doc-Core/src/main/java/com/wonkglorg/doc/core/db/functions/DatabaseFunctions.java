@@ -145,8 +145,8 @@ public class DatabaseFunctions{
 					""");
 			
 			//inserts default users
-			statement.execute("INSERT INTO Roles(role_id, role_name) VALUES ('admin', 'Admin')");
-			statement.execute("INSERT INTO Roles(role_id, role_name) VALUES ('user', 'User')");
+			statement.execute("INSERT OR IGNORE INTO  Roles(role_id, role_name) VALUES ('admin', 'Admin')");
+			statement.execute("INSERT OR IGNORE INTO Roles(role_id, role_name) VALUES ('user', 'User')");
 			
 			statement.execute("PRAGMA foreign_keys = ON");
 			return ScriptDatabaseResponse.success(database.getRepoId());
