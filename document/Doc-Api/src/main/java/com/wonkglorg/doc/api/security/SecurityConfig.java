@@ -19,6 +19,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.util.List;
+
 /**
  * Security configuration for the application.
  */
@@ -93,7 +95,12 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 for (var originEntry : apiProperties.getCrossOrigin().entrySet()) {
-                    registry.addMapping(originEntry.getKey()).allowedOrigins(originEntry.getValue().toArray(new String[0]));
+                    for(var data : originEntry.getValue()){
+                        registry.addMapping(originEntry.getKey())
+                                .allowedMethods(data.getAllowedMethods().toArray(new String[0]))
+                                .allowedHeaders(data.getAllowedHeaders().toArray(new String[0]))
+                                .allowedOrigins(data.getOrigin());
+                    }
                 }
             }
         };

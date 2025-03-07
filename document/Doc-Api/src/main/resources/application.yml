@@ -1,10 +1,12 @@
 doc:
   web:
     api:
+      #Defines which cross origin urls can access what link
       crossOrigin:
-        "*" :
-          - http://localhost:4200
-          - http://localhost:8080
+        "/**":
+          - origin: http://localhost:4200
+
+          - origin: http://localhost:8080
       #Defines all resources accessible by anyone without role or authentication needed
       whitelist:
         - "/auth/login"
@@ -19,5 +21,5 @@ doc:
         path: temp/git/repo2
       #- name: "Read only Repo"
       #  path: temp/git/readOnlyRepo
-       # readOnly: true
-       # dbStorage: temp/git/readOnlyRepoDB
+      # readOnly: true
+      # dbStorage: temp/git/readOnlyRepoDB
