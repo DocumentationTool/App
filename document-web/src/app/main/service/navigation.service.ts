@@ -1,12 +1,15 @@
 import {Injectable, signal} from '@angular/core';
 import {Router} from '@angular/router';
+import {ApiUser} from '../../api/apiUser';
+import {ApiAuth} from '../../api/apiAuth';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class NavigationService{
-  constructor(private router: Router) {
+  constructor(private router: Router,
+              private apiAuth: ApiAuth) {
   }
   toggle = signal<boolean>(true);
   isAdmin= signal<boolean>(false);
@@ -18,6 +21,17 @@ export class NavigationService{
 
   logUserIn() {
     this.isAdmin.set(false);
+    //ToDo: ausbauen:
+    this.getTestUser();
+  }
+
+  getTestUser(){
+    this.apiAuth.testLogin().subscribe(response => {
+        console.log(response)
+      },
+      (error) => {
+        console.error("Fehler Bei testLogin ", error)
+      });
   }
 
   toggleSidebar() {

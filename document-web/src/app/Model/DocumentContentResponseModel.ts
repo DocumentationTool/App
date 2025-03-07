@@ -1,4 +1,4 @@
-export interface DocumentContent {
+export interface DocumentContentResponseModel {
   path: string;
   repoId: string;
   createdBy: string;
@@ -8,10 +8,4 @@ export interface DocumentContent {
   lastModifiedAt: string;
   isEditable: boolean;
   content: string;
-}
-
-export interface ApiResponse {
-  message: string;
-  error: string;
-  content: DocumentContent[];
 }

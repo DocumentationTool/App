@@ -3,8 +3,9 @@ import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
 import {FileService} from '../service/file.service';
-import {ApiDocument} from '../../api/ApiDocument';
-import {DocumentContent} from '../../Model/DocumentContent';
+import {ApiResource} from '../../api/apiResource';
+import {DocumentContentResponseModel} from '../../Model/DocumentContentResponseModel';
+import {ApiUser} from '../../api/apiUser';
 
 @Component({
   selector: 'app-navbar',
@@ -20,25 +21,13 @@ import {DocumentContent} from '../../Model/DocumentContent';
 export class NavbarComponent implements OnInit{
   constructor(public navigationService: NavigationService,
               private router: Router,
-              public fileService: FileService,
-              private apiDocument: ApiDocument ) {
+              public fileService: FileService) {
   }
 
-  documents: DocumentContent[] = [];
-
+  documents: DocumentContentResponseModel[] = [];
 
   ngOnInit() {
     this.fileService.loadFiles();
-  }
-
-  onGetDoc(){
-    this.apiDocument.getDocument('repo1', 'user').subscribe(response => {
-        this.documents = response.content;
-        console.log('Erhaltene Dokumente:', this.documents);
-    },
-      (error) => {
-        console.error("Fehler Bei getDocument ", error)
-    });
   }
 
   onToggleSidebar() {

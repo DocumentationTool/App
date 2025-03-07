@@ -15,6 +15,8 @@ bei jeder Navigation weg von editor prüfen ob änderung
 
 Files Abwählen
 
+API Response Models!
+
 -----------------------------------------------------------------
 NPM:
 npm install ngx-markdown marked@^15.0.0 --save
