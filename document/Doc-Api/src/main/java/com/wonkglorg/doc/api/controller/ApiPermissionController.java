@@ -80,7 +80,7 @@ public class ApiPermissionController{
             description = "Returns the list of permissions a specific group has in a given repository."
     )
     @GetMapping("group/get")
-    public ResponseEntity<RestResponse<JsonPermissions>> getGroupPermissions(
+    public ResponseEntity<RestResponse<JsonRepos<JsonPermissions>>> getGroupPermissions(
             @Parameter(description = "The repoId to search the group's permissions in.")
             @RequestParam("repoId") String repoId,
             @Parameter(description = "The groupId to retrieve the permissions for.")

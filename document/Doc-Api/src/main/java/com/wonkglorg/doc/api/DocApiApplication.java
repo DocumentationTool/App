@@ -10,7 +10,10 @@ import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -44,5 +47,4 @@ public class DocApiApplication {
     public static void main(String[] args) {
         SpringApplication.run(DocApiApplication.class, args);
     }
-
 }
