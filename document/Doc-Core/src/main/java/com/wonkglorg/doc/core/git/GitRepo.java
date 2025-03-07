@@ -97,6 +97,7 @@ public class GitRepo{
 			openDatabaseRepository(pathToDB);
 		}
 		
+		//needs to at least contain 1 commit otherwise no head is found, that causes issues when creating new branches
 		ensureInitialCommit(pathToLocalRepo);
 	}
 	
