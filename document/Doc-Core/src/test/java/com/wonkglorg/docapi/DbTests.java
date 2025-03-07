@@ -15,8 +15,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
-import static com.wonkglorg.docapi.TestUtils.deleteDirecory;
-
 class DbTests {
     private static RepoProperty properties;
     private final Faker faker = new Faker();
@@ -42,8 +40,9 @@ class DbTests {
         properties.setPath(Path.of("..", "..", "temp", "git", "repo1"));
         properties.setId(new RepoId("Test Repo"));
         properties.setReadOnly(false);
-        deleteDirecory(properties.getPath());
-        Files.createDirectories(properties.getPath());
+        if (!Files.exists(properties.getPath())) {
+            Files.createDirectories(properties.getPath());
+        }
     }
 
 

@@ -68,6 +68,11 @@ public class RepoService {
         return repositories.get(repoId);
     }
 
+
+    public List<RepoProperty> getProperties(){
+        return properties.getRepositories();
+    }
+
     /**
      * Checks if a repository is valid
      *
