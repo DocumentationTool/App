@@ -25,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Represents a managed repository
@@ -43,6 +46,7 @@ public class FileRepository{
 	 * Represents the backing database of a repo
 	 */
 	private RepositoryDatabase dataDB;
+	private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 	
 	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
@@ -76,6 +80,17 @@ public class FileRepository{
 		Set<Path> foundFiles = gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED);
 		
 		checkFileChanges(foundFiles);
+		
+		log.info("Scheduling check for changes in '{}'", repoProperties.getId());
+		executorService.schedule(() ->{
+			try{
+				checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
+			} catch(GitAPIException e){
+				log.error("Error while checking for changes", e);
+			}
+		}, 10, TimeUnit.MINUTES);
+		
+
 	}
 	
 	private void checkFileChanges(Set<Path> foundFiles) {
@@ -105,6 +120,9 @@ public class FileRepository{
 			log.info("No changes detected in repo '{}'", repoProperties.getId());
 			return;
 		}
+		
+		//pull any changes from the remote
+		gitRepo.pull();
 		
 		UserBranch branch = gitRepo.createBranch("system");
 		

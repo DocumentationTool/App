@@ -5,10 +5,14 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.ServiceUnavailableException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.RemoteConfig;
+import org.eclipse.jgit.transport.Transport;
+import org.eclipse.jgit.transport.URIish;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -97,60 +102,95 @@ public class GitRepo{
 			openDatabaseRepository(pathToDB);
 		}
 		
-		//needs to at least contain 1 commit otherwise no head is found, that causes issues when creating new branches
-		ensureInitialCommit(pathToLocalRepo);
+		//needs to at least contain 1 commit otherwise jgit complains
+		ensureInitialCommit();
 	}
 	
+	//todo:jmd properly document and label methods before continuing, simplify and refactor
+	
 	private boolean repoHasCommits() {
-		try {
+		try{
 			// Try to get the HEAD reference. If HEAD doesn't exist, there are no commits yet.
 			Ref head = git.getRepository().exactRef("HEAD");
-			return head != null;
-		} catch (IOException e) {
+			if(head == null){
+				return false;
+			}
+			//head can exist without an actual commit, so commit specific check too
+			ObjectId masterCommit = git.getRepository().resolve("refs/heads/master");
+			return masterCommit != null;
+		} catch(IOException e){
 			return false;
 		}
 	}
 	
-	// Create an initial commit if the repository is empty
-	private void ensureInitialCommit(Path repoPath) throws GitAPIException {
-		try {
-			// Check if the repository has any commits
-			if (!repoHasCommits()) {
-				createInitialCommit(repoPath);
+	private void ensureInitialCommit() {
+		// Check if the repository has any commits
+		if(!repoHasCommits()){
+			createInitialCommit();
+		}
+	}
+	
+	private void createInitialCommit() {
+		try{
+			git.commit().setMessage("Initial commit").setAllowEmpty(true) // Allows an empty commit
+			   .call();
+		} catch(GitAPIException e){
+			log.error("Failed to create initial commit", e);
+		}
+	}
+	
+	//todo:jmd check if remote even exists if not ignore
+	public void pull() {
+		if(!remoteExists("origin")){
+			log.warn("No remote found, skipping pull");
+			return;
+		}
+		try{
+			git.pull().call();
+		} catch(GitAPIException e){
+			log.error("Error while pulling from remote", e);
+		}
+	}
+	
+	//todo:jmd check if remote even exists if not ignore
+	public void push() {
+		if(!remoteExists("origin")){
+			log.warn("No remote found, skipping push");
+			return;
+		}
+		try{
+			git.push().call();
+		} catch(GitAPIException e){
+			log.error("Error while pushing to remote", e);
+		}
+	}
+	
+	/**
+	 * Checks if a remote exists and is reachable
+	 *
+	 * @param remoteName the name of the remote
+	 * @return true if the remote exists and is reachable, false otherwise
+	 */
+	private boolean remoteExists(String remoteName) {
+		try{
+			List<RemoteConfig> remotes = git.remoteList().call();
+			for(RemoteConfig remote : remotes){
+				if(remote.getName().equals(remoteName) && !remote.getURIs().isEmpty()){
+					// Try to connect to the remote
+					URIish uri = remote.getURIs().get(0);
+					try(Transport transport = Transport.open(git.getRepository(), uri)){
+						transport.close();
+						return true; // Connection successful
+					}
+				}
 			}
-		} catch (IOException e) {
-			throw new GitAPIException("Failed to check repository commits", e);
+		} catch(Exception e){
+			log.error("Error checking remote existence", e);
 		}
+		return false;
 	}
 	
-	private void createInitialCommit(Path repoPath) throws GitAPIException {
-		Git git = this.git;
-		
-		// Create a file to stage for the commit
-		Path initialFilePath = repoPath.resolve("initial-file.txt");
-		try {
-			// Create an empty file for the initial commit
-			Files.createFile(initialFilePath);
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to create initial file", e);
-		}
-		
-		// Stage the file
-		try {
-			git.add().addFilepattern("initial-file.txt").call();
-		} catch (GitAPIException e) {
-			throw new GitAPIException("Failed to add file for initial commit", e);
-		}
-		
-		// Commit the file
-		try {
-			git.commit().setMessage("Initial commit").setAuthor("system", "system@example.com").call();
-		} catch (GitAPIException e) {
-			throw new GitAPIException("Failed to commit initial file", e);
-		}
-	}
-	
-	public UserBranch createBranch(String userId){
+	public UserBranch createBranch(String userId) {
 		UserBranch branch = null;
 		try{
 			branch = new UserBranch(this, userId);
@@ -182,7 +222,7 @@ public class GitRepo{
 		log.info("com.wonkglorg.doc.core.git.GitRepo initialized");
 	}
 	
-	private void handleMissingDatabaseRepository(Path path) throws GitAPIException {
+	private void handleMissingDatabaseRepository(Path path) {
 		log.info("No database repository found. Creating a new one...");
 		createRepoFromPath(path);
 		openDatabaseRepository(path);
@@ -227,6 +267,7 @@ public class GitRepo{
 		}
 		return Optional.empty();
 	}
+	
 	/**
 	 * @param filter
 	 * @param stages
@@ -314,8 +355,6 @@ public class GitRepo{
 		return get(filter, true, stages).stream().findFirst();
 	}
 	
-	//todo:jmd create new branch anytime someone checks out a file and merge it after they are done
-	// and want to save it
 	//or trow away the branch if its not needed anymore and they quit the changes
 	
 	public Repository getDatabaseRepository() {
@@ -326,10 +365,13 @@ public class GitRepo{
 		return databaseGit;
 	}
 	
-	
 	public String getMasterBranchName() {
-		Repository repository = git.getRepository();
-		return repository.getConfig().getString("remote", "origin", "HEAD");
+		try{
+			return git.getRepository().findRef("refs/heads/master").getName();
+		} catch(IOException e){
+			log.error("Error while getting master branch name", e);
+			return null;
+		}
 	}
 	
 }

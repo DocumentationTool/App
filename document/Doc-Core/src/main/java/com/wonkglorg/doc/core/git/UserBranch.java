@@ -46,9 +46,10 @@ public class UserBranch{
 		String repoRelativePath = git.getRepository().getWorkTree().toPath().relativize(file).toString();
 		
 		try{
-			git.checkout().setName(userId).call();
+			git.checkout().setName(branchName).call();
 			git.add().addFilepattern(repoRelativePath).call();
 		} catch(GitAPIException e){
+			
 			throw new RuntimeException(e);
 		}
 	}
@@ -123,8 +124,8 @@ public class UserBranch{
 		Git git = repo.getGit();
 		
 		// Ensure the branch exists before merging
-		if(git.getRepository().findRef(userId) == null){
-			throw new GitAPIException("Branch does not exist: " + userId){};
+		if(git.getRepository().findRef(branchName) == null){
+			throw new GitAPIException("Branch does not exist: " + branchName){};
 		}
 		
 		// Switch to main branch before merging
