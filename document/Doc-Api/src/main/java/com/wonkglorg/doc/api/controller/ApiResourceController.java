@@ -9,8 +9,11 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
+import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
+import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +41,7 @@ public class ApiResourceController{
 	private final ResourceService resourceService;
 	private final RepoService repoService;
 	
-	public ApiResourceController(ResourceService resourceService, RepoService repoService) {
+	public ApiResourceController(@Lazy RepoService repoService, ResourceService resourceService) {
 		this.resourceService = resourceService;
 		this.repoService = repoService;
 	}
@@ -185,24 +188,31 @@ public class ApiResourceController{
 		return RestResponse.of(resourceService.insertResource(resource)).toResponse();
 	}
 	
+	
+	
+	
+	
+	//todo:jmd seperate those otherwise it gets messy
+	
 	//todo:jmd not sure how to implement this yet
 	@Operation(summary = "Updates a resource", description = "Updates a resource in the Repository.")
 	@PutMapping("/update")
-	public ResponseEntity<RestResponse<Void>> updateResource(@RequestParam("repo") String repo,
-															 @RequestParam("path") String path,
-															 @RequestParam("modifiedBy") String createdBy,
-															 @RequestParam("category") String category,
-															 @RequestBody String content) {
-		if(!repoService.isValidRepo(new RepoId(repo))){
+	public ResponseEntity<RestResponse<Void>> updateResource(@RequestBody ResourceUpdateRequest request) {
+		if(!repoService.isValidRepo(new RepoId(request.repoId))){
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
 		
-		Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repo), category, content);
+		if(!resourceService.resourceExists(new RepoId(request.repoId), Path.of(request.path))){
+			return RestResponse.<Void>error("Resource does not exist").toResponse();
+		}
 		
-		//return RestResponse.of(resourceService.(resource)).toResponse();
 		
-		
-		return null;
+		QueryDatabaseResponse<Resource> response = resourceService.updateResource(request);
+		if(response.isSuccess()){
+			return RestResponse.<Void>success(response.getResponseText(),null).toResponse();
+		}else{
+			return RestResponse.<Void>error(response.getException().getMessage()).toResponse();
+		}
 	}
 	
 	
@@ -214,10 +224,10 @@ public class ApiResourceController{
 		if(!repoService.isValidRepo(id)){
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
-		if(resourceService.resourceExists(id, Path.of(path))){
+		if(!resourceService.resourceExists(id, Path.of(path))){
 			return RestResponse.<Void>error("Resource does not exist").toResponse();
 		}
-		
+
 		return RestResponse.of(resourceService.removeResource(id, Path.of(path))).toResponse();
 	}
 	

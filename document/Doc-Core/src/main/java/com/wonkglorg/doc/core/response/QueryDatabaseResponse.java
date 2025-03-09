@@ -53,7 +53,7 @@ public class QueryDatabaseResponse<T> extends Response{
 	 * @param <T>
 	 * @return the constructed reponse
 	 */
-	public static <T> QueryDatabaseResponse<T> error(RepoId causingRepo, Exception e) {
+	public static <T> QueryDatabaseResponse<T> fail(RepoId causingRepo, Exception e) {
 		return new QueryDatabaseResponse<>(causingRepo, null, e, null);
 	}
 	

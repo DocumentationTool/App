@@ -1,7 +1,6 @@
 package com.wonkglorg.doc.core.git;
 
 import com.wonkglorg.doc.core.RepoProperty;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
@@ -106,6 +105,30 @@ public class GitRepo{
 		
 		//needs to at least contain 1 commit otherwise jgit complains
 		ensureInitialCommit();
+	}
+	
+	public void add(Path file) {
+		try{
+			git.add().addFilepattern(file.toString()).call();
+		} catch(GitAPIException e){
+			log.error("Error while adding file: " + file, e);
+		}
+	}
+	
+	public void remove(Path file) {
+		try{
+			git.rm().addFilepattern(file.toString()).call();
+		} catch(GitAPIException e){
+			log.error("Error while removing file: " + file, e);
+		}
+	}
+	
+	public void commit(String message) {
+		try{
+			git.commit().setMessage(message).call();
+		} catch(GitAPIException e){
+			log.error("Error while committing", e);
+		}
 	}
 	
 	//todo:jmd properly document and label methods before continuing, simplify and refactor

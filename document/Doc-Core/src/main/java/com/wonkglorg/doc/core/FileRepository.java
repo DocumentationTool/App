@@ -120,11 +120,10 @@ public class FileRepository{
 		//pull any changes from the remote
 		gitRepo.pull();
 		
-		UserBranch branch = gitRepo.createBranch(new UserId("system"));
 		
-		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap, branch);
-		addNewFiles(newResources, branch);
-		deleteOldResources(deletedResources, branch);
+		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap);
+		addNewFiles(newResources);
+		deleteOldResources(deletedResources);
 		log.info("--------Report for repo '{}--------", repoProperties.getId());
 		if(newResources.isEmpty() && deletedResources.isEmpty() && existingFilesChanged == 0){
 			log.info("No changes detected in repo '{}'", repoProperties.getId());
@@ -137,21 +136,12 @@ public class FileRepository{
 			log.info("--------End of report--------");
 		}
 		
-		branch.addFile(Path.of(repoProperties.getDbName()));
-		branch.commit("Startup: Updated resources info: New: %s, Deleted: %s, Updated: %s".formatted(newResources.size(),
+		gitRepo.commit("Startup: Updated resources info: New: %s, Deleted: %s, Updated: %s".formatted(newResources.size(),
 				deletedResources.size(),
 				existingFilesChanged));
-		try{
-			branch.mergeIntoMain();
-			branch.closeBranch();
-		} catch(GitAPIException e){
-			log.error("Error while merging branch into main", e);
-		} catch(IOException e){
-			throw new RuntimeException(e);
-		}
-		
 		gitRepo.push();
 	}
+	
 	
 	/**
 	 * Adds a file to the database
@@ -192,7 +182,7 @@ public class FileRepository{
 	 *
 	 * @param newFiles the files to add
 	 */
-	private void addNewFiles(List<Path> newFiles, UserBranch branch) {
+	private void addNewFiles(List<Path> newFiles) {
 		List<Resource> resources = new ArrayList<>();
 		for(Path file : newFiles){
 			RevCommit lastCommitDetailsForFile = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -205,7 +195,7 @@ public class FileRepository{
 				newResource = new Resource(file, lastCommitDetailsForFile.getAuthorIdent().getName(), repoProperties.getId(), null, content);
 			}
 			resources.add(newResource);
-			branch.addFile(file);
+			gitRepo.add(file);
 		}
 		
 		dataDB.batchInsert(resources);
@@ -217,7 +207,7 @@ public class FileRepository{
 	 * @param matchingResources the resources to update
 	 * @return true if the resources have changed
 	 */
-	private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources, UserBranch branch) {
+	private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) {
 		List<Resource> resources = new ArrayList<>();
 		for(Path file : matchingResources){
 			RevCommit fileCommit = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -249,7 +239,7 @@ public class FileRepository{
 					existingResource.category(),
 					readData(gitRepo, file));
 			resources.add(newResource);
-			branch.addFile(file);
+			gitRepo.add(file);
 		}
 		dataDB.batchUpdate(resources);
 		return resources.size();
@@ -265,10 +255,10 @@ public class FileRepository{
 		}
 	}
 	
-	private void deleteOldResources(List<Path> deletedResources, UserBranch branch) {
+	private void deleteOldResources(List<Path> deletedResources) {
 		for(Path file : deletedResources){
 			log.error("Deleting resource '{}'", file);
-			branch.updateFileDeleted(file);
+			gitRepo.remove(file);
 		}
 		dataDB.batchDelete(deletedResources);
 	}
