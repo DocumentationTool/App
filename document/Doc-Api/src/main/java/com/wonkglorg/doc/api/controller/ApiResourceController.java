@@ -11,8 +11,6 @@ import com.wonkglorg.doc.core.request.ResourceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -79,7 +77,10 @@ public class ApiResourceController{
 	}
 	
 	
-	@Operation(summary = "Constructs a filetree", description = "Returns a filetree or filetrees if no repository is given. If a repository is given, only filetrees for that repository will be returned, if no userId is given returns all filetrees in this repository without permission checks.")
+	@Operation(summary = "Constructs a filetree", description = """
+	Constructs a file tree out of the given resource request.
+	If null is given as path, the file tree will be constructed for all resources.
+	""")
 	@PostMapping("/get/filetree")
 	public ResponseEntity<RestResponse<Map<String, JsonFileTree>>> getFiletree(@RequestBody ResourceRequest request) {
 		try {
@@ -87,23 +88,22 @@ public class ApiResourceController{
 			Map<String, JsonFileTree> fileTrees = new HashMap<>();
 			
 			for (var resource : resources) {
-				String repo = resource.repoId().id(); // Get repo name
-				String normalizedPath = resource.resourcePath().toString().replace("\\", "/"); // Normalize slashes
+				String repo = resource.repoId().id();
+				String normalizedPath = resource.resourcePath().toString().replace("\\", "/");
 				String[] pathSegments = normalizedPath.split("/");
 				
-				// Get or create the repository root node
 				JsonFileTree root = fileTrees.computeIfAbsent(repo, JsonFileTree::new);
 				
-				// Traverse and build the file tree
+				//build file tree
 				JsonFileTree current = root;
 				for (int i = 0; i < pathSegments.length; i++) {
 					String pathPart = pathSegments[i];
 					
 					if (i == pathSegments.length - 1 && pathPart.contains(".")) {
-						// If it's the last segment and contains ".", treat it as a file
+						// is a file
 						current.addResource(resource);
 					} else {
-						// Otherwise, it's a directory
+						//its a directory
 						current = current.add(pathPart);
 					}
 				}
