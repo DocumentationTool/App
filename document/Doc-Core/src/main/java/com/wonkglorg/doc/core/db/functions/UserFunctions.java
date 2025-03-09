@@ -111,7 +111,7 @@ public class UserFunctions{
 		} catch(Exception e){
 			String errorResponse = "Failed to get groups from user";
 			log.error(errorResponse, e);
-			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException("Failed to get groups from user", e));
+			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get groups from user", e));
 		}
 	}
 	
@@ -132,10 +132,10 @@ public class UserFunctions{
 					var userRoles = PermissionFunctions.getRolesForUser(database, userId);
 					
 					if(userPermissions.isError()){
-						return QueryDatabaseResponse.error(database.getRepoId(), userPermissions.getException());
+						return QueryDatabaseResponse.fail(database.getRepoId(), userPermissions.getException());
 					}
 					if(userRoles.isError()){
-						return QueryDatabaseResponse.error(database.getRepoId(), userRoles.getException());
+						return QueryDatabaseResponse.fail(database.getRepoId(), userRoles.getException());
 					}
 					
 					UserProfile userProfile = new UserProfile(userId, passwordHash, userPermissions.get(), userRoles.get());
@@ -147,7 +147,7 @@ public class UserFunctions{
 		} catch(Exception e){
 			String errorResponse = "Failed to get user";
 			log.error(errorResponse, e);
-			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 	}
 	

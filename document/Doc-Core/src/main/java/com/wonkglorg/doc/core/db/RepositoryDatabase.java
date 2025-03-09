@@ -12,6 +12,7 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
+import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import com.wonkglorg.doc.core.user.UserProfile;
@@ -150,9 +151,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		return ResourceFunctions.updatePath(this, oldPath, newPath);
 	}
 	
-	public UpdateDatabaseResponse updateResourceData(Resource resource) {
-		log.info("Updating resource '{}' in repo '{}'", resource.resourcePath(), repoProperties.getId());
-		return ResourceFunctions.updateResource(this, resource);
+	public QueryDatabaseResponse<Resource> updateResourceData(ResourceUpdateRequest request) {
+		log.info("Updating resource '{}' in repo '{}'", request.path, repoProperties.getId());
+		return ResourceFunctions.updateResource(this, request);
 	}
 	
 	public UpdateDatabaseResponse batchInsert(List<Resource> resources) {

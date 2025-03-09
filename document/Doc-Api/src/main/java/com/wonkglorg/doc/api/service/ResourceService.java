@@ -6,6 +6,7 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
+import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import org.springframework.cache.annotation.Cacheable;
@@ -74,6 +75,8 @@ public class ResourceService{
 		return resources.get();
 	}
 	
+	//todo:jmd properly evict all caches when a resource gets added!
+	
 	/**
 	 * Checks if a resource exists
 	 *
@@ -81,6 +84,7 @@ public class ResourceService{
 	 * @param path the path
 	 * @return true if the resource exists
 	 */
+	@Cacheable("resourceExists")
 	public boolean resourceExists(RepoId repoId, Path path) {
 		try{
 			return repoService.getRepo(repoId).getDatabase().resourceExists(path).get();
@@ -172,16 +176,16 @@ public class ResourceService{
 		}
 	}
 	
-	public UpdateDatabaseResponse updateResource(Resource resource) {
+	public QueryDatabaseResponse<Resource> updateResource(ResourceUpdateRequest request) {
 		try{
-			FileRepository repo = repoService.getRepo(resource.repoId());
-			UpdateDatabaseResponse updateDatabaseResponse = repo.getDatabase().updateResourceData(resource);
+			FileRepository repo = repoService.getRepo(new RepoId(request.repoId));
+			QueryDatabaseResponse<Resource> updateDatabaseResponse = repo.getDatabase().updateResourceData(request);
 			if(updateDatabaseResponse.isSuccess()){
-				repo.addResourceAndCommit(resource);
+				repo.addResourceAndCommit(updateDatabaseResponse.get());
 			}
 			return updateDatabaseResponse;
 		} catch(NotaRepoException e){
-			return UpdateDatabaseResponse.fail(null, e);
+			return QueryDatabaseResponse.fail(null, e);
 		}
 	}
 	

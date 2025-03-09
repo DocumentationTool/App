@@ -7,6 +7,7 @@ import static com.wonkglorg.doc.core.objects.Resource.fromDateTime;
 import static com.wonkglorg.doc.core.objects.Resource.parseDateTime;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.request.ResourceRequest;
+import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,7 +76,7 @@ public class ResourceFunctions{
 			return QueryDatabaseResponse.success(database.getRepoId(), resources);
 		} catch(SQLException e){
 			log.error("Failed to get resources", e);
-			return QueryDatabaseResponse.error(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
+			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get resources", e));
 		} finally{
 			try{
 				connection.close();
@@ -167,7 +169,7 @@ public class ResourceFunctions{
 			}
 		} catch(Exception e){
 			log.error("Failed to find resource by path", e);
-			return QueryDatabaseResponse.error(database.getRepoId(),
+			return QueryDatabaseResponse.fail(database.getRepoId(),
 					new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
 		}
 		return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
@@ -183,7 +185,7 @@ public class ResourceFunctions{
 			}
 		} catch(Exception e){
 			log.error("Failed to check if resource exists", e);
-			return QueryDatabaseResponse.error(database.getRepoId(),
+			return QueryDatabaseResponse.fail(database.getRepoId(),
 					new RuntimeSQLException("Failed to check if resource exists at path '%s'".formatted(path), e));
 		} finally{
 			try{
@@ -196,11 +198,11 @@ public class ResourceFunctions{
 	}
 	
 	public static QueryDatabaseResponse<List<Resource>> findByCategory(RepositoryDatabase database, String category) {
-		return QueryDatabaseResponse.error(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+		return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
 	}
 	
 	public static QueryDatabaseResponse<List<Resource>> findByAntPath(RepositoryDatabase database, String antPath) {
-		return QueryDatabaseResponse.error(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
+		return QueryDatabaseResponse.fail(database.getRepoId(), new UnsupportedOperationException("Not implemented yet"));
 	}
 	
 	/**
@@ -244,7 +246,7 @@ public class ResourceFunctions{
 			
 		} catch(Exception e){
 			log.error("Failed to find resource by content", e);
-			return QueryDatabaseResponse.error(database.getRepoId(),
+			return QueryDatabaseResponse.fail(database.getRepoId(),
 					new RuntimeSQLException("Failed to find resource by text '%s'".formatted(searchTerm), e));
 		}
 		
@@ -337,34 +339,76 @@ public class ResourceFunctions{
 	 * @param resource the resource to update
 	 * @return {@link UpdateDatabaseResponse}
 	 */
-	public static UpdateDatabaseResponse updateResource(RepositoryDatabase database, Resource resource) {
-		
+	public static QueryDatabaseResponse<Resource> updateResource(RepositoryDatabase database, ResourceUpdateRequest request) {
 		Connection connection = database.getConnection();
-		
-		//get current resource and compare it to the new resource
-		
-		/*
-		try(var statement = connection.prepareStatement("UPDATE Resources " +
-														"SET last_modified_at = ?, last_modified_by = ?, category = ?" +
-														"WHERE resource_path = ?")){
-			statement.setString(1, fromDateTime(resource.modifiedAt()));
-			statement.setString(2, resource.modifiedBy());
-			statement.setString(3, resource.category());
-			statement.setString(4, resource.resourcePath().toString());
-			int affectedRows = statement.executeUpdate();
+		try{
 			
-			
-			if(resource.data() == null){
-				return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
+			connection.setAutoCommit(false);
+			if(request.data != null){
+				updateResourceData(connection, database, Path.of(request.path), request.data);
 			}
 			
-			return updateResourceData(database, resource.resourcePath(), resource.data());
-		} catch(Exception e){
-			String errorResponse = "Failed to update resource '%s'".formatted(resource.resourcePath());
-			log.error(errorResponse, e);
-			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			if(request.tagsToSet != null){
+				updateResourceTagsSet(connection, database, Path.of(request.path), request.tagsToSet);
+			}
+			
+			if(request.tagsToRemove != null && !request.tagsToRemove.isEmpty()){
+				updateResourceTagsRemove(connection, database, Path.of(request.path), request.tagsToRemove);
+			}
+			
+			if(request.tagsToAdd != null && !request.tagsToAdd.isEmpty()){
+				updateResourceTagsAdd(connection, database, Path.of(request.path), request.tagsToAdd);
+			}
+			
+			if(request.category == null && request.treatNullsAsValues){
+				try(PreparedStatement statement = connection.prepareStatement("UPDATE Resources SET category = ? WHERE resource_path = ?")){
+					statement.setString(1, request.category);
+					statement.setString(2, request.path);
+				} catch(Exception e){
+					String errorResponse = "Failed to update resource '%s'".formatted(request.path);
+					log.error(errorResponse, e);
+					return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+				}
+			}
+			
+			try(var statement = connection.prepareStatement("UPDATE Resources " +
+															"SET last_modified_at = ?, last_modified_by = ?" +
+															"WHERE resource_path = ?")){
+				statement.setString(1, fromDateTime(LocalDateTime.now()));
+				statement.setString(2, request.userId);
+				statement.setString(3, request.path);
+				
+				statement.executeUpdate();
+				
+				connection.commit();
+				
+				//gets the updated resource
+				return QueryDatabaseResponse.success(database.getRepoId(), fetchResources(connection, database, request.path, 1).getFirst());
+			} catch(Exception e){
+				String errorResponse = "Failed to update resource '%s'".formatted(request.path);
+				log.error(errorResponse, e);
+				return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+			}
+		} catch(SQLException e){
+			try{
+				connection.rollback();
+			} catch(SQLException ex){
+				log.error("Failed to rollback transaction", ex);
+			}
+			log.error("Failed to update resource", e);
+			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to update resource", e));
+		} finally{
+			try{
+				connection.setAutoCommit(true);
+				connection.close();
+			} catch(SQLException e){
+				log.error("Failed to close connection", e);
+			}
 		}
-		try(var statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")){
+	}
+	
+	private static UpdateDatabaseResponse updateResourceData(Connection connection, RepositoryDatabase database, Path resourcePath, String data) {
+		try(PreparedStatement statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")){
 			statement.setString(1, data);
 			statement.setString(2, resourcePath.toString());
 			return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -373,9 +417,121 @@ public class ResourceFunctions{
 			log.error(errorResponse, e);
 			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
+	}
+	
+	/**
+	 * Updates the tags of a resource (removes all existing tags and replaces them with the new tags)
+	 *
+	 * @param connection
+	 * @param database
+	 * @param resourcePath
+	 * @param tags
+	 * @return
+	 */
+	private static UpdateDatabaseResponse updateResourceTagsSet(Connection connection,
+																RepositoryDatabase database,
+																Path resourcePath,
+																List<Tag> tags) {
+		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")){
+			statement.setString(1, resourcePath.toString());
+			statement.executeUpdate();
+		} catch(Exception e){
+			String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+		}
 		
-		 */
-		return null;
+		addMissingTags(connection, tags);
+		
+		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
+			for(Tag tag : tags){
+				statement.setString(1, resourcePath.toString());
+				statement.setString(2, tag.tagId());
+				statement.addBatch();
+			}
+			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
+		} catch(Exception e){
+			String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+		}
+	}
+	
+	/**
+	 * Adds missing tags to the database
+	 *
+	 * @param connection the connection to the database
+	 * @param tags the tags to add
+	 * @return {@link UpdateDatabaseResponse}
+	 */
+	private static UpdateDatabaseResponse addMissingTags(Connection connection, List<Tag> tags) {
+		try(PreparedStatement statement = connection.prepareStatement("INSERT OR IGNORE INTO Tags(tag_id, tag_name) VALUES(?, ?)")){
+			for(Tag tag : tags){
+				statement.setString(1, tag.tagId());
+				statement.setString(2, tag.tagName());
+				statement.addBatch();
+			}
+			return UpdateDatabaseResponse.success(null, Arrays.stream(statement.executeBatch()).sum());
+		} catch(Exception e){
+			String errorResponse = "Failed to add missing tags";
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(null, new RuntimeSQLException(errorResponse, e));
+		}
+	}
+	
+	/**
+	 * Updates the tags of a resource (removes the tags from the resource)
+	 *
+	 * @param connection
+	 * @param database
+	 * @param resourcePath
+	 * @param tags
+	 * @return
+	 */
+	private static UpdateDatabaseResponse updateResourceTagsRemove(Connection connection,
+																   RepositoryDatabase database,
+																   Path resourcePath,
+																   List<Tag> tags) {
+		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")){
+			for(Tag tag : tags){
+				statement.setString(1, resourcePath.toString());
+				statement.setString(2, tag.tagId());
+				statement.addBatch();
+			}
+			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
+		} catch(Exception e){
+			String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+		}
+	}
+	
+	/**
+	 * Updates the tags of a resource (adds the tags to the resource)
+	 *
+	 * @param connection
+	 * @param database
+	 * @param resourcePath
+	 * @param tags
+	 * @return
+	 */
+	private static UpdateDatabaseResponse updateResourceTagsAdd(Connection connection,
+																RepositoryDatabase database,
+																Path resourcePath,
+																List<Tag> tags) {
+		addMissingTags(connection, tags);
+		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
+			for(Tag tag : tags){
+				statement.setString(1, resourcePath.toString());
+				statement.setString(2, tag.tagId());
+				statement.addBatch();
+			}
+			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
+		} catch(Exception e){
+			String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+		}
 	}
 	
 	//todo:jmd check commits, if the commit matches the current commit then ignore as its already the same

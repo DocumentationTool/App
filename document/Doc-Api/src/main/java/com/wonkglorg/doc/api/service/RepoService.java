@@ -133,7 +133,7 @@ public class RepoService{
 		try{
 			return getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
 		} catch(NotaRepoException e){
-			return QueryDatabaseResponse.error(null, e);
+			return QueryDatabaseResponse.fail(null, e);
 		}
 	}
 	
@@ -142,7 +142,7 @@ public class RepoService{
 		try{
 			return getRepo(repoId).getDatabase().getGroupsFromUser(userId);
 		} catch(NotaRepoException e){
-			return QueryDatabaseResponse.error(null, e);
+			return QueryDatabaseResponse.fail(null, e);
 		}
 	}
 	
