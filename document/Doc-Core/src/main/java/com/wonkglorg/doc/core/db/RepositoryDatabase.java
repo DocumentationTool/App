@@ -71,6 +71,15 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		log.info("Database initialized for repo '{}'", repoProperties.getId());
 	}
 	
+	public void shutdown() {
+		log.info("Closing Database for repo '{}'", repoProperties.getId());
+		try{
+			getDataSource().close();
+		} catch(RuntimeSQLException e){
+			log.error("Error while closing Database for repo '{}'", repoProperties.getId(), e);
+		}
+	}
+	
 	/**
 	 * Rebuilds the entire FTS table to remove any unused records
 	 */

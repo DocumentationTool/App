@@ -11,6 +11,7 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,7 +39,7 @@ public class ApiResourceController{
 	private final ResourceService resourceService;
 	private final RepoService repoService;
 	
-	public ApiResourceController(ResourceService resourceService, RepoService repoService) {
+	public ApiResourceController( @Lazy RepoService repoService,ResourceService resourceService) {
 		this.resourceService = resourceService;
 		this.repoService = repoService;
 	}
@@ -185,6 +186,7 @@ public class ApiResourceController{
 		return RestResponse.of(resourceService.insertResource(resource)).toResponse();
 	}
 	
+	
 	//todo:jmd not sure how to implement this yet
 	@Operation(summary = "Updates a resource", description = "Updates a resource in the Repository.")
 	@PutMapping("/update")
@@ -214,10 +216,10 @@ public class ApiResourceController{
 		if(!repoService.isValidRepo(id)){
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
-		if(resourceService.resourceExists(id, Path.of(path))){
+		if(!resourceService.resourceExists(id, Path.of(path))){
 			return RestResponse.<Void>error("Resource does not exist").toResponse();
 		}
-		
+
 		return RestResponse.of(resourceService.removeResource(id, Path.of(path))).toResponse();
 	}
 	

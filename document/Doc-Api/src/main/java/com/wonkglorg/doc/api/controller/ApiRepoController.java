@@ -3,6 +3,7 @@ package com.wonkglorg.doc.api.controller;
 import com.wonkglorg.doc.api.json.JsonRepo;
 import com.wonkglorg.doc.api.service.RepoService;
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +19,7 @@ public class ApiRepoController {
 
     private final RepoService repoService;
 
-    public ApiRepoController(RepoService repoService) {
+    public ApiRepoController(@Lazy RepoService repoService) {
         this.repoService = repoService;
     }
 

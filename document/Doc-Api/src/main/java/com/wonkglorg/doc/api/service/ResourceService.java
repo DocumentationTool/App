@@ -117,10 +117,12 @@ public class ResourceService{
 	 */
 	public UpdateDatabaseResponse removeResource(RepoId repoId, Path path) {
 		try{
-			UpdateDatabaseResponse updateDatabaseResponse = repoService.getRepo(repoId).getDatabase().removeResource(path);
-			if(updateDatabaseResponse.isSuccess()){
-				Files.delete(repoService.getRepo(repoId).getRepoProperties().getPath().resolve(path));
+			FileRepository repo = repoService.getRepo(repoId);
+			UpdateDatabaseResponse updateDatabaseResponse = repo.getDatabase().removeResource(path);
+			if(updateDatabaseResponse.isSuccess() && Files.exists(repo.getRepoProperties().getPath().resolve(path))){
+				Files.delete((repo.getRepoProperties().getPath().resolve(path)));
 			}
+			
 			return updateDatabaseResponse;
 		} catch(NotaRepoException | IOException e){
 			return UpdateDatabaseResponse.fail(null, e);

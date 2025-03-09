@@ -41,7 +41,10 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = database.getConnection().prepareStatement("DELETE FROM FileData WHERE resource_path = ?")){
 			statement.setString(1, resourcePath.toString());
 			int i = statement.executeUpdate();
-			return UpdateDatabaseResponse.success(database.getRepoId(), i);
+			if(i == 0){
+				return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource does not exist"));
+			}
+			return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully deleted resource '%s'".formatted(resourcePath.toString()), i);
 		} catch(Exception e){
 			log.error("Failed to delete resource", e);
 			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to delete resource", e));

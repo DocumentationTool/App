@@ -21,6 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Manages all repositories (ALWAYS LAZY LOAD)
+ */
 @Component
 @Service
 public class RepoService{

@@ -4,6 +4,7 @@ import com.wonkglorg.doc.api.json.JsonUsers;
 import com.wonkglorg.doc.api.service.RepoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class ApiUserController {
 
     private final RepoService repoService;
 
-    public ApiUserController(RepoService repoService) {
+    public ApiUserController(@Lazy RepoService repoService) {
         this.repoService = repoService;
     }
 
