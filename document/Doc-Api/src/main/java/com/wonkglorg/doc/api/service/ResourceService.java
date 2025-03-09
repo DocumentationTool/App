@@ -7,7 +7,6 @@ import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
-import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -81,9 +80,9 @@ public class ResourceService{
 	 * @param path the path
 	 * @return true if the resource exists
 	 */
-	public boolean resourceExists(String repoId, Path path) {
+	public boolean resourceExists(RepoId repoId, Path path) {
 		try{
-			return repoService.getRepo(new RepoId(repoId)).getDatabase().resourceExists(path).get();
+			return repoService.getRepo(repoId).getDatabase().resourceExists(path).get();
 		} catch(NotaRepoException e){
 			return false;
 		}
@@ -123,6 +122,62 @@ public class ResourceService{
 			}
 			return updateDatabaseResponse;
 		} catch(NotaRepoException | IOException e){
+			return UpdateDatabaseResponse.fail(null, e);
+		}
+	}
+	
+	/**
+	 * Updates a resource in the database
+	 *
+	 * @param repoFrom the repo from
+	 * @param pathFrom the path from
+	 * @param repoTo the repo to
+	 * * @param pathTo the path to
+	 * @return the response
+	 */
+	public UpdateDatabaseResponse move(RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) {
+		try{
+			
+			if(!repoService.isValidRepo(repoFrom) || !repoService.isValidRepo(repoTo)){
+				return UpdateDatabaseResponse.fail(null, new NotaRepoException("Repo does not exist"));
+			}
+			FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
+			FileRepository fileRepoTo = repoService.getRepo(repoTo);
+			
+			if(!resourceExists(repoFrom, pathFrom)){
+				return UpdateDatabaseResponse.fail(null, new NotaRepoException("Resource does not exist"));
+			}
+			
+			if(resourceExists(repoTo, pathTo)){
+				return UpdateDatabaseResponse.fail(null, new NotaRepoException("Resource already exists"));
+			}
+			
+			ResourceRequest request = new ResourceRequest();
+			request.path = pathFrom.toString();
+			request.withData = true;
+			request.repoId = repoFrom.toString();
+			
+			fileRepoFrom.removeResourceAndCommit(repoFrom, pathFrom);
+			
+			//todo:jmd add and delete files
+			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().getFirst();
+			fileRepoTo.getDatabase().insertResource(resource);
+			
+			
+		} catch(NotaRepoException | IOException e){
+			return UpdateDatabaseResponse.fail(null, e);
+		}
+	}
+	
+	public UpdateDatabaseResponse updateResource(Resource resource) {
+		try{
+			FileRepository repo = repoService.getRepo(resource.repoId());
+			UpdateDatabaseResponse updateDatabaseResponse = repo.getDatabase().updateResourceData(resource);
+			if(updateDatabaseResponse.isSuccess()){
+				repo.addResourceAndCommit(resource);
+			}
+			return updateDatabaseResponse;
+		} catch(NotaRepoException e){
 			return UpdateDatabaseResponse.fail(null, e);
 		}
 	}

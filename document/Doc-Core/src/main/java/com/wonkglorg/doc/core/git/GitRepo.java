@@ -1,6 +1,8 @@
 package com.wonkglorg.doc.core.git;
 
 import com.wonkglorg.doc.core.RepoProperty;
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.UserId;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.Status;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -194,7 +196,7 @@ public class GitRepo{
 		return false;
 	}
 	
-	public UserBranch createBranch(String userId) {
+	public UserBranch createBranch(UserId userId) {
 		UserBranch branch = null;
 		try{
 			branch = new UserBranch(this, userId);

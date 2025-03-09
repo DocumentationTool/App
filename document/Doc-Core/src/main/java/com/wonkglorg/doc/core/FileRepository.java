@@ -6,6 +6,7 @@ import static com.wonkglorg.doc.core.git.GitRepo.GitStage.ADDED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.MODIFIED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.UNTRACKED;
 import com.wonkglorg.doc.core.git.UserBranch;
+import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
@@ -174,7 +175,7 @@ public class FileRepository{
 	 *
 	 * @param resourcePath the path to the resource
 	 */
-	public void removeFile(String repoId, Path resourcePath) {
+	public void removeResourceAndCommit(RepoId repoId, Path resourcePath) {
 		try{
 			UserBranch branch = gitRepo.createBranch(repoId);
 			branch.updateFileDeleted(resourcePath);

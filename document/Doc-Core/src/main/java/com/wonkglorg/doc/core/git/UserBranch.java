@@ -1,6 +1,8 @@
 package com.wonkglorg.doc.core.git;
 
+import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.UserId;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -19,10 +21,10 @@ public class UserBranch{
 	private final GitRepo repo;
 	//todo:jmd figure out a nice branch naming
 	private final String branchName;
-	private final String userId;
+	private final UserId userId;
 	private Ref branch;
 	
-	public UserBranch(GitRepo repo, String userId) throws GitAPIException {
+	public UserBranch(GitRepo repo, UserId userId) throws GitAPIException {
 		this.repo = repo;
 		this.userId = userId;
 		this.branchName = "user/" + userId + "/" + UUID.randomUUID();
@@ -79,7 +81,7 @@ public class UserBranch{
 		String repoRelativePath = git.getRepository().getWorkTree().toPath().relativize(file).toString();
 		
 		try{
-			git.checkout().setName(userId).call();
+			git.checkout().setName(userId.id()).call();
 			git.rm().addFilepattern(repoRelativePath).call();
 		} catch(GitAPIException e){
 			throw new RuntimeException(e);

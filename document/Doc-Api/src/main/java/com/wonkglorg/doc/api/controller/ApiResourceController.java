@@ -9,6 +9,7 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -42,7 +43,26 @@ public class ApiResourceController{
 	}
 	
 	//@formatter:off
-	@Operation(summary = "Gets a resource", description = "Returns a resource or resources if no repository is given. If a repository is given, only resources for that repository will be returned, if no userId is given returns all resources in this repository without permission checks.")
+	@Operation(summary = "Gets a resource", description = """
+	## Returns resources by the specified request.
+	
+	### searchTerm
+	if null is given returns the result regardless of its file contents.
+	### path
+	if null is given returns the result for all resources in the repository.
+	### repoId
+	if null is given returns the result for all repositories.
+	### userId
+	if null is given returns regardless of permissions, if a valid user is given limits the search to any file the user would have access to.
+	### whiteListTags
+	requires a resource to at least have this tag to be returned.
+	### blacklistListTags
+	requires a resource to not have this tag to be returned. If a resource has a whitelisted tag and a blacklisted tag it will not be returned as the blacklisted tag takes precedence.
+	### withData
+	if true returns the data of the resource.
+	### returnLimit
+	limits the amount of resources returned.
+	""")
 	@PostMapping("/get")
 	public ResponseEntity<RestResponse<Map<String,List<JsonResource>>>> getResources(@RequestBody ResourceRequest request) {
 		try{
@@ -78,8 +98,24 @@ public class ApiResourceController{
 	
 	
 	@Operation(summary = "Constructs a filetree", description = """
-	Constructs a file tree out of the given resource request.
-	If null is given as path, the file tree will be constructed for all resources.
+	## Constructs a file tree out of the given resource request.
+	
+	### searchTerm
+	if null is given returns the result regardless of its file contents.
+	### path
+	if null is given returns the result for all resources in the repository.
+	### repoId
+	if null is given returns the result for all repositories.
+	### userId
+	if null is given returns regardless of permissions, if a valid user is given limits the search to any file the user would have access to.
+	### whiteListTags
+	requires a resource to at least have this tag to be returned.
+	### blacklistListTags
+	requires a resource to not have this tag to be returned. If a resource has a whitelisted tag and a blacklisted tag it will not be returned as the blacklisted tag takes precedence.
+	### withData
+	if true returns the data of the resource.
+	### returnLimit
+	limits the amount of resources returned.
 	""")
 	@PostMapping("/get/filetree")
 	public ResponseEntity<RestResponse<Map<String, JsonFileTree>>> getFiletree(@RequestBody ResourceRequest request) {
@@ -116,12 +152,19 @@ public class ApiResourceController{
 		}
 	}
 	
-	@Operation(summary = "Adds a resource", description = "Adds a new resource to the Repository. ")
+	@Operation(summary = "Adds a resource", description = """
+	## Body
+	The data the file should contain.
+	""")
 	@PutMapping("/add")
 	public ResponseEntity<RestResponse<Void>> insertResource(
+			@Parameter(description = "The repoId to search in.")
 			@RequestParam("repoId") String repoId,
+			@Parameter(description = "The path to the resource.")
 			@RequestParam("path") String path,
+			@Parameter(description = "The user who created the resource.")
 			@RequestParam("createdBy") String createdBy,
+			@Parameter(description = "The category of the resource.")
 			@RequestParam(value = "category",required = false) String category,
 			@RequestBody String content) {
 		
@@ -146,10 +189,44 @@ public class ApiResourceController{
 	@PutMapping("/update")
 	public ResponseEntity<RestResponse<Void>> updateResource(@RequestParam("repo") String repo,
 															 @RequestParam("path") String path,
-															 @RequestParam("createdBy") String createdBy,
+															 @RequestParam("modifiedBy") String createdBy,
 															 @RequestParam("category") String category,
 															 @RequestBody String content) {
+		if(!repoService.isValidRepo(new RepoId(repo))){
+			return RestResponse.<Void>error("Repository does not exist").toResponse();
+		}
+		
+		Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repo), category, content);
+		
+		return RestResponse.of(resourceService.(resource)).toResponse();
+		
+		
 		return null;
 	}
+	
+	
+	@Operation(summary = "Removes a resource", description = "Removes a resource from the Repository.")
+	@PostMapping("/remove")
+	public ResponseEntity<RestResponse<Void>> removeResource(@RequestParam("repo") String repo,
+															 @RequestParam("path") String path) {
+		RepoId id = new RepoId(repo);
+		if(!repoService.isValidRepo(id)){
+			return RestResponse.<Void>error("Repository does not exist").toResponse();
+		}
+		if(resourceService.resourceExists(id, Path.of(path))){
+			return RestResponse.<Void>error("Resource does not exist").toResponse();
+		}
+		
+		return RestResponse.of(resourceService.removeResource(id, Path.of(path))).toResponse();
+	}
+	
+	
+	@Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
+	@PostMapping("/move")
+	public ResponseEntity<RestResponse<Void>> moveResource (RepoId repoFrom, Path from, RepoId repoTo,Path to) {
+		return RestResponse.of(resourceService.move(repoFrom, from, repoTo, to)).toResponse();
+	}
+	
+	
 	//@formatter:on
 }
