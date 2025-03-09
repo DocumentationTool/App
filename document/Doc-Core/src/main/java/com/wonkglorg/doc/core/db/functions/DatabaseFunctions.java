@@ -71,7 +71,7 @@ public class DatabaseFunctions{
 					""");
 			
 			statement.execute("""
-					CREATE TABLE IF NOT EXISTS GroupUsers (
+					CREATE TABLE IF NOT EXISTS UserGroups (
 					    user_id TEXT NOT NULL,
 					    group_id TEXT NOT NULL,
 					    PRIMARY KEY (user_id, group_id),
@@ -117,6 +117,32 @@ public class DatabaseFunctions{
 					CREATE TABLE IF NOT EXISTS Permissions (
 					    permission_id TEXT PRIMARY KEY NOT NULL,
 					    weight INTEGER NOT NULL
+					)
+					""");
+			
+			statement.execute("""
+					CREATE TABLE IF NOT EXISTS GroupPermissions(
+					    group_id TEXT NOT NULL,
+					    path TEXT NOT NULL,
+					    type TEXT NOT NULL,
+					    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					    created_by TEXT,
+					    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					    last_modified_by TEXT,
+					    PRIMARY KEY (group_id, path)
+					)
+					""");
+			
+			statement.execute("""
+					CREATE TABLE IF NOT EXISTS UserPermissions(
+					    user_id TEXT NOT NULL,
+					    path TEXT NOT NULL,
+					    type TEXT NOT NULL,
+					    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					    created_by TEXT,
+					    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					    last_modified_by TEXT,
+					    PRIMARY KEY (user_id, path)
 					)
 					""");
 			
@@ -185,12 +211,12 @@ public class DatabaseFunctions{
 				WHEN OLD.resource_path != NEW.resource_path
 				BEGIN
 				    -- Update related permissions
-				    UPDATE GroupPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
-				    UPDATE UserPermissions SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
+				    UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+				    UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
 				    -- Update related tags
-				    UPDATE ResourceTags SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
+				    UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
 				    -- Update indexed data
-				    UPDATE FileData SET resource_path = NEW.resource_path, last_modified_at = datetime('now') WHERE resource_path = OLD.resource_path;
+				    UPDATE FileData SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
 				END;
 				""";
 		try(Statement statement = database.getConnection().createStatement()){
@@ -216,8 +242,8 @@ public class DatabaseFunctions{
 				FOR EACH ROW
 				BEGIN
 				   -- Delete related permissions
-				    DELETE FROM GroupPermissions WHERE resource_path = OLD.resource_path;
-				    DELETE FROM UserPermissions WHERE resource_path = OLD.resource_path;
+				    DELETE FROM GroupPermissions WHERE path = OLD.resource_path;
+				    DELETE FROM UserPermissions WHERE path = OLD.resource_path;
 				    --Delete Related Tags
 				    DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
 				    --Delete Indexed Data
