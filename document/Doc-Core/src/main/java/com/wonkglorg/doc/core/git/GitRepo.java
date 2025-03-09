@@ -139,7 +139,9 @@ public class GitRepo{
 		}
 	}
 	
-	//todo:jmd check if remote even exists if not ignore
+	/**
+	 * Pulls the latest changes from the remote if it exists otherwise does nothing
+	 */
 	public void pull() {
 		if(!remoteExists("origin")){
 			log.warn("No remote found, skipping pull");
@@ -152,7 +154,9 @@ public class GitRepo{
 		}
 	}
 	
-	//todo:jmd check if remote even exists if not ignore
+	/**
+	 * Pushes the current branch to the remote if it exists otherwise does nothing
+	 */
 	public void push() {
 		if(!remoteExists("origin")){
 			log.warn("No remote found, skipping push");

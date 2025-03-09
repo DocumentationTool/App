@@ -88,7 +88,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * @param resourcePath the path to the resource (should it also delete it from the repo itself?)
      * @return the row count affected, -1 if an error occurred
      */
-    public UpdateDatabaseResponse deleteResource(Path resourcePath) {
+    public UpdateDatabaseResponse removeResource(Path resourcePath) {
         log.info("Deleting resource {} for repo {}", resourcePath, repoProperties.getId());
         return ResourceFunctions.deleteResource(this, resourcePath);
     }
@@ -115,11 +115,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return ResourceFunctions.findByAntPath(this, antPath);
     }
 
-    public QueryDatabaseResponse<Resource> findByPath(Path resourcePath) {
-        log.info("Retrieving resource {} for repo {}", resourcePath, repoProperties.getId());
-        return ResourceFunctions.findByPath(this, resourcePath);
-    }
-
     /**
      * Searches the database files by their content and finds any that match the search term
      *
@@ -134,6 +129,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     public UpdateDatabaseResponse insertResource(Resource resource) throws RuntimeSQLException {
         log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
         return ResourceFunctions.insertResource(this, resource);
+    }
+    
+    public QueryDatabaseResponse<Boolean> resourceExists(Path path) {
+        log.info("Checking if resource {} exists in repo {}", path, repoProperties.getId());
+        return ResourceFunctions.resourceExists(this, path);
     }
 
     public UpdateDatabaseResponse updatePath(Path oldPath, Path newPath) {

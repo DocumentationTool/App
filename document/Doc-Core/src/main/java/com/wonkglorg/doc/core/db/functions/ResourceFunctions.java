@@ -143,7 +143,6 @@ public class ResourceFunctions{
 				resultSet.getString("last_modified_by"),
 				database.getRepoProperties().getId(),
 				tags,
-				resultSet.getString("commit_id"),
 				database.getRepoProperties().isReadOnly(),
 				resultSet.getString("category"),
 				data);
@@ -169,6 +168,28 @@ public class ResourceFunctions{
 					new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
 		}
 		return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
+	}
+	
+	public static QueryDatabaseResponse<Boolean> resourceExists(RepositoryDatabase database, Path path) {
+		Connection connection = database.getConnection();
+		try(var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")){
+			statement.setString(1, path.toString());
+			ResultSet resultSet = statement.executeQuery();
+			if(resultSet.next()){
+				return QueryDatabaseResponse.success(database.getRepoId(), resultSet.getBoolean(1));
+			}
+		} catch(Exception e){
+			log.error("Failed to check if resource exists", e);
+			return QueryDatabaseResponse.error(database.getRepoId(),
+					new RuntimeSQLException("Failed to check if resource exists at path '%s'".formatted(path), e));
+		} finally{
+			try{
+				connection.close();
+			} catch(SQLException e){
+				log.error("Failed to close connection", e);
+			}
+		}
+		return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(path), false);
 	}
 	
 	public static QueryDatabaseResponse<List<Resource>> findByCategory(RepositoryDatabase database, String category) {
@@ -233,19 +254,34 @@ public class ResourceFunctions{
 	 * @return {@link UpdateDatabaseResponse}
 	 */
 	public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) {
+		Connection connection = database.getConnection();
 		int affectedRows = 0;
+		boolean resourceExists = false;
+		
+		try(var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")){
+			statement.setString(1, resource.resourcePath().toString());
+			ResultSet resultSet = statement.executeQuery();
+			resourceExists = resultSet.next() && resultSet.getBoolean(1);
+		} catch(Exception e){
+			log.error("Failed to check if resource exists", e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to check if resource exists", e));
+		}
+		
+		if(resourceExists){
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource already exists"));
+		}
+		
 		String sqlResourceInsert = """
-				INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category, commit_id)
-				VALUES(?, ?, ?, ?, ?, ?, ?)
+				INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category)
+				VALUES(?, ?, ?, ?, ?, ?)
 				""";
-		try(PreparedStatement statement = database.getConnection().prepareStatement(sqlResourceInsert)){
+		try(PreparedStatement statement = connection.prepareStatement(sqlResourceInsert)){
 			statement.setString(1, resource.resourcePath().toString());
 			statement.setString(2, fromDateTime(resource.createdAt()));
 			statement.setString(3, resource.createdBy());
 			statement.setString(4, fromDateTime(resource.modifiedAt()));
 			statement.setString(5, resource.modifiedBy());
 			statement.setString(6, resource.category());
-			statement.setString(7, resource.commitId());
 			affectedRows = statement.executeUpdate();
 		} catch(Exception e){
 			log.error("Failed to insert resource", e);
@@ -260,7 +296,7 @@ public class ResourceFunctions{
 				INSERT INTO FileData(resource_path, data)
 				VALUES(?, ?)
 				""";
-		try(PreparedStatement statement = database.getConnection().prepareStatement(sqlDataInsert)){
+		try(PreparedStatement statement = connection.prepareStatement(sqlDataInsert)){
 			statement.setString(1, resource.resourcePath().toString());
 			statement.setString(2, resource.data());
 			affectedRows += statement.executeUpdate();
@@ -325,7 +361,7 @@ public class ResourceFunctions{
 		try{
 			int affectedRows = 0;
 			try(var statement = connection.prepareStatement(
-					"INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category, commit_id)VALUES(?, ?, ?, ?, ?, ?, ?)")){
+					"INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category)VALUES(?, ?, ?, ?, ?, ?)")){
 				connection.setAutoCommit(false);
 				for(var resource : resources){
 					statement.setString(1, resource.resourcePath().toString());
@@ -334,7 +370,6 @@ public class ResourceFunctions{
 					statement.setString(4, fromDateTime(resource.modifiedAt()));
 					statement.setString(5, resource.modifiedBy());
 					statement.setString(6, resource.category());
-					statement.setString(7, resource.commitId());
 					statement.addBatch();
 				}
 				affectedRows += Arrays.stream(statement.executeBatch()).sum();
@@ -383,7 +418,7 @@ public class ResourceFunctions{
 		try{
 			int affectedRows = 0;
 			try(var statement = connection.prepareStatement("UPDATE Resources " +
-															"SET last_modified_at = ?, last_modified_by = ?, category = ?, commit_id = ? " +
+															"SET last_modified_at = ?, last_modified_by = ?, category = ?" +
 															"WHERE resource_path = ?")){
 				
 				connection.setAutoCommit(false);
@@ -391,8 +426,7 @@ public class ResourceFunctions{
 					statement.setString(1, fromDateTime(resource.modifiedAt()));
 					statement.setString(2, resource.modifiedBy());
 					statement.setString(3, resource.category());
-					statement.setString(4, resource.commitId());
-					statement.setString(5, resource.resourcePath().toString());
+					statement.setString(4, resource.resourcePath().toString());
 					statement.addBatch();
 				}
 				affectedRows += Arrays.stream(statement.executeBatch()).sum();

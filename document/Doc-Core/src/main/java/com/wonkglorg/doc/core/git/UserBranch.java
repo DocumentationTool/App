@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.core.git;
 
+import com.wonkglorg.doc.core.objects.Resource;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -7,6 +8,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.UUID;
 
@@ -43,6 +45,7 @@ public class UserBranch{
 	 */
 	public void addFile(Path file) {
 		Git git = repo.getGit();
+		
 		String repoRelativePath = git.getRepository().getWorkTree().toPath().relativize(file).toString();
 		
 		try{
@@ -51,6 +54,21 @@ public class UserBranch{
 		} catch(GitAPIException e){
 			
 			throw new RuntimeException(e);
+		}
+	}
+	
+	public void addResource(Resource resource) {
+		Git git = repo.getGit();
+		String repoRelativePath = git.getRepository().getWorkTree().toPath().relativize(resource.resourcePath()).toString();
+		
+		if(!Files.exists(resource.resourcePath())){
+			try{
+				Files.createFile(resource.resourcePath());
+				Files.write(resource.resourcePath(), resource.data().getBytes());
+				git.add().addFilepattern(repoRelativePath).call();
+			} catch(IOException | GitAPIException e){
+				throw new RuntimeException(e);
+			}
 		}
 	}
 	
@@ -117,6 +135,7 @@ public class UserBranch{
 	
 	/**
 	 * Merges the user branch into the main branch
+	 *
 	 * @throws IOException
 	 * @throws GitAPIException
 	 */

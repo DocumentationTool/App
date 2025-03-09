@@ -46,7 +46,7 @@ public class FileRepository{
 	 * Represents the backing database of a repo
 	 */
 	private RepositoryDatabase dataDB;
-	private ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
+	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 	
 	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
@@ -82,7 +82,7 @@ public class FileRepository{
 		checkFileChanges(foundFiles);
 		
 		log.info("Scheduling check for changes in '{}'", repoProperties.getId());
-		executorService.schedule(() ->{
+		executorService.schedule(() -> {
 			try{
 				checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
 			} catch(GitAPIException e){
@@ -90,7 +90,6 @@ public class FileRepository{
 			}
 		}, 10, TimeUnit.MINUTES);
 		
-
 	}
 	
 	private void checkFileChanges(Set<Path> foundFiles) {
@@ -117,7 +116,9 @@ public class FileRepository{
 		List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 		
 		if(newResources.isEmpty() && deletedResources.isEmpty() && matchingResources.isEmpty()){
+			log.info("--------Report for repo '{}--------", repoProperties.getId());
 			log.info("No changes detected in repo '{}'", repoProperties.getId());
+			log.info("--------End of report--------");
 			return;
 		}
 		
@@ -147,6 +148,42 @@ public class FileRepository{
 		} catch(IOException e){
 			throw new RuntimeException(e);
 		}
+		
+		gitRepo.push();
+	}
+	
+	/**
+	 * Adds a file to the database
+	 *
+	 * @param resource the resource to add
+	 */
+	public void addResourceAndCommit(Resource resource) {
+		try{
+			UserBranch branch = gitRepo.createBranch(resource.createdBy());
+			Path file = Files.createFile(gitRepo.getRepoPath().resolve(resource.resourcePath()));
+			Files.write(file, resource.data().getBytes());
+			branch.addFile(file);
+			branch.commit("Added resource %s".formatted(resource.resourcePath()));
+			branch.closeBranch();
+		} catch(IOException | GitAPIException e){
+			throw new RuntimeException(e);
+		}
+	}
+	
+	/**
+	 * Removes a file from the database
+	 *
+	 * @param resourcePath the path to the resource
+	 */
+	public void removeFile(String repoId, Path resourcePath) {
+		try{
+			UserBranch branch = gitRepo.createBranch(repoId);
+			branch.updateFileDeleted(resourcePath);
+			branch.commit("Deleted resource %s".formatted(resourcePath));
+			branch.closeBranch();
+		} catch(GitAPIException e){
+			throw new RuntimeException(e);
+		}
 	}
 	
 	/**
@@ -162,15 +199,9 @@ public class FileRepository{
 			String content = readData(gitRepo, file);
 			if(lastCommitDetailsForFile == null){
 				log.error("File '{}' was not added by git", file);
-				newResource = new Resource(file, "system", repoProperties.getId(), null, repoProperties.isReadOnly(), content);
+				newResource = new Resource(file, "system", repoProperties.getId(), null, content);
 			} else {
-				String lastCommit = lastCommitDetailsForFile.getName();
-				newResource = new Resource(file,
-						lastCommitDetailsForFile.getAuthorIdent().getName(),
-						repoProperties.getId(),
-						lastCommit,
-						repoProperties.isReadOnly(),
-						content);
+				newResource = new Resource(file, lastCommitDetailsForFile.getAuthorIdent().getName(), repoProperties.getId(), null, content);
 			}
 			resources.add(newResource);
 			branch.addFile(file);
@@ -197,16 +228,15 @@ public class FileRepository{
 			}
 			
 			String authorName = fileCommit.getAuthorIdent().getName();
-			String lastCommit = fileCommit.getName();
 			Instant instant = Instant.ofEpochSecond(fileCommit.getCommitTime());
 			LocalDateTime commitTime = LocalDateTime.ofInstant(instant, fileCommit.getAuthorIdent().getTimeZone().toZoneId());
-			
 			Resource existingResource = existingResources.get(file);
-			String currentCommit = existingResource.commitId();
 			
-			if(lastCommit.equals(currentCommit)){
+			//If the file has not been modified since the last commit, skip it
+			if(existingResource.modifiedAt().isEqual(commitTime)){
 				continue;
 			}
+			
 			Resource newResource = new Resource(file,
 					existingResource.createdAt(),
 					existingResource.createdBy(),
@@ -214,7 +244,6 @@ public class FileRepository{
 					authorName,
 					repoProperties.getId(),
 					existingResource.resourceTags(),
-					lastCommit,
 					repoProperties.isReadOnly(),
 					existingResource.category(),
 					readData(gitRepo, file));
