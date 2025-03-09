@@ -46,13 +46,10 @@ public class UserBranch{
 	public void addFile(Path file) {
 		Git git = repo.getGit();
 		
-		String repoRelativePath = git.getRepository().getWorkTree().toPath().relativize(file).toString();
-		
 		try{
 			git.checkout().setName(branchName).call();
-			git.add().addFilepattern(repoRelativePath).call();
+			git.add().addFilepattern(file.toString()).call();
 		} catch(GitAPIException e){
-			
 			throw new RuntimeException(e);
 		}
 	}

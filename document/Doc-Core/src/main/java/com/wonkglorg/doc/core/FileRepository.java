@@ -115,13 +115,6 @@ public class FileRepository{
 											   .toList();
 		List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 		
-		if(newResources.isEmpty() && deletedResources.isEmpty() && matchingResources.isEmpty()){
-			log.info("--------Report for repo '{}--------", repoProperties.getId());
-			log.info("No changes detected in repo '{}'", repoProperties.getId());
-			log.info("--------End of report--------");
-			return;
-		}
-		
 		//pull any changes from the remote
 		gitRepo.pull();
 		
@@ -131,10 +124,16 @@ public class FileRepository{
 		addNewFiles(newResources, branch);
 		deleteOldResources(deletedResources, branch);
 		log.info("--------Report for repo '{}--------", repoProperties.getId());
-		log.info("New resources: {}", newResources.size());
-		log.info("Deleted resources: {}", deletedResources.size());
-		log.info("Updated resources: {}", existingFilesChanged);
-		log.info("--------End of report--------");
+		if(newResources.isEmpty() && deletedResources.isEmpty() && existingFilesChanged == 0){
+			log.info("No changes detected in repo '{}'", repoProperties.getId());
+			log.info("--------End of report--------");
+			return;
+		} else {
+			log.info("New resources: {}", newResources.size());
+			log.info("Deleted resources: {}", deletedResources.size());
+			log.info("Updated resources: {}", existingFilesChanged);
+			log.info("--------End of report--------");
+		}
 		
 		branch.addFile(Path.of(repoProperties.getDbName()));
 		branch.commit("Startup: Updated resources info: New: %s, Deleted: %s, Updated: %s".formatted(newResources.size(),

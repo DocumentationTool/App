@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.Mapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -47,40 +48,72 @@ public class ApiResourceController{
 	@PostMapping("/get")
 	public ResponseEntity<RestResponse<Map<String,List<JsonResource>>>> getResources(@RequestBody ResourceRequest request) {
 		try{
-			Map<String, List<JsonResource>> jsonResources = new HashMap<>();
+			List<Resource> resources = getResourcesRequest(request);
+			Map<String,List<JsonResource>> jsonResources = new HashMap<>();
 			
+			for(var resource: resources){
+				jsonResources.computeIfAbsent(resource.repoId().id(),s ->new ArrayList<>()).add(JsonResource.of(resource));
+			}
+			return RestResponse.success(jsonResources).toResponse();
 			
+		}catch (Exception e) {
+			return RestResponse.<Map<String,List<JsonResource>>>error(e.getMessage()).toResponse();
+		}
+	}
+	
+	private List<Resource> getResourcesRequest(ResourceRequest request) throws Exception {
 			boolean isAntPath = pathMatcher.isPattern(request.path);
+			String antPath = request.path;
 			
 			if(isAntPath){
 				//match everything and and path match later (if optimisations are needed check for simple patterns to match)
 				request.path = null;
 			}
 			
-			
 			List<Resource> resources = resourceService.getResources(request);
-			
-			for(var resource: resources){
-				jsonResources.computeIfAbsent(resource.repoId().id(),s ->new ArrayList<>()).add(JsonResource.of(resource));
+			if(isAntPath){
+				resources = resources.stream().filter(r -> pathMatcher.match(antPath, r.resourcePath().toString())).toList();
 			}
 			
-			if(isAntPath){
-				for(var repo : jsonResources.entrySet()){
-					repo.setValue(repo.getValue().stream().filter(r -> pathMatcher.match(request.path, r.path)).toList());
+			return resources;
+	}
+	
+	
+	@Operation(summary = "Constructs a filetree", description = "Returns a filetree or filetrees if no repository is given. If a repository is given, only filetrees for that repository will be returned, if no userId is given returns all filetrees in this repository without permission checks.")
+	@PostMapping("/get/filetree")
+	public ResponseEntity<RestResponse<Map<String, JsonFileTree>>> getFiletree(@RequestBody ResourceRequest request) {
+		try {
+			var resources = getResourcesRequest(request);
+			Map<String, JsonFileTree> fileTrees = new HashMap<>();
+			
+			for (var resource : resources) {
+				String repo = resource.repoId().id(); // Get repo name
+				String normalizedPath = resource.resourcePath().toString().replace("\\", "/"); // Normalize slashes
+				String[] pathSegments = normalizedPath.split("/");
+				
+				// Get or create the repository root node
+				JsonFileTree root = fileTrees.computeIfAbsent(repo, JsonFileTree::new);
+				
+				// Traverse and build the file tree
+				JsonFileTree current = root;
+				for (int i = 0; i < pathSegments.length; i++) {
+					String pathPart = pathSegments[i];
+					
+					if (i == pathSegments.length - 1 && pathPart.contains(".")) {
+						// If it's the last segment and contains ".", treat it as a file
+						current.addResource(resource);
+					} else {
+						// Otherwise, it's a directory
+						current = current.add(pathPart);
+					}
 				}
 			}
 			
-			return RestResponse.success(jsonResources).toResponse();
-
-		}catch (Exception e) {
-			return RestResponse.<Map<String,List<JsonResource>>>error(e.getMessage()).toResponse();
+			return RestResponse.success(fileTrees).toResponse();
+			
+		} catch (Exception e) {
+			return RestResponse.<Map<String, JsonFileTree>>error(e.getMessage()).toResponse();
 		}
-	}
-	
-	@Operation(summary = "Constructs a filetree", description = "Returns a filetree or filetrees if no repository is given. If a repository is given, only filetrees for that repository will be returned, if no userId is given returns all filetrees in this repository without permission checks.")
-	@GetMapping("/get/filetree")
-	public ResponseEntity<RestResponse<Map<String,JsonFileTree>>> getFiletree(@RequestBody ResourceRequest request) {
-		return null;
 	}
 	
 	@Operation(summary = "Adds a resource", description = "Adds a new resource to the Repository. ")
@@ -93,6 +126,9 @@ public class ApiResourceController{
 			@RequestBody String content) {
 		
 		RepoId id = new RepoId(repoId);
+		if(!path.endsWith(".md")){
+			path = path + ".md";
+		}
 		if(!repoService.isValidRepo(id)){
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}

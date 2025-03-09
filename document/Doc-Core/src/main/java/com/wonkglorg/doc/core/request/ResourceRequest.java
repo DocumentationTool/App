@@ -85,10 +85,6 @@ public class ResourceRequest{
 		return containsWhitelistedTag;
 	}
 	
-	public boolean isSingleRepoRequest() {
-		return repoId != null;
-	}
-	
 	public boolean isValidResource(Resource resource) {
 		
 		//todo:jmd check path stuff

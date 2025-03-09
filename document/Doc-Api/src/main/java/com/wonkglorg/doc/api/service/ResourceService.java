@@ -40,7 +40,7 @@ public class ResourceService{
 		String repoId = request.repoId;
 		QueryDatabaseResponse<List<Resource>> resources = null;
 		
-		if(!request.isSingleRepoRequest()){
+		if(request.path == null){
 			QueryDatabaseResponse<List<Resource>> tempResource;
 			
 			for(var repos : repoService.getRepositories().values()){
@@ -54,8 +54,6 @@ public class ResourceService{
 					resources.get().addAll(tempResource.get());
 				}
 			}
-			
-			throw new NotImplementedException("Searching all repos not supported yet!");
 		} else {
 			RepoId id = new RepoId(repoId);
 			if(!repoService.isValidRepo(id)){
@@ -63,6 +61,10 @@ public class ResourceService{
 			}
 			
 			resources = repoService.getRepo(id).getDatabase().getResources(request);
+		}
+		
+		if(resources == null){
+			return List.of();
 		}
 		
 		if(resources.isError()){
