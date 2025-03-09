@@ -8,6 +8,7 @@ import static com.wonkglorg.doc.core.git.GitRepo.GitStage.UNTRACKED;
 import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -119,7 +120,7 @@ public class FileRepository{
 		//pull any changes from the remote
 		gitRepo.pull();
 		
-		UserBranch branch = gitRepo.createBranch("system");
+		UserBranch branch = gitRepo.createBranch(new UserId("system"));
 		
 		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap, branch);
 		addNewFiles(newResources, branch);
@@ -159,7 +160,7 @@ public class FileRepository{
 	 */
 	public void addResourceAndCommit(Resource resource) {
 		try{
-			UserBranch branch = gitRepo.createBranch(resource.createdBy());
+			UserBranch branch = gitRepo.createBranch(new UserId(resource.createdBy()));
 			Path file = Files.createFile(gitRepo.getRepoPath().resolve(resource.resourcePath()));
 			Files.write(file, resource.data().getBytes());
 			branch.addFile(file);
@@ -175,9 +176,9 @@ public class FileRepository{
 	 *
 	 * @param resourcePath the path to the resource
 	 */
-	public void removeResourceAndCommit(RepoId repoId, Path resourcePath) {
+	public void removeResourceAndCommit(UserId userId, Path resourcePath) {
 		try{
-			UserBranch branch = gitRepo.createBranch(repoId);
+			UserBranch branch = gitRepo.createBranch(userId);
 			branch.updateFileDeleted(resourcePath);
 			branch.commit("Deleted resource %s".formatted(resourcePath));
 			branch.closeBranch();

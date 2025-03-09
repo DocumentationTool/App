@@ -331,12 +331,37 @@ public class ResourceFunctions{
 	/**
 	 * Updates a resources data
 	 *
-	 * @param resourcePath the path the resource is at
-	 * @param data the data to set it to
+	 * @param resource the resource to update
 	 * @return {@link UpdateDatabaseResponse}
 	 */
-	public static UpdateDatabaseResponse updateResource(RepositoryDatabase database, Path resourcePath, String data) {
-		try(var statement = database.getConnection().prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")){
+	public static UpdateDatabaseResponse updateResource(RepositoryDatabase database, Resource resource) {
+		
+		Connection connection = database.getConnection();
+		
+		//get current resource and compare it to the new resource
+		
+		/*
+		try(var statement = connection.prepareStatement("UPDATE Resources " +
+														"SET last_modified_at = ?, last_modified_by = ?, category = ?" +
+														"WHERE resource_path = ?")){
+			statement.setString(1, fromDateTime(resource.modifiedAt()));
+			statement.setString(2, resource.modifiedBy());
+			statement.setString(3, resource.category());
+			statement.setString(4, resource.resourcePath().toString());
+			int affectedRows = statement.executeUpdate();
+			
+			
+			if(resource.data() == null){
+				return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
+			}
+			
+			return updateResourceData(database, resource.resourcePath(), resource.data());
+		} catch(Exception e){
+			String errorResponse = "Failed to update resource '%s'".formatted(resource.resourcePath());
+			log.error(errorResponse, e);
+			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+		}
+		try(var statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")){
 			statement.setString(1, data);
 			statement.setString(2, resourcePath.toString());
 			return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -345,6 +370,9 @@ public class ResourceFunctions{
 			log.error(errorResponse, e);
 			return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
+		
+		 */
+		return null;
 	}
 	
 	//todo:jmd check commits, if the commit matches the current commit then ignore as its already the same

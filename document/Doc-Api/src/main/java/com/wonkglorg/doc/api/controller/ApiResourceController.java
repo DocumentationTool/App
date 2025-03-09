@@ -7,6 +7,7 @@ import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -176,7 +177,7 @@ public class ApiResourceController{
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
 			
-		if(resourceService.resourceExists(repoId, Path.of(path))){
+		if(resourceService.resourceExists(new RepoId(repoId), Path.of(path))){
 			return RestResponse.<Void>error("Resource already exists").toResponse();
 		}
 		
@@ -198,7 +199,7 @@ public class ApiResourceController{
 		
 		Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repo), category, content);
 		
-		return RestResponse.of(resourceService.(resource)).toResponse();
+		//return RestResponse.of(resourceService.(resource)).toResponse();
 		
 		
 		return null;
@@ -223,8 +224,8 @@ public class ApiResourceController{
 	
 	@Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
 	@PostMapping("/move")
-	public ResponseEntity<RestResponse<Void>> moveResource (RepoId repoFrom, Path from, RepoId repoTo,Path to) {
-		return RestResponse.of(resourceService.move(repoFrom, from, repoTo, to)).toResponse();
+	public ResponseEntity<RestResponse<Void>> moveResource (UserId userId,RepoId repoFrom, Path from, RepoId repoTo,Path to) {
+		return RestResponse.of(resourceService.move(userId,repoFrom, from, repoTo, to)).toResponse();
 	}
 	
 	

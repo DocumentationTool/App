@@ -50,7 +50,7 @@ public class GitRepo{
 		}
 	}
 	
-	private final Map<String, UserBranch> currentUserBranches = new HashMap<>();
+	private final Map<UserId, UserBranch> currentUserBranches = new HashMap<>();
 	
 	private static final Logger log = LoggerFactory.getLogger(GitRepo.class);
 	/**

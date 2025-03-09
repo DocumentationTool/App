@@ -4,6 +4,7 @@ import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
@@ -114,11 +115,11 @@ public class ResourceService{
 	 * @param path the path
 	 * @return the response
 	 */
-	public UpdateDatabaseResponse removeResource(String repoId, Path path) {
+	public UpdateDatabaseResponse removeResource(RepoId repoId, Path path) {
 		try{
-			UpdateDatabaseResponse updateDatabaseResponse = repoService.getRepo(new RepoId(repoId)).getDatabase().removeResource(path);
+			UpdateDatabaseResponse updateDatabaseResponse = repoService.getRepo(repoId).getDatabase().removeResource(path);
 			if(updateDatabaseResponse.isSuccess()){
-				Files.delete(repoService.getRepo(new RepoId(repoId)).getRepoProperties().getPath().resolve(path));
+				Files.delete(repoService.getRepo(repoId).getRepoProperties().getPath().resolve(path));
 			}
 			return updateDatabaseResponse;
 		} catch(NotaRepoException | IOException e){
@@ -135,7 +136,7 @@ public class ResourceService{
 	 * * @param pathTo the path to
 	 * @return the response
 	 */
-	public UpdateDatabaseResponse move(RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) {
+	public UpdateDatabaseResponse move(UserId id, RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) {
 		try{
 			
 			if(!repoService.isValidRepo(repoFrom) || !repoService.isValidRepo(repoTo)){
@@ -157,14 +158,14 @@ public class ResourceService{
 			request.withData = true;
 			request.repoId = repoFrom.toString();
 			
-			fileRepoFrom.removeResourceAndCommit(repoFrom, pathFrom);
+			fileRepoFrom.removeResourceAndCommit(id, pathFrom);
 			
-			//todo:jmd add and delete files
 			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().getFirst();
 			fileRepoTo.getDatabase().insertResource(resource);
+			fileRepoTo.addResourceAndCommit(resource);
+			return UpdateDatabaseResponse.success(repoTo, 1);
 			
-			
-		} catch(NotaRepoException | IOException e){
+		} catch(NotaRepoException e){
 			return UpdateDatabaseResponse.fail(null, e);
 		}
 	}

@@ -107,7 +107,7 @@ public class UserBranch{
 		Git git = repo.getGit();
 		try{
 			git.checkout().setName(branchName).call();
-			git.commit().setMessage(message).setAuthor(userId, "email@example.com").call();
+			git.commit().setMessage(message).setAuthor(userId.id(), "email@example.com").call();
 		} catch(GitAPIException e){
 			throw new RuntimeException(e);
 		}
