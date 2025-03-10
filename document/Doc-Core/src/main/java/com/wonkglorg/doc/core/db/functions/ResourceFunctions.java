@@ -63,6 +63,8 @@ public class ResourceFunctions {
         List<Resource> resources;
         Connection connection = database.getConnection();
 
+
+
         try {
             resources = fetchResources(connection, database, request.path, request.returnLimit);
 
@@ -90,7 +92,7 @@ public class ResourceFunctions {
     private static List<Resource> fetchResources(Connection connection, RepositoryDatabase database, String path, int limit) throws SQLException {
         int currentFetchIndex = 0;
         List<Resource> resources = new ArrayList<>();
-        String query = "SELECT resource_path, created_at, created_by, last_modified_at, last_modified_by, category, commit_id " +
+        String query = "SELECT resource_path, created_at, created_by, last_modified_at, last_modified_by, category " +
                 "FROM Resources WHERE resource_path LIKE ?";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, path == null ? "%" : path);
@@ -154,28 +156,6 @@ public class ResourceFunctions {
                 data);
     }
 
-    /**
-     * Finds a resource by its fully Qualified path
-     *
-     * @param resourcePath the path to search for
-     * @return {@link QueryDatabaseResponse}
-     */
-    public static QueryDatabaseResponse<Resource> findByPath(RepositoryDatabase database, Path resourcePath) {
-        try (PreparedStatement statement = database.getConnection().prepareStatement(
-                "SELECT resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id FROM Resources WHERE resource_path = ?")) {
-            statement.setString(1, resourcePath.toString());
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                return QueryDatabaseResponse.success(database.getRepoId(), resourceFromResultSet(resultSet, null, null, database));
-            }
-        } catch (Exception e) {
-            log.error("Failed to find resource by path", e);
-            return QueryDatabaseResponse.fail(database.getRepoId(),
-                    new RuntimeSQLException("Failed to find resource by path '%s'".formatted(resourcePath), e));
-        }
-        return QueryDatabaseResponse.success(database.getRepoId(), "No resource matching path %s".formatted(resourcePath), null);
-    }
-
     public static QueryDatabaseResponse<Boolean> resourceExists(RepositoryDatabase database, Path path) {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")) {
@@ -213,18 +193,49 @@ public class ResourceFunctions {
      * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<List<Resource>> findByContent(RepositoryDatabase database, String searchTerm) {
-        String sqlScript = """
-                SELECT Resources.resource_path,created_at,created_by,last_modified_at,last_modified_by,category,commit_id, data
-                  FROM FileData
-                  JOIN Resources
-                    ON FileData.resource_path = Resources.resource_path
-                 WHERE
-                  CASE
-                    WHEN length(?) >= 3
-                      THEN data Match ?
-                    ELSE data LIKE '%' || ? || '%'
-                 END
+        String sqlScript = """  
+                SELECT ResourceInfo.*, data
+                FROM FileData
+                JOIN ResourceInfo
+                  ON FileData.resource_path = ResourceInfo.resource_path
+                JOIN ResourceTags
+                  ON ResourceTags.resource_path = FileData.resource_path
+                -- Search tags
+                WHERE
+                    (? IS NULL
+                        OR CASE
+                            WHEN LENGTH(?) >= 3 THEN data MATCH ?
+                            ELSE data LIKE '%' || ? || '%'
+                        END)
+                    -- Path search
+                    AND FileData.resource_path LIKE ?
+                    -- Optional: Check if tags exist and continue tag-specific search if needed
+                    AND ResourceInfo.hasTags = ?
+                    -- Check if the resource has the whitelisted tags and does not have the blacklisted tags
+                    AND (
+                        (? IS NULL OR EXISTS (
+                            SELECT 1
+                            FROM ResourceTags AS rt
+                            WHERE rt.resource_path = ResourceInfo.resource_path
+                              AND rt.tag_id = ?
+                        ))
+                        -- Only check for blacklist if it's not NULL
+                        AND (? IS NULL OR NOT EXISTS (
+                            SELECT 1
+                            FROM ResourceTags AS rt
+                            WHERE rt.resource_path = ResourceInfo.resource_path
+                              AND rt.tag_id = ?
+                        ))
+                    )
+                    -- Check if data is NULL when the variable is NULL, otherwise apply the data search
+                    AND (? IS NULL OR data IS NOT NULL)
+                GROUP BY
+                    FileData.resource_path
+                -- Limit the number of results returned
+                LIMIT ?;
                 """;
+
+
 
         try (PreparedStatement statement = database.getConnection().prepareStatement(sqlScript)) {
             List<Resource> resources = new ArrayList<>();

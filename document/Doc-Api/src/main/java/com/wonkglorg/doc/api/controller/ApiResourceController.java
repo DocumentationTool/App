@@ -188,10 +188,6 @@ public class ApiResourceController{
 		return RestResponse.of(resourceService.insertResource(resource)).toResponse();
 	}
 	
-	
-	
-	
-	
 	//todo:jmd seperate those otherwise it gets messy
 	
 	//todo:jmd not sure how to implement this yet
