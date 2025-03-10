@@ -383,7 +383,7 @@ public class ResourceFunctions{
 				connection.commit();
 				
 				//gets the updated resource
-				return QueryDatabaseResponse.success(database.getRepoId(), fetchResources(connection, database, request.path, 1).getFirst());
+				return QueryDatabaseResponse.success(database.getRepoId(), fetchResources(connection, database, request.path, 1).get(0));
 			} catch(Exception e){
 				String errorResponse = "Failed to update resource '%s'".formatted(request.path);
 				log.error(errorResponse, e);

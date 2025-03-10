@@ -166,7 +166,7 @@ public class ResourceService{
 			
 			fileRepoFrom.removeResourceAndCommit(id, pathFrom);
 			
-			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().getFirst();
+			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().get(0);
 			fileRepoTo.getDatabase().insertResource(resource);
 			fileRepoTo.addResourceAndCommit(resource);
 			return UpdateDatabaseResponse.success(repoTo, 1);
