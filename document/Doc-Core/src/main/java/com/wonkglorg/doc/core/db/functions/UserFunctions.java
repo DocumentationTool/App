@@ -10,6 +10,7 @@ import com.wonkglorg.doc.core.user.UserProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +50,7 @@ public class UserFunctions{
 	 * @return {@link UpdateDatabaseResponse}
 	 */
 	public static UpdateDatabaseResponse addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
-		try(var statement = database.getConnection().prepareStatement("INSERT INTO GroupUsers(user_id, group_id) VALUES(?,?)")){
+		try(var statement = database.getConnection().prepareStatement("INSERT INTO UserGroups(user_id, group_id) VALUES(?,?)")){
 			statement.setString(1, userId.id());
 			statement.setString(2, groupId.id());
 			return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -61,7 +62,7 @@ public class UserFunctions{
 	}
 	
 	public static UpdateDatabaseResponse removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
-		try(var statement = database.getConnection().prepareStatement("DELETE FROM GroupUsers WHERE user_id = ? and group_id = ?")){
+		try(var statement = database.getConnection().prepareStatement("DELETE FROM UserGroups WHERE user_id = ? and group_id = ?")){
 			statement.setString(1, userId.id());
 			statement.setString(2, groupId.id());
 			return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -82,7 +83,7 @@ public class UserFunctions{
 	 * @return {@link QueryDatabaseResponse}
 	 */
 	public static QueryDatabaseResponse<List<UserId>> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) {
-		try(var statement = database.getConnection().prepareStatement("SELECT user_id FROM GroupUsers WHERE group_id = ?")){
+		try(var statement = database.getConnection().prepareStatement("SELECT user_id FROM UserGroups WHERE group_id = ?")){
 			statement.setString(1, groupId.toString());
 			try(var rs = statement.executeQuery()){
 				List<UserId> users = new ArrayList<>();
@@ -99,7 +100,7 @@ public class UserFunctions{
 	}
 	
 	public static QueryDatabaseResponse<List<GroupId>> getGroupsFromUser(RepositoryDatabase database, UserId userId) {
-		try(var statement = database.getConnection().prepareStatement("SELECT group_id FROM GroupUsers WHERE user_id = ?")){
+		try(var statement = database.getConnection().prepareStatement("SELECT group_id FROM UserGroups WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){
 				List<GroupId> groups = new ArrayList<>();
@@ -112,6 +113,35 @@ public class UserFunctions{
 			String errorResponse = "Failed to get groups from user";
 			log.error(errorResponse, e);
 			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get groups from user", e));
+		}
+	}
+	
+	public static QueryDatabaseResponse<List<UserProfile>> getAllUsers(RepositoryDatabase database) {
+		Connection connection = database.getConnection();
+		try(var statement = connection.prepareStatement("SELECT * FROM Users")){
+			try(var rs = statement.executeQuery()){
+				List<UserProfile> users = new ArrayList<>();
+				while(rs.next()){
+					String userId = rs.getString("user_id");
+					String passwordHash = rs.getString("password_hash");
+					var userPermissions = PermissionFunctions.getPermissionsForUser(database, new UserId(userId));
+					var userRoles = PermissionFunctions.getRolesForUser(database, new UserId(userId));
+					
+					if(userPermissions.isError()){
+						return QueryDatabaseResponse.fail(database.getRepoId(), userPermissions.getException());
+					}
+					if(userRoles.isError()){
+						return QueryDatabaseResponse.fail(database.getRepoId(), userRoles.getException());
+					}
+					
+					users.add(new UserProfile(new UserId(userId), passwordHash, userPermissions.get(), userRoles.get()));
+				}
+				return QueryDatabaseResponse.success(database.getRepoId(), users);
+			}
+		} catch(Exception e){
+			String errorResponse = "Failed to get all users";
+			log.error(errorResponse, e);
+			return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 	}
 	
