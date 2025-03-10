@@ -35,7 +35,7 @@ public class ResourceRequest{
 	/**
 	 * If the data of the resource should be returned
 	 */
-	public boolean withData;
+	public boolean withData = false;
 	/**
 	 * The limit of results to return
 	 */
