@@ -8,7 +8,7 @@
        [routerLinkActiveOptions]="{ exact: true }">
       Editor
     </a>
-
+ 
     @if (this.navigationService.isEditorActive() || this.navigationService.isPreviewActive()) {
       <a (click)="this.navigationService.onPreview()"  routerLinkActive="active" class="preview"
          [routerLinkActiveOptions]="{ exact: true }">
