@@ -111,7 +111,7 @@ public class ResourceService{
 		List<Tag> tags = new ArrayList<>();
 		FileRepository repo = repoService.getRepo(repoId);
 		for(TagId id : ids){
-			Tag tag = repo.getDatabase().getTags().get(id);
+			Tag tag = repo.getDatabase().getTagCache().get(id);
 			if(tag == null){
 				throw new InvalidTagException("Tag '%s' does not exist".formatted(id));
 			}

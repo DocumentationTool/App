@@ -14,5 +14,11 @@ public class Group{
 		this.id = id;
 	}
 	
+	public GroupId getId() {
+		return id;
+	}
 	
+	public Set<Permission<GroupId>> getPermissions() {
+		return permissions;
+	}
 }

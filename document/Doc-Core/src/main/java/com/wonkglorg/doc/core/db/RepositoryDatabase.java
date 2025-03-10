@@ -54,12 +54,23 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * The cache of user profiles for this database
 	 */
 	private final Map<UserId, UserProfile> userProfiles = new java.util.concurrent.ConcurrentHashMap<>();
+	/**
+	 * Helper map to quickly access connections between groups and users
+	 */
+	private final Map<GroupId, List<UserId>> groupUsers = new java.util.concurrent.ConcurrentHashMap<>();
+	/**
+	 * Helper map to quickly access connections between users and groups
+	 */
+	private final Map<UserId, List<GroupId>> userGroups = new java.util.concurrent.ConcurrentHashMap<>();
 	
 	/**
 	 * The cache of groups for this database
 	 */
-	private final Map<GroupId, Group> groups = new java.util.concurrent.ConcurrentHashMap<>();
-	private final Map<TagId, Tag> tags = new HashMap<>();
+	private final Map<GroupId, Group> groupCache = new java.util.concurrent.ConcurrentHashMap<>();
+	/**
+	 * The cache of tags for this database
+	 */
+	private final Map<TagId, Tag> tagCache = new HashMap<>();
 	
 	public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
 		super(getDataSource(openInPath));
@@ -108,7 +119,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 			//todo:jmd fill user cache, tag cache and group cache
 		}
 		
-		ResourceFunctions.getAllTags(this).forEach(tag -> tags.put(tag.tagId(), tag));
+		ResourceFunctions.getAllTags(this).forEach(tag -> tagCache.put(tag.tagId(), tag));
 		QueryDatabaseResponse<List<UserProfile>> allUsers = UserFunctions.getAllUsers(this);
 		if(allUsers.isError()){
 			log.error("Error while getting users for repo '{}'", repoProperties.getId(), allUsers.getException());
@@ -222,7 +233,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		if(groupId == null){
 			return false;
 		}
-		return groups.containsKey(groupId);
+		return groupCache.containsKey(groupId);
 	}
 	
 	/**
@@ -235,7 +246,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		if(tag == null){
 			return false;
 		}
-		return tags.containsKey(tag);
+		return tagCache.containsKey(tag);
 	}
 	
 	/**
@@ -248,7 +259,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		if(tag == null){
 			return false;
 		}
-		Tag returnTag = tags.get(tag.tagId());
+		Tag returnTag = tagCache.get(tag.tagId());
 		return returnTag != null && returnTag.equals(tag);
 	}
 	
@@ -371,14 +382,12 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		return UserFunctions.addUser(this, userId, password, createdBy);
 	}
 	
-	public QueryDatabaseResponse<List<UserId>> getUsersFromGroup(GroupId groupId) {
-		log.info("Getting users from group '{}' in repO '{}'.", groupId, repoProperties.getId());
-		return UserFunctions.getUsersFromGroup(this, groupId);
+	public List<UserId> getUsersFromGroup(GroupId groupId) {
+		return groupUsers.get(groupId);
 	}
 	
-	public QueryDatabaseResponse<List<GroupId>> getGroupsFromUser(UserId userId) {
-		log.info("Getting groups from user '{}' in repo '{}'.", userId, repoProperties.getId());
-		return UserFunctions.getGroupsFromUser(this, userId);
+	public List<GroupId> getGroupsFromUser(UserId userId) {
+		return userGroups.get(userId);
 	}
 	
 	public QueryDatabaseResponse<UserProfile> getUser(UserId userId) {
@@ -394,7 +403,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		return repoProperties;
 	}
 	
-	public Map<TagId, Tag> getTags() {
-		return tags;
+	public Map<TagId, Tag> getTagCache() {
+		return tagCache;
 	}
 }
