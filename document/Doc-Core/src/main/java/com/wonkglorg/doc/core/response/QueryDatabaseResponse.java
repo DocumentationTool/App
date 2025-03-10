@@ -2,6 +2,8 @@ package com.wonkglorg.doc.core.response;
 
 import com.wonkglorg.doc.core.objects.RepoId;
 
+import java.util.function.BinaryOperator;
+
 /**
  * A response for a database query operation, indicating its success or failure with an optional message for more information, alongside the data returned by the query
  *
@@ -11,7 +13,7 @@ public class QueryDatabaseResponse<T> extends Response{
 	/**
 	 * The data returned by this query
 	 */
-	private final T data;
+	private T data;
 	
 	private QueryDatabaseResponse(RepoId causingRepo, String response, Exception exception, T data) {
 		super(causingRepo, response, exception);
@@ -51,17 +53,28 @@ public class QueryDatabaseResponse<T> extends Response{
 	 * @param <T>
 	 * @return the constructed reponse
 	 */
-	public static <T> QueryDatabaseResponse<T> error(RepoId causingRepo, Exception e) {
+	public static <T> QueryDatabaseResponse<T> fail(RepoId causingRepo, Exception e) {
 		return new QueryDatabaseResponse<>(causingRepo, null, e, null);
 	}
-
-
-
+	
+	/**
+	 * Combines the data of this response with the data of another response using the provided merger, if the other response is not an error, otherwise sets the error of this response to the error of the given response
+	 * @param other the other response to merge with
+	 * @param merger the function to merge the data with
+	 */
+	public void merge(QueryDatabaseResponse<T> other, BinaryOperator<T> merger) {
+		if(other.data != null){
+			if(other.isError()){
+				this.setError(other.getException());
+				return;
+			}
+			data = data == null ? other.data : merger.apply(data, other.data);
+		}
+	}
 	
 	public T get() {
 		return data;
 	}
-	
 	
 	public T get(T defaultValue) {
 		return data == null ? defaultValue : data;
