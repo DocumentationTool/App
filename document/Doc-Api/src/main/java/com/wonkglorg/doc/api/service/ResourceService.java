@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -37,12 +38,12 @@ public class ResourceService{
 	 * @throws Exception if the repository does not exist or null is passed
 	 */
 	@Cacheable("resources")
-	public List<Resource> getResources(ResourceRequest request) throws Exception {
+	public Collection<Resource> getResources(ResourceRequest request) throws Exception {
 		String repoId = request.repoId;
-		QueryDatabaseResponse<List<Resource>> resources = null;
+		QueryDatabaseResponse<Collection<Resource>> resources = null;
 		
 		if(request.path == null){
-			QueryDatabaseResponse<List<Resource>> tempResource;
+			QueryDatabaseResponse<Collection<Resource>> tempResource;
 			
 			for(var repos : repoService.getRepositories().values()){
 				tempResource = repos.getDatabase().getResources(request);
@@ -84,7 +85,6 @@ public class ResourceService{
 	 * @param path the path
 	 * @return true if the resource exists
 	 */
-	@Cacheable("resourceExists")
 	public boolean resourceExists(RepoId repoId, Path path) {
 		try{
 			return repoService.getRepo(repoId).getDatabase().resourceExists(path).get();
@@ -166,7 +166,7 @@ public class ResourceService{
 			
 			fileRepoFrom.removeResourceAndCommit(id, pathFrom);
 			
-			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().get(0);
+			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().stream().findFirst().orElseThrow();
 			fileRepoTo.getDatabase().insertResource(resource);
 			fileRepoTo.addResourceAndCommit(resource);
 			return UpdateDatabaseResponse.success(repoTo, 1);

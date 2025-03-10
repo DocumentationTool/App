@@ -1,12 +1,18 @@
 package com.wonkglorg.doc.core.user;
 
 import com.google.gson.Gson;
+import com.wonkglorg.doc.core.objects.GroupId;
+import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
 
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The users profile
@@ -16,6 +22,7 @@ public class UserProfile{
 	private final UserId id;
 	private final String passwordHash;
 	private final Set<Permission<UserId>> permissionNodes;
+	private final Map<GroupId, Group> groups = new ConcurrentHashMap<>();
 	private final Set<Role> roles;
 	
 	public UserProfile(UserId id, String passwordHash) {
@@ -30,6 +37,11 @@ public class UserProfile{
 		this.permissionNodes = permissionNodes;
 		this.roles = roles;
 		this.passwordHash = passwordHash;
+	}
+	
+	//todo:jmd implement
+	public Collection<Resource> getAllowedResources(Collection<Resource> resources) {
+		return resources;
 	}
 	
 	public UserId getId() {

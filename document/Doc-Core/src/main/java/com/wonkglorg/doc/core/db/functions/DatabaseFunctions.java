@@ -268,6 +268,8 @@ public class DatabaseFunctions{
 		}
 	}
 	
+	
+	
 	//todo:jmd implement
 	public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
         /*

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,7 @@ public class ApiResourceController{
 	@PostMapping("/get")
 	public ResponseEntity<RestResponse<Map<String,List<JsonResource>>>> getResources(@RequestBody ResourceRequest request) {
 		try{
-			List<Resource> resources = getResourcesRequest(request);
+			Collection<Resource> resources = getResourcesRequest(request);
 			Map<String,List<JsonResource>> jsonResources = new HashMap<>();
 			
 			for(var resource: resources){
@@ -83,7 +84,7 @@ public class ApiResourceController{
 		}
 	}
 	
-	private List<Resource> getResourcesRequest(ResourceRequest request) throws Exception {
+	private Collection<Resource> getResourcesRequest(ResourceRequest request) throws Exception {
 			boolean isAntPath = pathMatcher.isPattern(request.path);
 			String antPath = request.path;
 			
@@ -92,7 +93,7 @@ public class ApiResourceController{
 				request.path = null;
 			}
 			
-			List<Resource> resources = resourceService.getResources(request);
+			Collection<Resource> resources = resourceService.getResources(request);
 			if(isAntPath){
 				resources = resources.stream().filter(r -> pathMatcher.match(antPath, r.resourcePath().toString())).toList();
 			}

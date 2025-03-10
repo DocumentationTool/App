@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -102,13 +103,13 @@ public class FileRepository{
 		request.repoId = repoProperties.getId().id();
 		request.userId = null;
 		
-		QueryDatabaseResponse<List<Resource>> resourceRequest = dataDB.getResources(request);
+		QueryDatabaseResponse<Collection<Resource>> resourceRequest = dataDB.getResources(request);
 		if(resourceRequest.isError()){
 			log.error("Error while checking for changes: {}", resourceRequest.getErrorMessage());
 			return;
 		}
 		
-		List<Resource> resources = resourceRequest.get();
+		Collection<Resource> resources = resourceRequest.get();
 		Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
 		List<Path> newResources = foundFiles.stream().filter(f -> resources.stream().noneMatch(r -> r.resourcePath().equals(f))).toList();
 		List<Path> deletedResources = resources.stream()

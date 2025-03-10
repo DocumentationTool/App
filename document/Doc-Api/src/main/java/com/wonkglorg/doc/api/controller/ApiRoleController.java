@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,6 +21,7 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_ROL
 public class ApiRoleController {
 
     private final RepoService repoService;
+	AntPathMatcher pathMatcher = new AntPathMatcher();
 
     public ApiRoleController(@Lazy RepoService repoService) {
         this.repoService = repoService;

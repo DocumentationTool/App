@@ -13,7 +13,7 @@ import java.util.Objects;
 public final class Resource{
 	
 	public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	private final Path resourcePath;
+	private Path resourcePath;
 	private final LocalDateTime createdAt;
 	private final String createdBy;
 	private final LocalDateTime modifiedAt;
@@ -107,6 +107,19 @@ public final class Resource{
 		return data;
 	}
 	
+	public Resource copy() {
+		return new Resource(resourcePath,
+				createdAt,
+				createdBy,
+				modifiedAt,
+				modifiedBy,
+				repoId,
+				new ArrayList<>(resourceTags),
+				isEditable,
+				category,
+				data);
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if(obj == this){
@@ -128,13 +141,20 @@ public final class Resource{
 			   Objects.equals(this.data, that.data);
 	}
 	
-	public void setData(String data) {
+	public Resource setData(String data) {
 		this.data = data;
+		return this;
 	}
 	
-	public void setTags(List<Tag> resourceTags) {
+	public Resource setTags(List<Tag> resourceTags) {
 		this.resourceTags.clear();
 		this.resourceTags.addAll(resourceTags);
+		return this;
+	}
+	
+	public Resource setResourcePath(Path resourcePath) {
+		this.resourcePath = resourcePath;
+		return this;
 	}
 	
 	@Override
