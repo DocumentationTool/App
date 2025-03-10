@@ -1,6 +1,7 @@
 import {Injectable, signal, WritableSignal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Router} from '@angular/router';
+import {ApiResource} from '../../api/apiResource';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,8 @@ import {Router} from '@angular/router';
 
 export class FileService {
   constructor(private http: HttpClient,
-              private router: Router) {
+              private router: Router,
+              private apiResource: ApiResource) {
   }
 
   files = signal<string[]>([]);
@@ -17,6 +19,9 @@ export class FileService {
   fileContentBeforeChanges = "";
 
   loadFiles() {
+    this.apiResource.getFiletree("repo1","").subscribe(
+      data => this.files.set(data)
+    )
     this.http.get<string[]>('file-list.json')
       .subscribe(data => this.files.set(data));
   }
