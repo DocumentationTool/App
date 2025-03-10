@@ -191,9 +191,14 @@ public class FileRepository{
 			String content = readData(gitRepo, file);
 			if(lastCommitDetailsForFile == null){
 				log.error("File '{}' was not added by git", file);
-				newResource = new Resource(file, "system", repoProperties.getId(), null, content);
+				newResource = new Resource(file, "system", repoProperties.getId(), null, new HashMap<>(), content);
 			} else {
-				newResource = new Resource(file, lastCommitDetailsForFile.getAuthorIdent().getName(), repoProperties.getId(), null, content);
+				newResource = new Resource(file,
+						lastCommitDetailsForFile.getAuthorIdent().getName(),
+						repoProperties.getId(),
+						null,
+						new HashMap<>(),
+						content);
 			}
 			resources.add(newResource);
 			gitRepo.add(file);
@@ -235,7 +240,7 @@ public class FileRepository{
 					commitTime,
 					authorName,
 					repoProperties.getId(),
-					existingResource.resourceTags(),
+					existingResource.getResourceTags(),
 					repoProperties.isReadOnly(),
 					existingResource.category(),
 					readData(gitRepo, file));

@@ -157,9 +157,13 @@ public class ApiResourceController{
 															 @RequestParam(value = "tagIds", required = false) List<String> tagIds,
 															 @RequestBody String content) {
 		RepoId id = new RepoId(repoId);
-		if(DbHelper.isAllowedPath(Path.of(path))){
+		Path resourcePath = Path.of(path);
+		/*
+		if(DbHelper.isAllowedPath(resourcePath)){
 			return RestResponse.<Void>error("Invalid path form or blacklisted symbols used! Symbols include (% and ..)").toResponse();
 		}
+		
+		 */
 		
 		if(tagIds == null){
 			tagIds = new ArrayList<>();
@@ -170,10 +174,10 @@ public class ApiResourceController{
 		}
 		
 		if(!repoService.isValidRepo(id)){
-			return RestResponse.<Void>error("Repository does not exist").toResponse();
+			return RestResponse.<Void>error("Repository '%s' does not exist".formatted(id.id())).toResponse();
 		}
 		
-		if(resourceService.resourceExists(id, Path.of(path))){
+		if(resourceService.resourceExists(id, resourcePath)){
 			return RestResponse.<Void>error("Resource already exists").toResponse();
 		}
 		
@@ -184,7 +188,7 @@ public class ApiResourceController{
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		}
 		
-		Resource resource = new Resource(Path.of(path), createdBy, id, category, tags, content);
+		Resource resource = new Resource(resourcePath, createdBy, id, category, tags, content);
 		return RestResponse.of(resourceService.insertResource(resource)).toResponse();
 	}
 	

@@ -70,11 +70,11 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement(query)){
 			ResultSet resultSet = statement.executeQuery();
 			while(resultSet.next()){
-				resources.add(resourceFromResultSet(resultSet, null, null, database));
+				resources.add(resourceFromResultSet(resultSet, new HashMap<>(), null, database));
 			}
 			
 			for(Resource resource : resources){
-				List<Tag> tags = fetchTagsForResources(connection, resource.resourcePath().toString());
+				var tags = fetchTagsForResources(connection, resource.resourcePath().toString());
 				resource.setTags(tags);
 			}
 			
@@ -91,8 +91,8 @@ public class ResourceFunctions{
 		}
 	}
 	
-	private static List<Tag> fetchTagsForResources(Connection connection, String path) throws SQLException {
-		List<Tag> tags = new ArrayList<>();
+	private static Map<TagId, Tag> fetchTagsForResources(Connection connection, String path) throws SQLException {
+		Map<TagId, Tag> tags = new HashMap<>();
 		String query = """
 				SELECT Tags.tag_id, tag_name
 				FROM ResourceTags
@@ -102,7 +102,8 @@ public class ResourceFunctions{
 			statement.setString(1, path);
 			ResultSet resultSet = statement.executeQuery();
 			while(resultSet.next()){
-				tags.add(new Tag(TagId.of(resultSet.getString(1)), resultSet.getString(2)));
+				TagId tagId = new TagId(resultSet.getString(1));
+				tags.put(tagId, new Tag(tagId, resultSet.getString(2)));
 			}
 		}
 		return tags;
@@ -121,7 +122,8 @@ public class ResourceFunctions{
 		return tags;
 	}
 	
-	private static Resource resourceFromResultSet(ResultSet resultSet, List<Tag> tags, String data, RepositoryDatabase database) throws SQLException {
+	private static Resource resourceFromResultSet(ResultSet resultSet, Map<TagId, Tag> tags, String data, RepositoryDatabase database)
+			throws SQLException {
 		return new Resource(Path.of(resultSet.getString("resource_path")),
 				parseDateTime(resultSet.getString("created_at")),
 				resultSet.getString("created_by"),
@@ -382,7 +384,7 @@ public class ResourceFunctions{
 			statement.setString(1, path.toString());
 			ResultSet resultSet = statement.executeQuery();
 			if(resultSet.next()){
-				List<Tag> tags = fetchTagsForResources(connection, path.toString());
+				var tags = fetchTagsForResources(connection, path.toString());
 				return resourceFromResultSet(resultSet, tags, null, database);
 			}
 			return null;
