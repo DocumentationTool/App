@@ -53,14 +53,14 @@ public class GitRepo{
 	
 	private static final Logger log = LoggerFactory.getLogger(GitRepo.class);
 	/**
-	 * The Plumbing view of the backing git repo
-	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
-	 */
+     * The Plumbing view of the backing git repo
+     * (<a href="https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit">Docs</a>)
+     */
 	private Repository repository;
 	/**
-	 * The Porcelain view of the backing git repo
-	 * (https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit)
-	 */
+     * The Porcelain view of the backing git repo
+     * (<a href="https://git-scm.com/book/en/v2/Appendix-B:-Embedding-Git-in-your-Applications-JGit">Docs</a>)
+     */
 	private Git git;
 	
 	/**

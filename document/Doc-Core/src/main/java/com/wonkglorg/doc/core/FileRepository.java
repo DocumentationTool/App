@@ -49,7 +49,7 @@ public class FileRepository{
 	 */
 	private RepositoryDatabase dataDB;
 	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-	
+
 	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
 	}
@@ -151,7 +151,9 @@ public class FileRepository{
 	public void addResourceAndCommit(Resource resource) {
 		try{
 			UserBranch branch = gitRepo.createBranch(new UserId(resource.createdBy()));
-			Path file = Files.createFile(gitRepo.getRepoPath().resolve(resource.resourcePath()));
+			Path resolve = gitRepo.getRepoPath().resolve(resource.resourcePath());
+			Files.createDirectories(resolve.getParent());
+			Path file = Files.createFile(resolve);
 			Files.write(file, resource.data().getBytes());
 			branch.addFile(file);
 			branch.commit("Added resource %s".formatted(resource.resourcePath()));
