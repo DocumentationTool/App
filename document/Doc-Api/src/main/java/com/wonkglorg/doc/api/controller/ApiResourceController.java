@@ -42,6 +42,8 @@ public class ApiResourceController{
 	private final ResourceService resourceService;
 	private final RepoService repoService;
 	
+	//todo:jmd validate all parameters before any calls (quick returns are alot better and safer)
+	
 	public ApiResourceController(@Lazy RepoService repoService, ResourceService resourceService) {
 		this.resourceService = resourceService;
 		this.repoService = repoService;
@@ -201,9 +203,12 @@ public class ApiResourceController{
 		if(!repoService.isValidRepo(new RepoId(request.repoId))){
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
+		/*
 		if(DbHelper.isAllowedPath(Path.of(request.path))){
 			return RestResponse.<Void>error("Invalid path form or blacklisted symbols used! Symbols include (% and ..)").toResponse();
 		}
+		
+		 */
 		
 		if(!request.path.endsWith(".md")){
 			return RestResponse.<Void>error("Specified Resource must be a markdown file path ending in .md").toResponse();
@@ -229,9 +234,12 @@ public class ApiResourceController{
 			return RestResponse.<Void>error("Repository does not exist").toResponse();
 		}
 		
+		/*
 		if(DbHelper.isAllowedPath(Path.of(path))){
 			return RestResponse.<Void>error("Invalid path form or blacklisted symbols used! Symbols include (% and ..)").toResponse();
 		}
+		
+		 */
 		
 		if(!path.endsWith(".md")){
 			return RestResponse.<Void>error("Resource path must point to a markdown file ending in .md").toResponse();

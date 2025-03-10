@@ -109,6 +109,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		}
 		
 		ResourceFunctions.getAllTags(this).forEach(tag -> tags.put(tag.tagId(), tag));
+		QueryDatabaseResponse<List<UserProfile>> allUsers = UserFunctions.getAllUsers(this);
+		if(allUsers.isError()){
+			log.error("Error while getting users for repo '{}'", repoProperties.getId(), allUsers.getException());
+		}
+		allUsers.get().forEach(user -> userProfiles.put(user.getId(), user));
 		
 	}
 	
