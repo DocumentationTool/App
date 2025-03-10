@@ -7,6 +7,7 @@ import com.wonkglorg.doc.core.objects.Resource;
 import static com.wonkglorg.doc.core.objects.Resource.fromDateTime;
 import static com.wonkglorg.doc.core.objects.Resource.parseDateTime;
 import com.wonkglorg.doc.core.objects.Tag;
+import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
@@ -101,8 +102,21 @@ public class ResourceFunctions{
 			statement.setString(1, path);
 			ResultSet resultSet = statement.executeQuery();
 			while(resultSet.next()){
-				tags.add(new Tag(resultSet.getString(1), resultSet.getString(2)));
+				tags.add(new Tag(TagId.of(resultSet.getString(1)), resultSet.getString(2)));
 			}
+		}
+		return tags;
+	}
+	
+	public static List<Tag> getAllTags(RepositoryDatabase database) {
+		List<Tag> tags = new ArrayList<>();
+		try(PreparedStatement statement = database.getConnection().prepareStatement("SELECT * FROM Tags")){
+			ResultSet resultSet = statement.executeQuery();
+			while(resultSet.next()){
+				tags.add(new Tag(new TagId(resultSet.getString("tag_id")), resultSet.getString("tag_name")));
+			}
+		} catch(Exception e){
+			log.error("Failed to get all tags", e);
 		}
 		return tags;
 	}
@@ -115,7 +129,7 @@ public class ResourceFunctions{
 				resultSet.getString("last_modified_by"),
 				database.getRepoProperties().getId(),
 				tags,
-				database.getRepoProperties().isReadOnly(),
+				!database.getRepoProperties().isReadOnly(),
 				resultSet.getString("category"),
 				data);
 	}
@@ -127,33 +141,58 @@ public class ResourceFunctions{
 	 * @return {@link QueryDatabaseResponse} with the paths of matching resourc es and an optional data field if  specified in the request
 	 */
 	public static QueryDatabaseResponse<Map<Path, String>> findByContent(RepositoryDatabase database, ResourceRequest request) {
-		String sqlScript = """
-				SELECT FileData.resource_path,
-				       CASE
-				           WHEN ? IS NOT NULL THEN FileData.data
-				           END AS data
-				  FROM FileData
-				 WHERE
-				    (? IS NULL -- Full-text search or LIKE-based search (in case the token is too short)
-				        OR (LENGTH(?) >= 3 AND FileData.data MATCH ?)
-				        OR (LENGTH(?) < 3 AND FileData.data LIKE '%' || ? || '%'))
-				   AND FileData.resource_path LIKE ?
-				 LIMIT ?;
-				""";
+		String sqlScript;
+		
+		//needs seperation sqlite gave me an error on matches clause when doing it in 1 statement with optional matches
+		//old sql:
+		/*
+					SELECT resource_path,
+			       CASE
+			           WHEN 't' IS NOT NULL THEN data
+			           END AS fileContent
+			FROM FileData
+			WHERE ('This' IS NULL -- Full-text search or LIKE-based search (in case the token is too short)
+			    OR (LENGTH('This') >= 3 AND data MATCH 'This')
+			    OR (LENGTH('This') < 3 AND data LIKE '%' || 'This' || '%'))
+			  AND resource_path LIKE '%'
+			LIMIT 10;
+		
+		 */
+		
+		if(request.searchTerm.length() > 3){
+			sqlScript = """
+					SELECT FileData.resource_path,
+					       CASE
+					           WHEN ? IS NOT NULL THEN data
+					           END AS fileContent
+					  FROM FileData
+					 WHERE data MATCH ?
+					   AND FileData.resource_path LIKE ?
+					 LIMIT ?;
+					""";
+		} else {
+			sqlScript = """
+					SELECT FileData.resource_path,
+					       CASE
+					           WHEN ? IS NOT NULL THEN data
+					           END AS fileContent
+					  FROM FileData
+					 WHERE data LIKE '%' || ? || '%'
+					   AND FileData.resource_path LIKE ?
+					 LIMIT ?;
+					""";
+		}
 		
 		try(PreparedStatement statement = database.getConnection().prepareStatement(sqlScript)){
 			Map<Path, String> resources = new HashMap<>();
 			statement.setString(1, request.withData ? "anything" : null);
 			statement.setString(2, request.searchTerm);
-			statement.setString(3, request.searchTerm);
-			statement.setString(4, request.searchTerm);
-			statement.setString(5, request.searchTerm);
-			statement.setString(6, request.searchTerm);
-			statement.setString(7, DbHelper.convertAntPathToSQLLike(request.path));
+			statement.setString(3, DbHelper.convertAntPathToSQLLike(request.path));
+			statement.setInt(4, request.returnLimit);
 			ResultSet resultSet = statement.executeQuery();
 			
 			while(resultSet.next()){
-				resources.put(Path.of(resultSet.getString("resource_path")), resultSet.getString("data"));
+				resources.put(Path.of(resultSet.getString("resource_path")), resultSet.getString("fileContent"));
 			}
 			
 			if(resources.isEmpty()){
@@ -392,7 +431,7 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(Tag tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag.tagId());
+				statement.setString(2, tag.tagId().id());
 				statement.addBatch();
 			}
 			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
@@ -413,7 +452,7 @@ public class ResourceFunctions{
 	private static UpdateDatabaseResponse addMissingTags(Connection connection, List<Tag> tags) {
 		try(PreparedStatement statement = connection.prepareStatement("INSERT OR IGNORE INTO Tags(tag_id, tag_name) VALUES(?, ?)")){
 			for(Tag tag : tags){
-				statement.setString(1, tag.tagId());
+				statement.setString(1, tag.tagId().id());
 				statement.setString(2, tag.tagName());
 				statement.addBatch();
 			}
@@ -441,7 +480,7 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")){
 			for(Tag tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag.tagId());
+				statement.setString(2, tag.tagId().id());
 				statement.addBatch();
 			}
 			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
@@ -469,7 +508,7 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(Tag tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag.tagId());
+				statement.setString(2, tag.tagId().id());
 				statement.addBatch();
 			}
 			return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());

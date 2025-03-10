@@ -6,7 +6,6 @@ import static com.wonkglorg.doc.core.git.GitRepo.GitStage.ADDED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.MODIFIED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.UNTRACKED;
 import com.wonkglorg.doc.core.git.UserBranch;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
@@ -50,7 +49,7 @@ public class FileRepository{
 	 */
 	private RepositoryDatabase dataDB;
 	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-
+	
 	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
 	}
@@ -85,13 +84,14 @@ public class FileRepository{
 		checkFileChanges(foundFiles);
 		
 		log.info("Scheduling check for changes in '{}'", repoProperties.getId());
-		executorService.schedule(() -> {
+		executorService.scheduleAtFixedRate(() -> {
 			try{
+				log.info("Update task for repo '{}'", repoProperties.getId());
 				checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
 			} catch(GitAPIException e){
 				log.error("Error while checking for changes", e);
 			}
-		}, 10, TimeUnit.MINUTES);
+		}, 10, 10, TimeUnit.MINUTES);
 		
 	}
 	
@@ -121,7 +121,6 @@ public class FileRepository{
 		//pull any changes from the remote
 		gitRepo.pull();
 		
-		
 		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap);
 		addNewFiles(newResources);
 		deleteOldResources(deletedResources);
@@ -142,7 +141,6 @@ public class FileRepository{
 				existingFilesChanged));
 		gitRepo.push();
 	}
-	
 	
 	/**
 	 * Adds a file to the database

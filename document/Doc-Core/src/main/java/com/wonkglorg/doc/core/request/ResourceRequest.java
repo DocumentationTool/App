@@ -31,7 +31,7 @@ public class ResourceRequest{
 	/**
 	 * The tags to exclude from the search
 	 */
-	public List<String> blacklistListTags = new ArrayList<>();
+	public List<String> blacklistTags = new ArrayList<>();
 	/**
 	 * If the data of the resource should be returned
 	 */
@@ -46,7 +46,7 @@ public class ResourceRequest{
 	}
 	
 	private boolean isBlackListEnabled() {
-		return blacklistListTags == null || blacklistListTags.isEmpty();
+		return blacklistTags == null || blacklistTags.isEmpty();
 	}
 	
 	private boolean isWhitelistedTag(String tag) {
@@ -54,7 +54,7 @@ public class ResourceRequest{
 	}
 	
 	private boolean isBlacklistedTag(String tag) {
-		return !isBlackListEnabled() || blacklistListTags.contains(tag);
+		return !isBlackListEnabled() || blacklistTags.contains(tag);
 	}
 	
 	/**
@@ -104,11 +104,11 @@ public class ResourceRequest{
 		}
 		return withData == that.withData && returnLimit == that.returnLimit && Objects.equals(searchTerm, that.searchTerm) && Objects.equals(path,
 				that.path) && Objects.equals(repoId, that.repoId) && Objects.equals(userId, that.userId) && Objects.equals(whiteListTags,
-				that.whiteListTags) && Objects.equals(blacklistListTags, that.blacklistListTags);
+				that.whiteListTags) && Objects.equals(blacklistTags, that.blacklistTags);
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, withData, returnLimit);
+		return Objects.hash(searchTerm, path, repoId, userId, whiteListTags, blacklistTags, withData, returnLimit);
 	}
 }

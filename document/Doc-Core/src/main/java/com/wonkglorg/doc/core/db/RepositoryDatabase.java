@@ -10,6 +10,8 @@ import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.Tag;
+import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -48,8 +50,16 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * The cache of resources for this database
 	 */
 	private final Map<Path, Resource> resourceCache = new java.util.concurrent.ConcurrentHashMap<>();
+	/**
+	 * The cache of user profiles for this database
+	 */
 	private final Map<UserId, UserProfile> userProfiles = new java.util.concurrent.ConcurrentHashMap<>();
+	
+	/**
+	 * The cache of groups for this database
+	 */
 	private final Map<GroupId, Group> groups = new java.util.concurrent.ConcurrentHashMap<>();
+	private final Map<TagId, Tag> tags = new HashMap<>();
 	
 	public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
 		super(getDataSource(openInPath));
@@ -76,7 +86,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	/**
 	 * Initializes the database for the current repo (creating tables, triggers, etc.)
 	 */
-	@SuppressWarnings("TextBlockBackwardMigration")
 	public void initialize() {
 		log.info("Initialising Database for repo '{}'", repoProperties.getId());
 		try{
@@ -94,8 +103,12 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		if(resources.isError()){
 			log.error("Error while getting resources for repo '{}'", repoProperties.getId(), resources.getException());
 		} else {
+			log.info("Caching {} resources for repo '{}'", resources.get().size(), repoProperties.getId());
 			resources.get().forEach(resource -> resourceCache.put(resource.resourcePath(), resource));
+			//todo:jmd fill user cache, tag cache and group cache
 		}
+		
+		ResourceFunctions.getAllTags(this).forEach(tag -> tags.put(tag.tagId(), tag));
 		
 	}
 	
@@ -134,7 +147,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	public QueryDatabaseResponse<Collection<Resource>> getResources(ResourceRequest request) {
 		log.info("Retrieving resources for repo {}", repoProperties.getId());
 		
-		Map<Path, Resource> resources = resourceCache; // Start with the full cache
+		Map<Path, Resource> resources = resourceCache; //start with the full cache
 		
 		if(request.searchTerm != null || request.withData){
 			QueryDatabaseResponse<Map<Path, String>> byContent = ResourceFunctions.findByContent(this, request);
@@ -142,7 +155,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 				return QueryDatabaseResponse.fail(this.getRepoId(), byContent.getException());
 			}
 			
-			// Directly update only matching resources instead of creating a new map
 			resources = new HashMap<>();
 			for(var entry : resourceCache.entrySet()){
 				if(byContent.get().containsKey(entry.getKey())){
@@ -159,23 +171,36 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 								 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 		
+		resources = resources.entrySet()
+							 .stream()
+							 .filter(entry -> request.whiteListTags.isEmpty() ||
+											  entry.getValue().hasAnyTag(request.whiteListTags))
+							 .filter(entry -> request.blacklistTags.isEmpty() || !entry.getValue().hasAnyTag(request.blacklistTags))
+							 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+		
 		// Handle user-specific filtering
 		Collection<Resource> resourcesToReturn = resources.values();
-		UserId userId = new UserId(request.userId);
-		if(isValidUser(userId)){
-			resourcesToReturn = userProfiles.get(userId).getAllowedResources(resourcesToReturn);
+		if(request.userId == null){
+			return QueryDatabaseResponse.success(this.getRepoId(), resourcesToReturn);
 		}
+		
+		UserId userId = new UserId(request.userId);
+		
+		if(!userExists(userId)){
+			return QueryDatabaseResponse.fail(this.getRepoId(), new RuntimeException("User does not exist"));
+		}
+		resourcesToReturn = userProfiles.get(userId).getAllowedResources(resourcesToReturn);
 		
 		return QueryDatabaseResponse.success(this.getRepoId(), resourcesToReturn);
 	}
 	
 	/**
-	 * Adds a resource to the database
+	 * Checks if a user exists in the database
 	 *
-	 * @param userId the user to add
-	 * @return weather is valid or not
+	 * @param userId the user to check
+	 * @return weather it exists or not
 	 */
-	public boolean isValidUser(UserId userId) {
+	public boolean userExists(UserId userId) {
 		if(userId == null){
 			return false;
 		}
@@ -183,16 +208,43 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	}
 	
 	/**
-	 * Adds a resource to the database
+	 * Checks if a group exists in the database
 	 *
-	 * @param groupId the group to add
-	 * @return weather is valid or not
+	 * @param groupId the group to check
+	 * @return weather it exists or not
 	 */
-	public boolean isValidGroup(GroupId groupId) {
+	public boolean groupExists(GroupId groupId) {
 		if(groupId == null){
 			return false;
 		}
 		return groups.containsKey(groupId);
+	}
+	
+	/**
+	 * Checks if a tag exists in the database
+	 *
+	 * @param tag the tag to check
+	 * @return weather it exists or not
+	 */
+	public boolean tagExists(TagId tag) {
+		if(tag == null){
+			return false;
+		}
+		return tags.containsKey(tag);
+	}
+	
+	/**
+	 * Checks if a tag exists in the database
+	 *
+	 * @param tag the tag to check
+	 * @return weather it exists or not
+	 */
+	public boolean tagExists(Tag tag) {
+		if(tag == null){
+			return false;
+		}
+		Tag returnTag = tags.get(tag.tagId());
+		return returnTag != null && returnTag.equals(tag);
 	}
 	
 	/**
@@ -206,7 +258,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		if(resourceCache.containsKey(path)){
 			return QueryDatabaseResponse.success(this.getRepoId(), true);
 		} else {
-			return QueryDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Resource does not exist"));
+			return QueryDatabaseResponse.success(this.getRepoId(), false);
 		}
 	}
 	
@@ -335,5 +387,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	public RepoProperty getRepoProperties() {
 		return repoProperties;
+	}
+	
+	public Map<TagId, Tag> getTags() {
+		return tags;
 	}
 }

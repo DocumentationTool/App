@@ -4,8 +4,11 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Represents a resource in the database
@@ -19,7 +22,7 @@ public final class Resource{
 	private final LocalDateTime modifiedAt;
 	private final String modifiedBy;
 	private final RepoId repoId;
-	private final List<Tag> resourceTags;
+	private final Map<String, Tag> resourceTags;
 	private final boolean isEditable;
 	private final String category;
 	private String data;
@@ -41,14 +44,16 @@ public final class Resource{
 		this.modifiedAt = modifiedAt;
 		this.modifiedBy = modifiedBy;
 		this.repoId = repoId;
-		this.resourceTags = resourceTags == null ? new ArrayList<>() : resourceTags;
+		this.resourceTags = resourceTags == null ? new HashMap<>() : resourceTags.stream().collect(HashMap::new,
+				(m, v) -> m.put(v.tagId(), v),
+				HashMap::putAll);
 		this.isEditable = isEditable;
 		this.category = category;
 		this.data = data;
 	}
 	
-	public Resource(Path resourcePath, String creator, RepoId repoId, String category, String data) {
-		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, List.of(), false, category, data);
+	public Resource(Path resourcePath, String creator, RepoId repoId, String category, List<Tag> tags, String data) {
+		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, false, category, data);
 	}
 	
 	public static LocalDateTime parseDateTime(String dateTime) {
@@ -91,7 +96,7 @@ public final class Resource{
 		return repoId;
 	}
 	
-	public List<Tag> resourceTags() {
+	public Map<String, Tag> getResourceTags() {
 		return resourceTags;
 	}
 	
@@ -114,7 +119,7 @@ public final class Resource{
 				modifiedAt,
 				modifiedBy,
 				repoId,
-				new ArrayList<>(resourceTags),
+				new ArrayList<>(resourceTags.values()),
 				isEditable,
 				category,
 				data);
@@ -148,13 +153,31 @@ public final class Resource{
 	
 	public Resource setTags(List<Tag> resourceTags) {
 		this.resourceTags.clear();
-		this.resourceTags.addAll(resourceTags);
+		resourceTags.forEach(tag -> this.resourceTags.put(tag.tagId(), tag));
 		return this;
 	}
 	
 	public Resource setResourcePath(Path resourcePath) {
 		this.resourcePath = resourcePath;
 		return this;
+	}
+	
+	public boolean hasAnyTag(Set<Tag> tags) {
+		for(Tag tag : tags){
+			if(resourceTags.containsKey(tag.tagId())){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean hasAnyTag(List<String> tagIds) {
+		for(String tag : tagIds){
+			if(resourceTags.containsKey(tag)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override
