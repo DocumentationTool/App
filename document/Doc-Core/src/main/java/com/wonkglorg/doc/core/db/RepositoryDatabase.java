@@ -116,7 +116,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		} else {
 			log.info("Caching {} resources for repo '{}'", resources.get().size(), repoProperties.getId());
 			resources.get().forEach(resource -> resourceCache.put(resource.resourcePath(), resource));
-			//todo:jmd fill user cache, tag cache and group cache
 		}
 		
 		ResourceFunctions.getAllTags(this).forEach(tag -> tagCache.put(tag.tagId(), tag));
@@ -125,6 +124,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 			log.error("Error while getting users for repo '{}'", repoProperties.getId(), allUsers.getException());
 		}
 		allUsers.get().forEach(user -> userProfiles.put(user.getId(), user));
+		
+		//todo:jmd fill the other caches: groups, groupUsers, userGroups
 		
 	}
 	
