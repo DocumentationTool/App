@@ -124,6 +124,41 @@ public class ResourceFunctions {
 
     }
 
+    /**
+     * Adds a tag to the database
+     *
+     * @param database the database to add the tag to
+     * @param tag      the tag to add
+     * @return {@link UpdateDatabaseResponse}
+     */
+    public static UpdateDatabaseResponse addTag(RepositoryDatabase database, Tag tag) {
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement("INSERT INTO Tags(tag_id, tag_name) VALUES(?, ?)")) {
+            statement.setString(1, tag.tagId().id());
+            statement.setString(2, tag.tagName());
+            return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully added tag '%s' to repo '%s'".formatted(tag.tagId().id(), database.getRepoId()), statement.executeUpdate());
+        } catch (Exception e) {
+            log.error("Failed to add tag", e);
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to add tag", e));
+        } finally {
+            closeConnection(connection);
+        }
+    }
+
+    public static UpdateDatabaseResponse removeTag(RepositoryDatabase database, TagId tagId) {
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM Tags WHERE tag_id = ?")) {
+            statement.setString(1, tagId.id());
+            return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully removed tag '%s' from repo '%s'".formatted(tagId.id(), database.getRepoId()), statement.executeUpdate());
+        } catch (Exception e) {
+            log.error("Failed to remove tag", e);
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to remove tag", e));
+        } finally {
+            closeConnection(connection);
+        }
+    }
+
+
     private static Resource resourceFromResultSet(ResultSet resultSet, Map<TagId, Tag> tags, String data, RepositoryDatabase database)
             throws SQLException {
         return new Resource(Path.of(resultSet.getString("resource_path")),
