@@ -160,6 +160,7 @@ public class ApiResourceController {
                                                              @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category,
                                                              @RequestParam(value = "tagIds", required = false) List<String> tagIds,
                                                              @RequestBody String content) {
+        
         try {
             RepoId id = repoService.validateRepoId(repoId);
             Path resourcePath = Path.of(path);
@@ -287,7 +288,7 @@ public class ApiResourceController {
     @Operation(summary = "Removes a Tag", description = "The tag to remove from the destination.")
     @PostMapping("/tag/remove")
     public ResponseEntity<RestResponse<Void>> removeTag(
-            @Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam("repoId") String id,
+            @Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String id,
             @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
         try {
             RepoId repoId = repoService.validateRepoId(id);
