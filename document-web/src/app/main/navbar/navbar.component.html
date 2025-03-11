@@ -15,7 +15,7 @@
         Preview
       </a>
     }
-    <i class="ri-save-line" (click)="this.fileService.saveFile()"></i>
+    <i class="ri-save-line" (click)="this.fileService.updateResource()"></i>
   </div>
 
   <form class="search" (click)="onSearchFocus()">
@@ -36,7 +36,6 @@
     </div>
   }
 
-
   <div class="profile" (click)="toggleDropdown()">
     Profile
     @if (isDropdownOpen) {
@@ -51,3 +50,5 @@
     }
   </div>
 </nav>
+
+

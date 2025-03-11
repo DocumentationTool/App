@@ -1,5 +1,5 @@
 import {Component, OnDestroy} from '@angular/core';
-import {FileService} from '../service/file.service';
+import {ResourceService} from '../service/resource.service';
 import {MarkdownModule} from 'ngx-markdown';
 import {LMarkdownEditorModule, UploadResult} from 'ngx-markdown-editor';
 import {FormsModule} from '@angular/forms';
@@ -18,7 +18,7 @@ import {EmptyPageComponent} from '../empty-page/empty-page.component';
   styleUrl: './editor.component.css'
 })
 export class EditorComponent implements OnDestroy {
-  constructor(public fileService: FileService,
+  constructor(public fileService: ResourceService,
               public navigationService: NavigationService) {
     this.doUpload = this.doUpload.bind(this);
   }

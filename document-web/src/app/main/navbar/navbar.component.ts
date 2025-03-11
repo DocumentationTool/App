@@ -2,7 +2,7 @@ import {Component, ElementRef, HostListener, OnInit, Resource, ViewChild} from '
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
-import {FileService} from '../service/file.service';
+import {ResourceService} from '../service/resource.service';
 import {DocumentContentResponseModel} from '../../Model/DocumentContentResponseModel';
 import {Resources} from '../../Model/apiResponseFileTree';
 
@@ -20,7 +20,7 @@ import {Resources} from '../../Model/apiResponseFileTree';
 export class NavbarComponent implements OnInit{
   constructor(public navigationService: NavigationService,
               private router: Router,
-              public fileService: FileService) {
+              public fileService: ResourceService) {
   }
 
   documents: DocumentContentResponseModel[] = [];

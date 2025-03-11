@@ -17,6 +17,10 @@ Files Abwählen
 
 API Response Models!
 
+Einzelne Updates beim Filetree laden nicht immer ganzen baum
+
+selected File auf Path + Repo weil es files mit gleichem Path gibt
+
 -----------------------------------------------------------------
 NPM:
 npm install ngx-markdown marked@^15.0.0 --save

@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {NavigationService} from '../service/navigation.service';
 import {KeyValuePipe, NgClass, NgForOf, NgIf} from '@angular/common';
-import {FileService} from '../service/file.service';
+import {ResourceService} from '../service/resource.service';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 
 @Component({
@@ -24,7 +24,7 @@ export class SidebarComponent implements OnInit{
 
 
   constructor(public navigationService: NavigationService,
-              public fileService: FileService,
+              public fileService: ResourceService,
               private router: Router) {
   }
 

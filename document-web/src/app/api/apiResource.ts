@@ -11,21 +11,64 @@ export class ApiResource {
 
   private baseUrl = 'http://localhost:8080/api/resource';
 
-  updateResource(repoId: string, path: string, createdBy: string, category: string) {
-    const payload = {repoId, path, createdBy, category}
-    return this.http.put(this.baseUrl + "/update", {payload})
+  updateResource(repoId: string, path: string, userId: string | null, tagsToAdd: string[], tagsToRemove: string[],
+                 tagsToSet: string[], category: string | null, data: string, treatNullsAsValues: boolean) {
+    const payload = {
+      "repoId": repoId,
+      "path": path,
+      "userId": userId,
+      "tagsToAdd":
+      tagsToAdd
+      ,
+      "tagsToRemove":
+      tagsToRemove
+      ,
+      "tagsToSet":
+      tagsToSet
+      ,
+      "category": category,
+      "data": data
+    }
+    return this.http.put(this.baseUrl + "/update", payload)
+  }
+
+  addTag(repoId: string, tagId: string, tagName: string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('tagId', tagId)
+      .set('tagName', tagName)
+    return this.http.put(this.baseUrl + "/add", params)
   }
 
   addResource(repoId: string, path: string, createdBy: string, category: string, content: string) {
     const params = new HttpParams()
       .set('repoId', repoId)
       .set('path', path)
-      .set('createdBy', createdBy)
-      .set('category', category);
-    return this.http.put(this.baseUrl + "/add", content, {params})
+      .set('category', category)
+      .set('createdBy', createdBy);
+    return this.http.put(this.baseUrl + "/add", content, {params: params})
   }
 
-  removeResource(repo:string, path: string){
+  removeTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
+    const params = new HttpParams()
+      .set('repoFrom', repoFrom)
+      .set('from', from)
+      .set('repoTo', repoTo)
+      .set('to', to);
+    return this.http.post(this.baseUrl + "/tag/remove", {params: params})
+  }
+
+  getTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
+    const params = new HttpParams()
+      .set('repoFrom', repoFrom)
+      .set('from', from)
+      .set('repoTo', repoTo)
+      .set('to', to);
+    return this.http.post(this.baseUrl + "/tag/get", {params: params})
+
+  }
+
+  removeResource(repo: string, path: string) {
     const params = new HttpParams()
       .set('repo', repo)
       .set('path', path)
@@ -34,7 +77,7 @@ export class ApiResource {
   }
 
   moveResource() {
-    const params =""
+    const params = ""
     return this.http.post(this.baseUrl + "/move", {params})
 
   }
@@ -44,8 +87,8 @@ export class ApiResource {
     return this.http.get(this.baseUrl + "/get");
   }
 
-  getFiletree(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
-              whiteListTags: string[], blacklistListTags: string[], withData: boolean, returnLimit: number) {
+  loadFileTree(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
+               whiteListTags: string[], blacklistListTags: string[], withData: boolean, returnLimit: number) {
     const payload = {
       "searchTerm": searchTerm,
       "path": path,

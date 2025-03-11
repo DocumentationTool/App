@@ -1,7 +1,7 @@
 import {Component, OnInit} from '@angular/core';
 import {NavbarComponent} from './navbar/navbar.component';
 import {SidebarComponent} from './sidebar/sidebar.component';
-import {FileService} from './service/file.service';
+import {ResourceService} from './service/resource.service';
 import {MarkdownModule} from 'ngx-markdown';
 import {RouterOutlet} from '@angular/router';
 import {NgClass} from '@angular/common';
@@ -21,7 +21,7 @@ import {NavigationService} from './service/navigation.service';
 })
 export class MainComponent implements OnInit{
 
-  constructor(public fileService: FileService,
+  constructor(public fileService: ResourceService,
               public navigationService: NavigationService) {
 
   }

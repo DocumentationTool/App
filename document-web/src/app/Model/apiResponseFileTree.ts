@@ -14,7 +14,7 @@ export interface Resources {
   createdBy: string;
   createdAt: string;
   category: string;
-  tags: Record<string, string>; // Beliebige Key-Value-Paare
+  tags: Record<string, string>;
   lastModifiedBy: string;
   lastModifiedAt: string;
   isEditable: boolean;
