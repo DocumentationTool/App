@@ -156,7 +156,7 @@ public class ResourceFunctions {
 		
 		 */
 
-        if (request.searchTerm == null && request.withData) {
+        if (request.searchTerm == null) {
             sqlScript = """
                     SELECT FileData.resource_path,
                            CASE
