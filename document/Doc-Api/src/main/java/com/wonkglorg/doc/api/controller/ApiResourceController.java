@@ -314,7 +314,6 @@ public class ApiResourceController {
             if (resourceService.tagExists(repoId, new TagId(tagId))) {
                 throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
             }
-
             return RestResponse.of(repoService.getRepo(repoId).getDatabase().getTags(new TagId(tagId))).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
