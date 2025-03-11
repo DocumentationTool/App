@@ -23,7 +23,6 @@ public class ApiRepoController {
         this.repoService = repoService;
     }
 
-    //@formatter:off
     @Operation(
             summary = "Gets all existing repos",
             description = "Returns a list of repos and their properties"
@@ -32,6 +31,5 @@ public class ApiRepoController {
     public ResponseEntity<RestResponse<List<JsonRepo>>> getUserPermissions() {
         return RestResponse.success(JsonRepo.from(repoService.getProperties())).toResponse();
     }
-    //@formatter:on
 
 }

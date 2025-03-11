@@ -156,6 +156,20 @@ public class ResourceFunctions {
 		
 		 */
 
+        if(request.searchTerm == null && request.withData){
+            sqlScript = """
+                    SELECT FileData.resource_path,
+                           CASE
+                               WHEN ? IS NOT NULL THEN data
+                               WHEN ? IS NOT NULL THEN data --just temp to match the same parameters
+                               END AS fileContent
+                      FROM FileData
+                     WHERE FileData.resource_path LIKE ?
+                     LIMIT ?;
+                    """;
+        }
+
+
         if (request.searchTerm.length() > 3) {
             sqlScript = """
                     SELECT FileData.resource_path,
