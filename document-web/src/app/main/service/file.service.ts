@@ -20,7 +20,7 @@ export class FileService {
   fileContentBeforeChanges = "";
 
   loadFileTree() {
-    this.apiResource.getFiletree("repo1","").subscribe(
+    this.apiResource.getFiletree(null, null, "repo1", null, [], [], true, 1073741824).subscribe(
       data => {
         this.fileTree.set(data);
         console.log(this.fileTree());
