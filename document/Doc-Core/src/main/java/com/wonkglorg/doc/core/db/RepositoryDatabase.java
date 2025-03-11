@@ -310,6 +310,50 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return ResourceFunctions.insertResource(this, resource);
     }
 
+
+    /**
+     * Adds a tag to the database
+     *
+     * @param tag the tag to add
+     */
+    public UpdateDatabaseResponse addTag(Tag tag) {
+        log.info("Adding tag {} for repo {}", tag, repoProperties.getId());
+        if (tagExists(tag.tagId())) {
+            return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag already exists"));
+        }
+        tagCache.put(tag.tagId(), tag);
+        return ResourceFunctions.addTag(this, tag);
+    }
+
+    /**
+     * Removes a tag from the database
+     *
+     * @param id the id of the tag to remove
+     */
+    public UpdateDatabaseResponse removeTag(TagId id) {
+        log.info("Removing tag {} for repo {}", id, repoProperties.getId());
+        if (!tagExists(id)) {
+            return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
+        }
+        tagCache.remove(id);
+        return ResourceFunctions.removeTag(this, id);
+    }
+
+
+    /**
+     * Gets all tags from the database
+     * @param tagId the tag to get
+     * @return the tags
+     */
+    public QueryDatabaseResponse<List<Tag>> getTags(TagId tagId) {
+        log.info("Getting tag {} for repo {}", tagId, repoProperties.getId());
+        if (!tagExists(tagId)) {
+            return QueryDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
+        }
+        return QueryDatabaseResponse.success(this.getRepoId(), tagCache.values().stream().filter(tag -> tag.tagId().equals(tagId) || tagId==null).collect(Collectors.toList()));
+    }
+
+
     /**
      * Updates the path of a resource in the database
      *
