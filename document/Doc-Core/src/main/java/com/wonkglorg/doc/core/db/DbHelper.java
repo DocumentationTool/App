@@ -1,11 +1,17 @@
 package com.wonkglorg.doc.core.db;
 
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 
 /**
  * Helper class for database operations
  */
 public class DbHelper {
+
+
+    private DbHelper() {
+        // Prevent instantiation
+    }
 
     /**
      * Helper method to limit how many things sql returns before antpath matching the rest, this method converts any possible antpath values to sql like values
@@ -58,7 +64,6 @@ public class DbHelper {
         }
 
         return sqlPattern.toString();
-
     }
 
     /**
@@ -67,31 +72,38 @@ public class DbHelper {
      * @param path the path to check
      * @return null if the path is allowed, otherwise a message explaining why it is not allowed
      */
-    public static String isAllowedPath(Path path) {
+    public static void validatePath(Path path) throws InvalidPathException {
         if (path == null) {
-            return "The path cannot be null";
+            throw new InvalidPathException("null", "The path cannot be null");
         }
 
         String pathStr = path.toString();
 
         if (pathStr.length() >= 255) {
-            return "The path is too long contained " + pathStr.length() + " characters expected less than 255";
+            throw new InvalidPathException(pathStr, "The path is too long contained " + pathStr.length() + " characters expected less than 255");
         }
 
         if (pathStr.contains("..")) {
-            return "The path cannot contain '..' to escape the current directory";
+            throw new InvalidPathException(pathStr, "The path cannot contain '..' to escape the current directory");
         }
 
         if (pathStr.contains("%")) {
-            return "The path cannot contain '%' duo to SQL issues";
+            throw new InvalidPathException(pathStr, "The path cannot contain '%' duo to SQL issues");
         }
 
-        boolean matches = pathStr.matches("^[a-zA-Z0-9_\\-./*?{}]+$");
-        if (!matches) {
-            return "The path contains invalid characters, only a-z, A-Z, 0-9, _, -, ., /, *, ?, and {} are allowed";
+        if (path.isAbsolute()) {
+            throw new InvalidPathException(pathStr, "The path cannot be absolute");
         }
-        return null;
+
+        boolean matches = pathStr.matches("^[a-zA-Z0-9_\\\\\\-./*?{}]+$");
+        if (!matches) {
+            throw new InvalidPathException(pathStr, "The path contains invalid characters, only a-z, A-Z, 0-9, _, -, ., /, *, ?, and {} are allowed");
+        }
     }
 
-
+    public static void validateFileType(Path path) throws InvalidPathException {
+        if (!path.toString().endsWith(".md")) {
+            throw new InvalidPathException(path.toString(), "The file type is not allowed, only .md files are allowed");
+        }
+    }
 }

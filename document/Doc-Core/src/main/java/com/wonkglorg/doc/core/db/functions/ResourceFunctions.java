@@ -413,7 +413,7 @@ public class ResourceFunctions {
     private static UpdateDatabaseResponse updateResourceTagsSet(Connection connection,
                                                                 RepositoryDatabase database,
                                                                 Path resourcePath,
-                                                                List<Tag> tags) {
+                                                                List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
             statement.executeUpdate();
@@ -423,12 +423,10 @@ public class ResourceFunctions {
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
         }
 
-        addMissingTags(connection, tags);
-
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")) {
-            for (Tag tag : tags) {
+            for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
-                statement.setString(2, tag.tagId().id());
+                statement.setString(2, tag);
                 statement.addBatch();
             }
             return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
@@ -473,11 +471,11 @@ public class ResourceFunctions {
     private static UpdateDatabaseResponse updateResourceTagsRemove(Connection connection,
                                                                    RepositoryDatabase database,
                                                                    Path resourcePath,
-                                                                   List<Tag> tags) {
+                                                                   List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")) {
-            for (Tag tag : tags) {
+            for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
-                statement.setString(2, tag.tagId().id());
+                statement.setString(2, tag);
                 statement.addBatch();
             }
             return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
@@ -500,12 +498,11 @@ public class ResourceFunctions {
     private static UpdateDatabaseResponse updateResourceTagsAdd(Connection connection,
                                                                 RepositoryDatabase database,
                                                                 Path resourcePath,
-                                                                List<Tag> tags) {
-        addMissingTags(connection, tags);
+                                                                List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")) {
-            for (Tag tag : tags) {
+            for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
-                statement.setString(2, tag.tagId().id());
+                statement.setString(2, tag);
                 statement.addBatch();
             }
             return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());

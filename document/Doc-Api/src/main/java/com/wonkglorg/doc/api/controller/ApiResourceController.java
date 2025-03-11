@@ -1,18 +1,20 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.exception.InvalidTagException;
-import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
+import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.db.DbHelper;
+import com.wonkglorg.doc.core.exception.ResourceNotExistException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +33,7 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_RES
 @RestController
 @RequestMapping(API_RESOURCE)
 public class ApiResourceController {
+    private static final Logger log = LoggerFactory.getLogger(ApiResourceController.class);
     private final ResourceService resourceService;
     private final RepoService repoService;
 
@@ -133,6 +136,7 @@ public class ApiResourceController {
             return RestResponse.success(fileTrees).toResponse();
 
         } catch (Exception e) {
+            log.error("Error while generating Filetree", e);
             return RestResponse.<Map<String, JsonFileTree>>error(e.getMessage()).toResponse();
         }
     }
@@ -148,95 +152,79 @@ public class ApiResourceController {
                                                              @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category,
                                                              @RequestParam(value = "tagIds", required = false) List<String> tagIds,
                                                              @RequestBody String content) {
-        RepoId id = new RepoId(repoId);
-        Path resourcePath = Path.of(path);
-
-        if (!repoService.isValidRepo(id)) {
-            return RestResponse.<Void>error("Repository '%s' does not exist".formatted(id.id())).toResponse();
-        }
-
-        if (tagIds == null) {
-            tagIds = new ArrayList<>();
-        }
-
-        if (!path.endsWith(".md")) {
-            return RestResponse.<Void>error("Resource must be a markdown file ending in .md").toResponse();
-        }
-
-        String allowedResponse = DbHelper.isAllowedPath(resourcePath);
-        if (allowedResponse != null) {
-            return RestResponse.<Void>error(allowedResponse).toResponse();
-        }
-
-        if (resourceService.resourceExists(id, resourcePath)) {
-            return RestResponse.<Void>error("Resource already exists").toResponse();
-        }
-
-        List<Tag> tags = null;
         try {
-            tags = resourceService.getTags(id, tagIds.stream().map(TagId::new).toList());
-        } catch (InvalidTagException | NotaRepoException e) {
+            RepoId id = repoService.validateRepoId(repoId);
+            Path resourcePath = Path.of(path);
+            DbHelper.validatePath(resourcePath);
+            DbHelper.validateFileType(resourcePath);
+            if (resourceService.resourceExists(id, resourcePath)) {
+                throw new IllegalArgumentException("The resource '%s' already exists in repository '%s'".formatted(resourcePath, id));
+            }
+            FileRepository repo = repoService.getRepo(id);
+            repo.checkTags(tagIds);
+
+            List<Tag> tags;
+            if (tagIds != null && !tagIds.isEmpty()) {
+                tags = resourceService.getTags(id, tagIds.stream().map(TagId::new).toList());
+            } else {
+                tags = new ArrayList<>();
+            }
+            Resource resource = new Resource(resourcePath, createdBy, id, category, tags, content);
+            return RestResponse.of(resourceService.insertResource(resource)).toResponse();
+        } catch (Exception e) {
+            log.error("Error while adding File", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
-
-        Resource resource = new Resource(resourcePath, createdBy, id, category, tags, content);
-        return RestResponse.of(resourceService.insertResource(resource)).toResponse();
     }
 
 
     @Operation(summary = "Updates a resource", description = "Updates a resource in the Repository.")
     @PutMapping("/update")
     public ResponseEntity<RestResponse<Void>> updateResource(@RequestBody ResourceUpdateRequest request) {
-        if (!repoService.isValidRepo(new RepoId(request.repoId))) {
-            return RestResponse.<Void>error("Repository does not exist").toResponse();
-        }
-		/*
-		if(DbHelper.isAllowedPath(Path.of(request.path))){
-			return RestResponse.<Void>error("Invalid path form or blacklisted symbols used! Symbols include (% and ..)").toResponse();
-		}
-		
-		 */
+        try {
+            RepoId id = repoService.validateRepoId(request.repoId);
+            Path path = Path.of(request.path);
+            DbHelper.validatePath(path);
+            DbHelper.validateFileType(path);
+            FileRepository repo = repoService.getRepo(id);
+            if (!resourceService.resourceExists(id, path)) {
+                throw new ResourceNotExistException("Resource '%s' does not exist in repository '%s'".formatted(path, id));
+            }
+            repo.checkTags(request.tagsToSet);
+            repo.checkTags(request.tagsToAdd);
+            repo.checkTags(request.tagsToRemove);
 
-        if (!request.path.endsWith(".md")) {
-            return RestResponse.<Void>error("Specified Resource must be a markdown file path ending in .md").toResponse();
-        }
 
-        if (!resourceService.resourceExists(new RepoId(request.repoId), Path.of(request.path))) {
-            return RestResponse.<Void>error("Resource does not exist").toResponse();
-        }
-
-        QueryDatabaseResponse<Resource> response = resourceService.updateResource(request);
-        if (response.isSuccess()) {
-            return RestResponse.<Void>success(response.getResponseText(), null).toResponse();
-        } else {
-            return RestResponse.<Void>error(response.getException().getMessage()).toResponse();
+            QueryDatabaseResponse<Resource> response = resourceService.updateResource(request);
+            if (response.isSuccess()) {
+                return RestResponse.<Void>success(response.getResponseText(), null).toResponse();
+            } else {
+                return RestResponse.<Void>error(response.getException().getMessage()).toResponse();
+            }
+        } catch (Exception e) {
+            log.error("Error while updating File", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 
     @Operation(summary = "Removes a resource", description = "Removes a resource from the Repository.")
     @PostMapping("/remove")
     public ResponseEntity<RestResponse<Void>> removeResource(@RequestParam("repo") String repo, @RequestParam("path") String path) {
-        RepoId id = new RepoId(repo);
-        if (!repoService.isValidRepo(id)) {
-            return RestResponse.<Void>error("Repository does not exist").toResponse();
-        }
-		
-		/*
-		if(DbHelper.isAllowedPath(Path.of(path))){
-			return RestResponse.<Void>error("Invalid path form or blacklisted symbols used! Symbols include (% and ..)").toResponse();
-		}
-		
-		 */
+        try {
+            RepoId id = repoService.validateRepoId(repo);
+            Path pPath = Path.of(path);
+            DbHelper.validatePath(pPath);
+            DbHelper.validateFileType(pPath);
 
-        if (!path.endsWith(".md")) {
-            return RestResponse.<Void>error("Resource path must point to a markdown file ending in .md").toResponse();
-        }
+            if (!resourceService.resourceExists(id, pPath)) {
+                throw new ResourceNotExistException("Resource '%s' does not exist in repository '%s'".formatted(pPath, id));
+            }
 
-        if (!resourceService.resourceExists(id, Path.of(path))) {
-            return RestResponse.<Void>error("Resource does not exist").toResponse();
+            return RestResponse.of(resourceService.removeResource(id, pPath)).toResponse();
+        } catch (Exception e) {
+            log.error("Error while removing File", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
-
-        return RestResponse.of(resourceService.removeResource(id, Path.of(path))).toResponse();
     }
 
     @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
