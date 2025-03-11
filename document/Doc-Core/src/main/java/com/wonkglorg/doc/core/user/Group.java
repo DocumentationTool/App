@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.core.user;
 
+import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.permissions.Permission;
 
@@ -31,9 +32,9 @@ public class Group {
         this.id = id;
         this.name = name;
         this.createdBy = createdBy;
-        this.creationDate = creationDate;
+        this.creationDate = DateHelper.parseDateTime(creationDate);
         this.modifiedBy = modifiedBy;
-        this.lastModified = lastModified;
+        this.lastModified = DateHelper.parseDateTime(lastModified);
     }
 
     public Group(GroupId id, String name, String createdBy, LocalDateTime creationDate) {

@@ -102,9 +102,15 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         } catch (RuntimeException e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
-
         log.info("Database initialized for repo '{}'", repoProperties.getId());
+        initializeCaches();
+    }
 
+
+    /**
+     * Initializes the caches for the database
+     */
+    private void initializeCaches() {
         QueryDatabaseResponse<List<Resource>> resources = ResourceFunctions.getAllResources(this);
         if (resources.isError()) {
             log.error("Error while getting resources for repo '{}'", repoProperties.getId(), resources.getException());

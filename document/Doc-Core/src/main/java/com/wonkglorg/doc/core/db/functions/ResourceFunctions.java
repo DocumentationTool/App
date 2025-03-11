@@ -3,6 +3,7 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.DbHelper;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
+import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
@@ -20,9 +21,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.*;
-
-import static com.wonkglorg.doc.core.objects.Resource.fromDateTime;
-import static com.wonkglorg.doc.core.objects.Resource.parseDateTime;
 
 /**
  * All resource related database functions
@@ -114,7 +112,7 @@ public class ResourceFunctions {
                 tags.add(new Tag(new TagId(resultSet.getString("tag_id")), resultSet.getString("tag_name")));
             }
         } catch (Exception e) {
-            return QueryDatabaseResponse.fail(database.getRepoId(),e);
+            return QueryDatabaseResponse.fail(database.getRepoId(), e);
         }
         return QueryDatabaseResponse.success(database.getRepoId(), tags);
     }
@@ -122,9 +120,9 @@ public class ResourceFunctions {
     private static Resource resourceFromResultSet(ResultSet resultSet, Map<TagId, Tag> tags, String data, RepositoryDatabase database)
             throws SQLException {
         return new Resource(Path.of(resultSet.getString("resource_path")),
-                parseDateTime(resultSet.getString("created_at")),
+                DateHelper.parseDateTime(resultSet.getString("created_at")),
                 resultSet.getString("created_by"),
-                parseDateTime(resultSet.getString("last_modified_at")),
+                DateHelper.parseDateTime(resultSet.getString("last_modified_at")),
                 resultSet.getString("last_modified_by"),
                 database.getRepoProperties().getId(),
                 tags,
@@ -239,9 +237,9 @@ public class ResourceFunctions {
                 """;
         try (PreparedStatement statement = connection.prepareStatement(sqlResourceInsert)) {
             statement.setString(1, resource.resourcePath().toString());
-            statement.setString(2, fromDateTime(resource.createdAt()));
+            statement.setString(2, DateHelper.fromDateTime(resource.createdAt()));
             statement.setString(3, resource.createdBy());
-            statement.setString(4, fromDateTime(resource.modifiedAt()));
+            statement.setString(4, DateHelper.fromDateTime(resource.modifiedAt()));
             statement.setString(5, resource.modifiedBy());
             statement.setString(6, resource.category());
             affectedRows = statement.executeUpdate();
@@ -331,7 +329,7 @@ public class ResourceFunctions {
             try (var statement = connection.prepareStatement("UPDATE Resources " +
                     "SET last_modified_at = ?, last_modified_by = ?" +
                     "WHERE resource_path = ?")) {
-                statement.setString(1, fromDateTime(LocalDateTime.now()));
+                statement.setString(1, DateHelper.fromDateTime(LocalDateTime.now()));
                 statement.setString(2, request.userId);
                 statement.setString(3, request.path);
 
@@ -536,9 +534,9 @@ public class ResourceFunctions {
                 connection.setAutoCommit(false);
                 for (var resource : resources) {
                     statement.setString(1, resource.resourcePath().toString());
-                    statement.setString(2, fromDateTime(resource.createdAt()));
+                    statement.setString(2, DateHelper.fromDateTime(resource.createdAt()));
                     statement.setString(3, resource.createdBy());
-                    statement.setString(4, fromDateTime(resource.modifiedAt()));
+                    statement.setString(4, DateHelper.fromDateTime(resource.modifiedAt()));
                     statement.setString(5, resource.modifiedBy());
                     statement.setString(6, resource.category());
                     statement.addBatch();
@@ -594,7 +592,7 @@ public class ResourceFunctions {
 
                 connection.setAutoCommit(false);
                 for (var resource : resources) {
-                    statement.setString(1, fromDateTime(resource.modifiedAt()));
+                    statement.setString(1, DateHelper.fromDateTime(resource.modifiedAt()));
                     statement.setString(2, resource.modifiedBy());
                     statement.setString(3, resource.category());
                     statement.setString(4, resource.resourcePath().toString());
