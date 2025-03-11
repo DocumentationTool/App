@@ -1,9 +1,9 @@
 package com.wonkglorg.doc.api.service;
 
-import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.api.properties.RepoProperties;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.RepoProperty;
+import com.wonkglorg.doc.core.exception.NotaRepoException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -52,7 +52,7 @@ public class RepoService {
     public FileRepository getRepo(RepoId repoId) throws NotaRepoException {
         if (!isValidRepo(repoId)) {
             log.error("Repo '{}' does not exist", repoId);
-            throw new NotaRepoException("Repo '%s' does not exist".formatted(repoId));
+            throw new NotaRepoException(repoId, "Repo '%s' does not exist".formatted(repoId));
         }
 
         return repositories.get(repoId);
@@ -82,7 +82,7 @@ public class RepoService {
 
         RepoId id = new RepoId(repoId);
         if (!repositories.containsKey(id)) {
-            throw new NotaRepoException("Repo '%s' does not exist".formatted(repoId));
+            throw new NotaRepoException(id, "Repo '%s' does not exist".formatted(repoId));
         }
 
         return id;

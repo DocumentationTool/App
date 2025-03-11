@@ -4,7 +4,6 @@ import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.InvalidTagException;
 import com.wonkglorg.doc.core.git.GitRepo;
 import com.wonkglorg.doc.core.git.UserBranch;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -141,16 +140,17 @@ public class FileRepository {
 
     /**
      * Checks if a tag exists
+     *
      * @param tags the tags to check
      * @throws InvalidTagException if the tag does not exist
      */
     public void checkTags(List<String> tags) throws InvalidTagException {
-        if(tags == null) {
+        if (tags == null) {
             return;
         }
         for (String tag : tags) {
             if (!getDatabase().tagExists(new TagId(tag))) {
-                throw new InvalidTagException("Tag '%s' does not exist".formatted(tag));
+                throw new InvalidTagException(repoProperties.getId(), "Tag '%s' does not exist".formatted(tag));
 
             }
         }
@@ -164,10 +164,15 @@ public class FileRepository {
     public void addResourceAndCommit(Resource resource) {
         try {
             UserBranch branch = gitRepo.createBranch(new UserId(resource.createdBy()));
-            Path resolve = gitRepo.getRepoPath().resolve(resource.resourcePath());
-            Files.createDirectories(resolve.getParent());
-            Path file = Files.createFile(resolve);
-            Files.write(file, resource.data().getBytes());
+            Path file = gitRepo.getRepoPath().resolve(resource.resourcePath());
+            if (!Files.exists(file)) {
+                Files.createDirectories(file.getParent());
+                Files.createFile(file);
+            }
+
+            if (resource.data() != null) {
+                Files.write(file, resource.data().getBytes());
+            }
             branch.addFile(file);
             branch.commit("Added resource %s".formatted(resource.resourcePath()));
             branch.closeBranch();

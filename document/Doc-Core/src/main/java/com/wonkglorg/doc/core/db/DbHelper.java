@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core.db;
 
-import java.nio.file.InvalidPathException;
+import com.wonkglorg.doc.core.exception.InvalidPathException;
+
 import java.nio.file.Path;
 
 /**
@@ -74,36 +75,36 @@ public class DbHelper {
      */
     public static void validatePath(Path path) throws InvalidPathException {
         if (path == null) {
-            throw new InvalidPathException("null", "The path cannot be null");
+            throw new InvalidPathException(null, "The path cannot be null");
         }
 
         String pathStr = path.toString();
 
         if (pathStr.length() >= 255) {
-            throw new InvalidPathException(pathStr, "The path is too long contained " + pathStr.length() + " characters expected less than 255");
+            throw new InvalidPathException(null, "Path '%s' is too long contained %s characters expected less than 255".formatted(pathStr, pathStr.length()));
         }
 
         if (pathStr.contains("..")) {
-            throw new InvalidPathException(pathStr, "The path cannot contain '..' to escape the current directory");
+            throw new InvalidPathException(null, "Path '%s' cannot contain '..' to escape the current directory".formatted(pathStr));
         }
 
         if (pathStr.contains("%")) {
-            throw new InvalidPathException(pathStr, "The path cannot contain '%' duo to SQL issues");
+            throw new InvalidPathException(null, "Path '%s' cannot contain '%' duo to SQL issues".formatted(pathStr));
         }
 
         if (path.isAbsolute()) {
-            throw new InvalidPathException(pathStr, "The path cannot be absolute");
+            throw new InvalidPathException(null, "Path '%s' cannot be absolute".formatted(pathStr));
         }
 
         boolean matches = pathStr.matches("^[a-zA-Z0-9_\\\\\\-./*?{}]+$");
         if (!matches) {
-            throw new InvalidPathException(pathStr, "The path contains invalid characters, only a-z, A-Z, 0-9, _, -, ., /, *, ?, and {} are allowed");
+            throw new InvalidPathException(null, "Path '%s' contains invalid characters, only a-z, A-Z, 0-9, _, -, ., /, *, ?, and {} are allowed".formatted(pathStr));
         }
     }
 
-    public static void validateFileType(Path path) throws InvalidPathException {
+    public static void validateFileType(Path path) throws com.wonkglorg.doc.core.exception.InvalidPathException {
         if (!path.toString().endsWith(".md")) {
-            throw new InvalidPathException(path.toString(), "The file type is not allowed, only .md files are allowed");
+            throw new InvalidPathException(null, "Path '%s' file type is not allowed, only .md files are allowed".formatted(path.toString()));
         }
     }
 }

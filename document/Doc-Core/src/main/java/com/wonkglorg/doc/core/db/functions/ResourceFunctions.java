@@ -194,7 +194,8 @@ public class ResourceFunctions {
         }
 
 
-        try (PreparedStatement statement = database.getConnection().prepareStatement(sqlScript)) {
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(sqlScript)) {
             Map<Path, String> resources = new HashMap<>();
             statement.setString(1, request.withData ? "anything" : null);
             statement.setString(2, request.searchTerm);
@@ -218,6 +219,8 @@ public class ResourceFunctions {
             log.error("Failed to find resource by content", e);
             return QueryDatabaseResponse.fail(database.getRepoId(),
                     new RuntimeSQLException("Failed to find resource by text '%s'".formatted(request.searchTerm), e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
@@ -229,56 +232,79 @@ public class ResourceFunctions {
      */
     public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) {
         Connection connection = database.getConnection();
-        int affectedRows = 0;
-        boolean resourceExists = false;
+        try {
 
-        try (var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")) {
-            statement.setString(1, resource.resourcePath().toString());
-            ResultSet resultSet = statement.executeQuery();
-            resourceExists = resultSet.next() && resultSet.getBoolean(1);
-        } catch (Exception e) {
-            log.error("Failed to check if resource exists", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to check if resource exists", e));
-        }
+            int affectedRows = 0;
+            boolean resourceExists = false;
 
-        if (resourceExists) {
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource already exists"));
-        }
+            try (var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")) {
+                statement.setString(1, resource.resourcePath().toString());
+                ResultSet resultSet = statement.executeQuery();
+                resourceExists = resultSet.next() && resultSet.getBoolean(1);
+            } catch (Exception e) {
+                log.error("Failed to check if resource exists", e);
+                return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to check if resource exists", e));
+            }
 
-        String sqlResourceInsert = """
-                INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category)
-                VALUES(?, ?, ?, ?, ?, ?)
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(sqlResourceInsert)) {
-            statement.setString(1, resource.resourcePath().toString());
-            statement.setString(2, DateHelper.fromDateTime(resource.createdAt()));
-            statement.setString(3, resource.createdBy());
-            statement.setString(4, DateHelper.fromDateTime(resource.modifiedAt()));
-            statement.setString(5, resource.modifiedBy());
-            statement.setString(6, resource.category());
-            affectedRows = statement.executeUpdate();
-        } catch (Exception e) {
-            log.error("Failed to insert resource", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to insert resource", e));
-        }
+            if (resourceExists) {
+                return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource already exists"));
+            }
 
-        if (resource.data() == null) { //no data to insert so we skip the next part
+            String sqlResourceInsert = """
+                    
+                        INSERT INTO Resources(resource_path, created_at, created_by, last_modified_at, last_modified_by,category)
+                    VALUES(?, ?, ?, ?, ?, ?)
+                    
+                    """;
+            try (PreparedStatement statement = connection.prepareStatement(sqlResourceInsert
+            )) {
+                statement.setString(1, resource.
+                        resourcePath().toString());
+                statement.setString(2, DateHelper.
+                        fromDateTime(resource.createdAt()));
+                statement.setString(3, resource.createdBy());
+                statement.setString(4,
+                        DateHelper.fromDateTime(resource.modifiedAt()));
+                statement.setString(5, resource.modifiedBy());
+                statement.setString(6, resource.
+                        category());
+                affectedRows = statement.executeUpdate();
+            } catch (
+                    Exception e) {
+                log.error("Failed to insert resource", e);
+                return UpdateDatabaseResponse.
+                        fail(
+
+                                database.getRepoId(), new RuntimeSQLException("Failed to insert resource", e))
+                        ;
+            }
+
+            if (resource.data() == null) { //no data to insert so we skip the next part
+                return UpdateDatabaseResponse.success(database.getRepoId(),
+                        "Added Resource '%s'".formatted(resource.
+                                resourcePath()), affectedRows
+                );
+            }
+
+            String sqlDataInsert = """
+                    INSERT INTO
+                    FileData(resource_path, data)
+                    VALUES(?,?)
+                    """;
+            try (PreparedStatement statement = connection.prepareStatement(sqlDataInsert)) {
+                statement.setString(1,
+                        resource.resourcePath().toString());
+                statement.setString(2, resource.data());
+                affectedRows += statement.executeUpdate();
+            } catch (Exception e) {
+                log.error("Failed to insert resource data", e);
+                return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(
+                        "Failed to insert resource data", e));
+            }
             return UpdateDatabaseResponse.success(database.getRepoId(), "Added Resource '%s'".formatted(resource.resourcePath()), affectedRows);
+        } finally {
+            closeConnection(connection);
         }
-
-        String sqlDataInsert = """
-                INSERT INTO FileData(resource_path, data)
-                VALUES(?, ?)
-                """;
-        try (PreparedStatement statement = connection.prepareStatement(sqlDataInsert)) {
-            statement.setString(1, resource.resourcePath().toString());
-            statement.setString(2, resource.data());
-            affectedRows += statement.executeUpdate();
-        } catch (Exception e) {
-            log.error("Failed to insert resource data", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to insert resource data", e));
-        }
-        return UpdateDatabaseResponse.success(database.getRepoId(), "Added Resource '%s'".formatted(resource.resourcePath()), affectedRows);
     }
 
     /**
@@ -290,7 +316,8 @@ public class ResourceFunctions {
      */
     public static UpdateDatabaseResponse updatePath(RepositoryDatabase database, Path oldPath, Path newPath) {
         log.info("Updating resource path '{}' to '{}'", oldPath, newPath);
-        try (PreparedStatement statement = database.getConnection()
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection
                 .prepareStatement("UPDATE Resources SET resource_path = ? WHERE resource_path = ?")) {
             statement.setString(1, newPath.toString());
             statement.setString(2, oldPath.toString());
@@ -299,6 +326,12 @@ public class ResourceFunctions {
             String errorResponse = "Failed to update resource path from '%s' to '%s'".formatted(oldPath, newPath);
             log.error(errorResponse, e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -356,7 +389,7 @@ public class ResourceFunctions {
                 if (resource == null) {
                     return QueryDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Error while fetching updated resource!"));
                 }
-                return QueryDatabaseResponse.success(database.getRepoId(), resource);
+                return QueryDatabaseResponse.success(database.getRepoId(), "Successfully updated '%s' in repository '%s'".formatted(resource.resourcePath().toString(), resource.repoId()), resource);
             } catch (Exception e) {
                 String errorResponse = "Failed to update resource '%s'".formatted(request.path);
                 log.error(errorResponse, e);
@@ -649,7 +682,7 @@ public class ResourceFunctions {
         } finally {
             try {
                 connection.setAutoCommit(true);
-                connection.close();
+                closeConnection(connection);
             } catch (SQLException e) {
                 log.error("Failed to close connection", e);
             }
@@ -701,12 +734,19 @@ public class ResourceFunctions {
         } finally {
             try {
                 connection.setAutoCommit(true);
-                connection.close();
+                closeConnection(connection);
             } catch (SQLException e) {
                 log.error("Failed to close connection", e);
             }
         }
     }
 
+    private static void closeConnection(Connection connection) {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            log.error("Error while closing connection", e);
+        }
+    }
 }
 

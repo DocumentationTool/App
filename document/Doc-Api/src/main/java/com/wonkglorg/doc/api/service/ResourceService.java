@@ -1,8 +1,8 @@
 package com.wonkglorg.doc.api.service;
 
-import com.wonkglorg.doc.api.exception.InvalidTagException;
-import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.core.FileRepository;
+import com.wonkglorg.doc.core.exception.InvalidTagException;
+import com.wonkglorg.doc.core.exception.NotaRepoException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -61,7 +61,7 @@ public class ResourceService {
 
         RepoId id = new RepoId(request.repoId);
         if (!repoService.isValidRepo(id)) {
-            return QueryDatabaseResponse.fail(null, new NotaRepoException("Repo '%s' does not exist".formatted(request.repoId)));
+            return QueryDatabaseResponse.fail(null, new NotaRepoException(null, "Repo '%s' does not exist".formatted(request.repoId)));
         }
         FileRepository repo;
         try {
@@ -105,7 +105,7 @@ public class ResourceService {
         for (TagId id : ids) {
             Tag tag = repo.getDatabase().getTagCache().get(id);
             if (tag == null) {
-                throw new InvalidTagException("Tag '%s' does not exist".formatted(id));
+                throw new InvalidTagException(repoId, "Tag '%s' does not exist".formatted(id));
             }
             tags.add(tag);
         }
@@ -164,17 +164,17 @@ public class ResourceService {
         try {
 
             if (!repoService.isValidRepo(repoFrom) || !repoService.isValidRepo(repoTo)) {
-                return UpdateDatabaseResponse.fail(null, new NotaRepoException("Repo does not exist"));
+                return UpdateDatabaseResponse.fail(null, new NotaRepoException(repoFrom, "Repo does not exist"));
             }
             FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
             FileRepository fileRepoTo = repoService.getRepo(repoTo);
 
             if (!resourceExists(repoFrom, pathFrom)) {
-                return UpdateDatabaseResponse.fail(null, new NotaRepoException("Resource does not exist"));
+                return UpdateDatabaseResponse.fail(null, new NotaRepoException(repoFrom, "Resource does not exist"));
             }
 
             if (resourceExists(repoTo, pathTo)) {
-                return UpdateDatabaseResponse.fail(null, new NotaRepoException("Resource already exists"));
+                return UpdateDatabaseResponse.fail(null, new NotaRepoException(repoTo, "Resource already exists"));
             }
 
             ResourceRequest request = new ResourceRequest();
