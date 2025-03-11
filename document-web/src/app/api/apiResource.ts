@@ -1,6 +1,6 @@
 import {HttpClient} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {ApiResponseModel} from '../Model/ApiResponseModel';
+import {ApiResponseFileTree} from '../Model/apiResponseFileTree';
 
 @Injectable({
   providedIn: 'root'
@@ -12,22 +12,35 @@ export class ApiResource {
   private baseUrl = 'http://localhost:8080/api/resource';
 
   updateResource(repoId: string, path: string, createdBy: string, category: string) {
-    const params = {repoId, path, createdBy, category}
-    return this.http.put(this.baseUrl + "/update", {params})
+    const payload = {repoId, path, createdBy, category}
+    return this.http.put(this.baseUrl + "/update", {payload})
   }
 
-  addResource(repoId: string, path: string, createdBy: string, category: string) {
+  addResource(repoId: string, path: string, createdBy: string, category: string, content: string) {
     const params = {repoId, path, createdBy, category}
-    return this.http.put(this.baseUrl + "/add", {params})
+    return this.http.put(this.baseUrl + "/add", content, {params})
   }
 
   getResource(repo: string, user: string) {
-    const params = {repo, user};
+    const payload = {repo, user};
     return this.http.get(this.baseUrl + "/get");
   }
 
   getFiletree(repo: string, user: string) {
-    const params = {repo, user};
-    return this.http.get(this.baseUrl + "/get/filetree");
+    const payload = {
+      "searchTerm": null,
+      "path": null,
+      "repoId": "repo1",
+      "userId": null,
+      "whiteListTags": [
+
+      ],
+      "blacklistListTags": [
+
+      ],
+      "withData": true,
+      "returnLimit": 1073741824
+    }
+    return this.http.post<ApiResponseFileTree>(this.baseUrl + "/get/filetree", payload);
   }
 }

@@ -26,7 +26,7 @@ export class MainComponent implements OnInit{
 
   }
   ngOnInit(): void {
-    this.fileService.loadFiles();
+    this.fileService.loadFileTree();
   }
 
 }

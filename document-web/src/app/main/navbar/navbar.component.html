@@ -8,7 +8,7 @@
        [routerLinkActiveOptions]="{ exact: true }">
       Editor
     </a>
- 
+
     @if (this.navigationService.isEditorActive() || this.navigationService.isPreviewActive()) {
       <a (click)="this.navigationService.onPreview()"  routerLinkActive="active" class="preview"
          [routerLinkActiveOptions]="{ exact: true }">
@@ -29,7 +29,8 @@
     <div class="search-results">
       @for (file of filteredFiles; track file) {
         <div class="search-box" (click)="this.fileService.setSelectedFile(file)">
-          {{ file }}
+          <span class="file-path">{{ file.path }}</span>
+          <span class="repo-id">{{ file.repoId }}</span>
         </div>
       }
     </div>

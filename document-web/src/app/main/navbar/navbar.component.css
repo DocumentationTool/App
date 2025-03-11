@@ -105,11 +105,29 @@
 .search-box {
   padding: 5px;
   font-size: 12pt;
+  justify-content: space-between; /* Elemente nach links & rechts verteilen */
+  display: flex;
+
+
 }
 
 .search-box:hover {
   background: lightgray;
   cursor: pointer;
+}
+
+
+.file-path {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.repo-id {
+  margin-left: 10px;
+  white-space: nowrap;
+  opacity: 50%;
 }
 
 .profile {

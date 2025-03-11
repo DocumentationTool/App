@@ -2,15 +2,27 @@
   <div class="left-sidebar">
     <nav class="nav flex-column">
       <ul>
-        @for (file of fileService.files(); track file) {
-          <li>
-            <a [href]="getAssetUrl(file)"
-               (click)="selectFile(file); $event.preventDefault()"
-               [ngClass]="{'active': fileService.selectedFile() === file}">
-              {{ file }}
+
+        <ul>
+          <li *ngFor="let repo of fileService.fileTree()?.content | keyvalue">
+            <a [href]="getAssetUrl(repo.key)"
+               (click)="toggleRepo(repo.key); $event.preventDefault()"
+               [ngClass]="{'active': fileService.selectedFile()?.path === repo.key}">
+              {{ repo.key }}
             </a>
+
+            <ul *ngIf="isRepoOpen(repo.key)">
+              <li *ngFor="let resource of repo.value.resources">
+                <a [href]="getAssetUrl(resource.path)"
+                   (click)="selectFile(resource); $event.preventDefault()"
+                   [ngClass]="{'active': fileService.selectedFile()?.path === resource.path}">
+                  {{ resource.path }}
+                </a>
+              </li>
+            </ul>
           </li>
-        }
+        </ul>
+
           <div class="upload">
             <i class="ri-file-upload-line ms-md-2" (click)="upload()"></i>
           </div>

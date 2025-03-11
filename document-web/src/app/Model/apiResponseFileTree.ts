@@ -1,14 +1,14 @@
-export interface ApiResponse {
+export interface ApiResponseFileTree {
   message: string;
   error: string;
   content: Record<string, ContentGroup>;
 }
 
 export interface ContentGroup {
-  resources: Resource[];
+  resources: Resources[];
 }
 
-export interface Resource {
+export interface Resources {
   path: string;
   repoId: string;
   createdBy: string;

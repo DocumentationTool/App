@@ -49,3 +49,11 @@ li a.active {
   position: fixed;
   bottom: 10px;
 }
+
+ul > li > a {
+  cursor: pointer;
+}
+
+ul > li > ul {
+  padding-left: 20px;
+}

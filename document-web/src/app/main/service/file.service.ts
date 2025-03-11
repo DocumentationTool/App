@@ -1,7 +1,8 @@
-import {Injectable, signal, WritableSignal} from '@angular/core';
+import {Injectable, Resource, signal, WritableSignal} from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Router} from '@angular/router';
 import {ApiResource} from '../../api/apiResource';
+import {ApiResponseFileTree, Resources} from '../../Model/apiResponseFileTree';
 
 @Injectable({
   providedIn: 'root'
@@ -13,33 +14,32 @@ export class FileService {
               private apiResource: ApiResource) {
   }
 
-  files = signal<string[]>([]);
-  selectedFile = signal<string | null>(null);
+  fileTree = signal<ApiResponseFileTree | null>(null);
+  selectedFile = signal<Resources | null>(null);
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
 
-  loadFiles() {
+  loadFileTree() {
     this.apiResource.getFiletree("repo1","").subscribe(
-      data => this.files.set(data)
-    )
-    this.http.get<string[]>('file-list.json')
-      .subscribe(data => this.files.set(data));
+      data => {
+        this.fileTree.set(data);
+        console.log(this.fileTree());
+      },
+      error => {
+        console.error('Error loading file tree:', error);
+      }
+    );
   }
 
-  setSelectedFile(file: string) {
+  setSelectedFile(file: any) {
+    console.log(file.repoId)
+    console.log(file.path)
+    console.log(file.data)
     this.selectedFile.set(file);
-    this.loadFileContent().subscribe(content => {
-      this._fileContent.set(content);
-      this.fileContentBeforeChanges = content;
-    }, error => {
-      console.error('Fehler beim Laden der Datei:', error);
-    });
+    this._fileContent.set(file.data);
+    this.fileContentBeforeChanges = file.data;
 
     this.router.navigate(['/main/view'])
-  }
-
-  loadFileContent() {
-    return this.http.get('assets/' + this.selectedFile(), {responseType: 'text'})
   }
 
   checkForFileChanges() {
@@ -64,5 +64,10 @@ export class FileService {
     } else {
       return
     }
+  }
+
+  addResource() {
+    console.log("Upload File")
+    this.apiResource.addResource("repo1","TestFile1","Niklas", "", "# TestFile1 im repo1")
   }
 }

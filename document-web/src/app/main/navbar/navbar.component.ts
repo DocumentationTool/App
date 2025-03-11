@@ -1,11 +1,10 @@
-import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Component, ElementRef, HostListener, OnInit, Resource, ViewChild} from '@angular/core';
 import {Router, RouterLink, RouterLinkActive} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
 import {FileService} from '../service/file.service';
-import {ApiResource} from '../../api/apiResource';
 import {DocumentContentResponseModel} from '../../Model/DocumentContentResponseModel';
-import {ApiUser} from '../../api/apiUser';
+import {Resources} from '../../Model/apiResponseFileTree';
 
 @Component({
   selector: 'app-navbar',
@@ -27,7 +26,7 @@ export class NavbarComponent implements OnInit{
   documents: DocumentContentResponseModel[] = [];
 
   ngOnInit() {
-    this.fileService.loadFiles();
+    this.fileService.loadFileTree();
   }
 
   onToggleSidebar() {
@@ -36,7 +35,7 @@ export class NavbarComponent implements OnInit{
 
   // Searchbar
   searchTerm: string = '';
-  filteredFiles: string[] = [];
+  filteredFiles: Resources[] = [];
   isSearchActive: boolean = false;
   @ViewChild('searchInput') searchInput!: ElementRef;
 
@@ -46,11 +45,21 @@ export class NavbarComponent implements OnInit{
       return;
     }
 
-    this.filteredFiles = this.fileService.files().filter(file =>
-      file.toLowerCase().includes(this.searchTerm.toLowerCase())
-    );
+    const fileTree = this.fileService.fileTree()?.content;
+    if (!fileTree) {
+      this.filteredFiles = [];
+      return;
+    }
+
+    this.filteredFiles = Object.entries(fileTree)
+      .flatMap(([repoName, group]) =>
+        group.resources.map(resource => ({ ...resource, repoName })) // Füge den Repo-Namen hinzu
+      )
+      .filter(resource => resource.path.toLowerCase().includes(this.searchTerm.toLowerCase()));
+
     this.isSearchActive = this.filteredFiles.length > 0;
   }
+
 
   onSearchFocus() {
     if (this.searchTerm.trim() !== '') {
