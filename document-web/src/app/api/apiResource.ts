@@ -25,7 +25,7 @@ export class ApiResource {
     return this.http.put(this.baseUrl + "/add", content, {params})
   }
 
-  removeResource(repo: string, path: string) {
+  removeResource(repo:string, path: string){
     const params = new HttpParams()
       .set('repo', repo)
       .set('path', path)
@@ -34,7 +34,7 @@ export class ApiResource {
   }
 
   moveResource() {
-    const params = ""
+    const params =""
     return this.http.post(this.baseUrl + "/move", {params})
 
   }
