@@ -45,15 +45,7 @@ public class SqliteDatabase<T extends DataSource> extends Database<T>{
 	
 	@Override
 	public void close() {
-		disconnect();
-	}
-	
-	public void disconnect() {
-		try{
-			dataSource.getConnection().close();
-		} catch(SQLException e){
-			throw new RuntimeException(e);
-		}
+
 	}
 	
 	public Connection getConnection() {
