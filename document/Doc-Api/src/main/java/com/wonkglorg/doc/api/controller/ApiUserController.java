@@ -2,6 +2,7 @@ package com.wonkglorg.doc.api.controller;
 
 import com.wonkglorg.doc.api.json.JsonUsers;
 import com.wonkglorg.doc.api.service.RepoService;
+import com.wonkglorg.doc.api.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.context.annotation.Lazy;
@@ -21,9 +22,11 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USE
 public class ApiUserController {
 
     private final RepoService repoService;
+    private final UserService userService;
 
-    public ApiUserController(@Lazy RepoService repoService) {
+    public ApiUserController(@Lazy RepoService repoService, UserService userService) {
         this.repoService = repoService;
+        this.userService = userService;
     }
 
     //@formatter:off
@@ -37,6 +40,7 @@ public class ApiUserController {
 			@RequestParam(value = "repoId",required = false) String repoId,
 			@Parameter(description = "The userId to search for, if none is given, returns all users in the repository.")
 			@RequestParam(value = "userId",required = false) String userId) {
+
 		return null;
 	}
 	@Operation(
