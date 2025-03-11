@@ -52,12 +52,7 @@ public class RepoService{
 	 * @throws NotaRepoException if the repository does not exist or null is passed
 	 */
 	public FileRepository getRepo(RepoId repoId) throws NotaRepoException {
-		if(repoId == null){
-			log.error("RepoId cannot be null");
-			throw new NotaRepoException("RepoId cannot be null");
-		}
-		
-		if(!repositories.containsKey(repoId)){
+		if(!isValidRepo(repoId)){
 			log.error("Repo '{}' does not exist", repoId);
 			throw new NotaRepoException("Repo '%s' does not exist".formatted(repoId));
 		}

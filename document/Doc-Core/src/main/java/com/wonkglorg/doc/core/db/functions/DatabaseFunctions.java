@@ -96,8 +96,7 @@ public class DatabaseFunctions{
 					    created_by TEXT,
 					    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 					    last_modified_by TEXT,
-					    category TEXT,
-					    commit_id TEXT
+					    category TEXT
 					)
 					""");
 			
@@ -168,6 +167,15 @@ public class DatabaseFunctions{
 					    data,
 					    tokenize='trigram'
 					)
+					""");
+
+			statement.execute("""
+					CREATE VIEW IF NOT EXISTS ResourceInfo AS
+					SELECT Resources.*, ResourceTags.tag_id IS NOT NULL AS hasTags
+					  FROM Resources
+					  LEFT JOIN ResourceTags
+					    ON Resources.resource_path = ResourceTags.resource_path
+					  GROUP BY Resources.resource_path;
 					""");
 			
 			//inserts default users
@@ -259,6 +267,8 @@ public class DatabaseFunctions{
 			return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
 		}
 	}
+	
+	
 	
 	//todo:jmd implement
 	public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {

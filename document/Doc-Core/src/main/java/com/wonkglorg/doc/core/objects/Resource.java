@@ -3,9 +3,12 @@ package com.wonkglorg.doc.core.objects;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Represents a resource in the database
@@ -13,13 +16,13 @@ import java.util.Objects;
 public final class Resource{
 	
 	public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-	private final Path resourcePath;
+	private Path resourcePath;
 	private final LocalDateTime createdAt;
 	private final String createdBy;
 	private final LocalDateTime modifiedAt;
 	private final String modifiedBy;
 	private final RepoId repoId;
-	private final List<Tag> resourceTags;
+	private final Map<TagId, Tag> resourceTags;
 	private final boolean isEditable;
 	private final String category;
 	private String data;
@@ -30,7 +33,7 @@ public final class Resource{
 					LocalDateTime modifiedAt,
 					String modifiedBy,
 					RepoId repoId,
-					List<Tag> resourceTags,
+					Map<TagId, Tag> resourceTags,
 					boolean isEditable,
 					String category,
 					String data) {
@@ -41,14 +44,27 @@ public final class Resource{
 		this.modifiedAt = modifiedAt;
 		this.modifiedBy = modifiedBy;
 		this.repoId = repoId;
-		this.resourceTags = resourceTags == null ? new ArrayList<>() : resourceTags;
+		this.resourceTags = new HashMap<>(resourceTags);
 		this.isEditable = isEditable;
 		this.category = category;
 		this.data = data;
 	}
 	
-	public Resource(Path resourcePath, String creator, RepoId repoId, String category, String data) {
-		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, List.of(), false, category, data);
+	public Resource(Path resourcePath, String creator, RepoId repoId, String category, HashMap<TagId, Tag> tags, String data) {
+		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, false, category, data);
+	}
+	
+	public Resource(Path resourcePath, String creator, RepoId repoId, String category, List<Tag> tags, String data) {
+		this(resourcePath,
+				LocalDateTime.now(),
+				creator,
+				LocalDateTime.now(),
+				creator,
+				repoId,
+				tags.stream().collect(Collectors.toMap(Tag::tagId, tag -> tag, (existing, replacement) -> existing, HashMap::new)),
+				false,
+				category,
+				data);
 	}
 	
 	public static LocalDateTime parseDateTime(String dateTime) {
@@ -91,7 +107,7 @@ public final class Resource{
 		return repoId;
 	}
 	
-	public List<Tag> resourceTags() {
+	public Map<TagId, Tag> getResourceTags() {
 		return resourceTags;
 	}
 	
@@ -105,6 +121,19 @@ public final class Resource{
 	
 	public String data() {
 		return data;
+	}
+	
+	public Resource copy() {
+		return new Resource(resourcePath,
+				createdAt,
+				createdBy,
+				modifiedAt,
+				modifiedBy,
+				repoId,
+				new HashMap<>(resourceTags),
+				isEditable,
+				category,
+				data);
 	}
 	
 	@Override
@@ -128,13 +157,38 @@ public final class Resource{
 			   Objects.equals(this.data, that.data);
 	}
 	
-	public void setData(String data) {
+	public Resource setData(String data) {
 		this.data = data;
+		return this;
 	}
 	
-	public void setTags(List<Tag> resourceTags) {
+	public Resource setTags(Map<TagId, Tag> resourceTags) {
 		this.resourceTags.clear();
-		this.resourceTags.addAll(resourceTags);
+		this.resourceTags.putAll(resourceTags);
+		return this;
+	}
+	
+	public Resource setResourcePath(Path resourcePath) {
+		this.resourcePath = resourcePath;
+		return this;
+	}
+	
+	public boolean hasAnyTag(Set<Tag> tags) {
+		for(Tag tag : tags){
+			if(resourceTags.containsKey(tag.tagId())){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean hasAnyTag(List<String> tagIds) {
+		for(String tag : tagIds){
+			if(resourceTags.containsKey(tag)){
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	@Override

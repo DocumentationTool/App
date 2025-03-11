@@ -5,6 +5,9 @@ dependencies {
     implementation 'com.zaxxer:HikariCP:5.1.0'
     implementation 'org.xerial:sqlite-jdbc:3.49.0.0'
     implementation 'com.google.code.gson:gson:2.12.1'
+    //user for ant path matcher
+    implementation 'org.springframework:spring-core:7.0.0-M2'
+
     //git
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'
     //other

@@ -6,7 +6,6 @@ import static com.wonkglorg.doc.core.git.GitRepo.GitStage.ADDED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.MODIFIED;
 import static com.wonkglorg.doc.core.git.GitRepo.GitStage.UNTRACKED;
 import com.wonkglorg.doc.core.git.UserBranch;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
@@ -22,6 +21,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +49,7 @@ public class FileRepository{
 	 */
 	private RepositoryDatabase dataDB;
 	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
-
+	
 	public FileRepository(RepoProperty repoProperty) {
 		this.repoProperties = repoProperty;
 	}
@@ -84,13 +84,14 @@ public class FileRepository{
 		checkFileChanges(foundFiles);
 		
 		log.info("Scheduling check for changes in '{}'", repoProperties.getId());
-		executorService.schedule(() -> {
+		executorService.scheduleAtFixedRate(() -> {
 			try{
+				log.info("Update task for repo '{}'", repoProperties.getId());
 				checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
 			} catch(GitAPIException e){
 				log.error("Error while checking for changes", e);
 			}
-		}, 10, TimeUnit.MINUTES);
+		}, 10, 10, TimeUnit.MINUTES);
 		
 	}
 	
@@ -102,13 +103,13 @@ public class FileRepository{
 		request.repoId = repoProperties.getId().id();
 		request.userId = null;
 		
-		QueryDatabaseResponse<List<Resource>> resourceRequest = dataDB.getResources(request);
+		QueryDatabaseResponse<Collection<Resource>> resourceRequest = dataDB.getResources(request);
 		if(resourceRequest.isError()){
 			log.error("Error while checking for changes: {}", resourceRequest.getErrorMessage());
 			return;
 		}
 		
-		List<Resource> resources = resourceRequest.get();
+		Collection<Resource> resources = resourceRequest.get();
 		Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
 		List<Path> newResources = foundFiles.stream().filter(f -> resources.stream().noneMatch(r -> r.resourcePath().equals(f))).toList();
 		List<Path> deletedResources = resources.stream()
@@ -119,7 +120,6 @@ public class FileRepository{
 		
 		//pull any changes from the remote
 		gitRepo.pull();
-		
 		
 		int existingFilesChanged = updateMatchingResources(matchingResources, resourceMap);
 		addNewFiles(newResources);
@@ -141,7 +141,6 @@ public class FileRepository{
 				existingFilesChanged));
 		gitRepo.push();
 	}
-	
 	
 	/**
 	 * Adds a file to the database
@@ -192,9 +191,14 @@ public class FileRepository{
 			String content = readData(gitRepo, file);
 			if(lastCommitDetailsForFile == null){
 				log.error("File '{}' was not added by git", file);
-				newResource = new Resource(file, "system", repoProperties.getId(), null, content);
+				newResource = new Resource(file, "system", repoProperties.getId(), null, new HashMap<>(), content);
 			} else {
-				newResource = new Resource(file, lastCommitDetailsForFile.getAuthorIdent().getName(), repoProperties.getId(), null, content);
+				newResource = new Resource(file,
+						lastCommitDetailsForFile.getAuthorIdent().getName(),
+						repoProperties.getId(),
+						null,
+						new HashMap<>(),
+						content);
 			}
 			resources.add(newResource);
 			gitRepo.add(file);
@@ -236,7 +240,7 @@ public class FileRepository{
 					commitTime,
 					authorName,
 					repoProperties.getId(),
-					existingResource.resourceTags(),
+					existingResource.getResourceTags(),
 					repoProperties.isReadOnly(),
 					existingResource.category(),
 					readData(gitRepo, file));

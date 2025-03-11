@@ -1,15 +1,18 @@
 package com.wonkglorg.doc.api.service;
 
+import com.wonkglorg.doc.api.exception.InvalidTagException;
 import com.wonkglorg.doc.api.exception.NotaRepoException;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.objects.Tag;
+import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Component
@@ -24,10 +29,14 @@ import java.util.List;
 public class ResourceService{
 	
 	private final RepoService repoService;
+	private final CacheManager cacheManager;
 	
-	public ResourceService(@Lazy RepoService repoService) {
+	public ResourceService(@Lazy RepoService repoService, CacheManager cacheManager) {
 		this.repoService = repoService;
+		this.cacheManager = cacheManager;
 	}
+	
+	//DO NOT CACHE THIS METHOD, could contain a lot of data duo to the withData flag, it is already very optimized with internal resource caching in the getResources method
 	
 	/**
 	 * Gets a repository by its id
@@ -36,46 +45,37 @@ public class ResourceService{
 	 * @return the repository
 	 * @throws Exception if the repository does not exist or null is passed
 	 */
-	@Cacheable("resources")
-	public List<Resource> getResources(ResourceRequest request) throws Exception {
-		String repoId = request.repoId;
-		QueryDatabaseResponse<List<Resource>> resources = null;
-		
-		if(request.path == null){
-			QueryDatabaseResponse<List<Resource>> tempResource;
-			
-			for(var repos : repoService.getRepositories().values()){
-				tempResource = repos.getDatabase().getResources(request);
-				if(resources == null){
-					resources = tempResource;
+	public QueryDatabaseResponse<Collection<Resource>> getResources(ResourceRequest request) {
+		if(request.repoId == null){ //gets resources from all repos
+			QueryDatabaseResponse<Collection<Resource>> allResources = null;
+			for(var repo : repoService.getRepositories().values()){
+				//todo:jmd make em async later to improve performance
+				QueryDatabaseResponse<Collection<Resource>> tempResponse = repo.getDatabase().getResources(request);
+				if(tempResponse.isError()){
+					return tempResponse;
+				}
+				if(allResources == null){
+					allResources = tempResponse;
 				} else {
-					if(tempResource.isError()){
-						resources.setError(tempResource.getException());
-					}
-					resources.get().addAll(tempResource.get());
+					allResources.get().addAll(tempResponse.get());
 				}
 			}
-		} else {
-			RepoId id = new RepoId(repoId);
-			if(!repoService.isValidRepo(id)){
-				throw new NotaRepoException("Repo '%s' does not exist".formatted(repoId));
-			}
-			
-			resources = repoService.getRepo(id).getDatabase().getResources(request);
+			return allResources;
 		}
 		
-		if(resources == null){
-			return List.of();
+		RepoId id = new RepoId(request.repoId);
+		if(!repoService.isValidRepo(id)){
+			return QueryDatabaseResponse.fail(null, new NotaRepoException("Repo '%s' does not exist".formatted(request.repoId)));
+		}
+		FileRepository repo;
+		try{
+			repo = repoService.getRepo(id);
+		} catch(NotaRepoException e){
+			return QueryDatabaseResponse.fail(null, e);
 		}
 		
-		if(resources.isError()){
-			throw resources.getException();
-		}
-		
-		return resources.get();
+		return repo.getDatabase().getResources(request);
 	}
-	
-	//todo:jmd properly evict all caches when a resource gets added!
 	
 	/**
 	 * Checks if a resource exists
@@ -84,13 +84,40 @@ public class ResourceService{
 	 * @param path the path
 	 * @return true if the resource exists
 	 */
-	@Cacheable("resourceExists")
 	public boolean resourceExists(RepoId repoId, Path path) {
 		try{
 			return repoService.getRepo(repoId).getDatabase().resourceExists(path).get();
 		} catch(NotaRepoException e){
 			return false;
 		}
+	}
+	
+	/**
+	 * Checks if a tag exists
+	 *
+	 * @param repoId the repo id
+	 * @param tagId the tag id
+	 * @return true if the tag exists
+	 */
+	public boolean tagExists(RepoId repoId, TagId tagId) {
+		try{
+			return repoService.getRepo(repoId).getDatabase().tagExists(tagId);
+		} catch(NotaRepoException e){
+			return false;
+		}
+	}
+	
+	public List<Tag> getTags(RepoId repoId, List<TagId> ids) throws InvalidTagException, NotaRepoException {
+		List<Tag> tags = new ArrayList<>();
+		FileRepository repo = repoService.getRepo(repoId);
+		for(TagId id : ids){
+			Tag tag = repo.getDatabase().getTagCache().get(id);
+			if(tag == null){
+				throw new InvalidTagException("Tag '%s' does not exist".formatted(id));
+			}
+			tags.add(tag);
+		}
+		return tags;
 	}
 	
 	/**
@@ -126,7 +153,6 @@ public class ResourceService{
 			if(updateDatabaseResponse.isSuccess() && Files.exists(repo.getRepoProperties().getPath().resolve(path))){
 				Files.delete((repo.getRepoProperties().getPath().resolve(path)));
 			}
-			
 			return updateDatabaseResponse;
 		} catch(NotaRepoException | IOException e){
 			return UpdateDatabaseResponse.fail(null, e);
@@ -166,7 +192,7 @@ public class ResourceService{
 			
 			fileRepoFrom.removeResourceAndCommit(id, pathFrom);
 			
-			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().get(0);
+			Resource resource = fileRepoFrom.getDatabase().getResources(request).get().stream().findFirst().orElseThrow();
 			fileRepoTo.getDatabase().insertResource(resource);
 			fileRepoTo.addResourceAndCommit(resource);
 			return UpdateDatabaseResponse.success(repoTo, 1);
@@ -176,6 +202,12 @@ public class ResourceService{
 		}
 	}
 	
+	/**
+	 * Updates a resource in the database
+	 *
+	 * @param request the request
+	 * @return the response
+	 */
 	public QueryDatabaseResponse<Resource> updateResource(ResourceUpdateRequest request) {
 		try{
 			FileRepository repo = repoService.getRepo(new RepoId(request.repoId));
