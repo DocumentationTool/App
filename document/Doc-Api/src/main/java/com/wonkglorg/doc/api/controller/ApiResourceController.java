@@ -6,7 +6,8 @@ import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.db.DbHelper;
-import com.wonkglorg.doc.core.exception.ResourceNotExistException;
+import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.ResourceException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -77,7 +78,11 @@ public class ApiResourceController {
             }
             return RestResponse.success(jsonResources).toResponse();
 
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Map<String, List<JsonResource>>>error(e.getMessage()).toResponse();
         } catch (Exception e) {
+            log.error("Error while retrieving resources", e);
             return RestResponse.<Map<String, List<JsonResource>>>error(e.getMessage()).toResponse();
         }
     }
@@ -135,8 +140,11 @@ public class ApiResourceController {
 
             return RestResponse.success(fileTrees).toResponse();
 
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Map<String, JsonFileTree>>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while generating Filetree", e);
+            log.error("Error while retrieving filetree", e);
             return RestResponse.<Map<String, JsonFileTree>>error(e.getMessage()).toResponse();
         }
     }
@@ -171,8 +179,11 @@ public class ApiResourceController {
             }
             Resource resource = new Resource(resourcePath, createdBy, id, category, tags, content);
             return RestResponse.of(resourceService.insertResource(resource)).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while adding File", e);
+            log.error("Failed while trying to insert Resource", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
@@ -188,7 +199,7 @@ public class ApiResourceController {
             DbHelper.validateFileType(path);
             FileRepository repo = repoService.getRepo(id);
             if (!resourceService.resourceExists(id, path)) {
-                throw new ResourceNotExistException("Resource '%s' does not exist in repository '%s'".formatted(path, id));
+                throw new ResourceException(id, "Resource '%s' does not exist in repository '%s'".formatted(path, id));
             }
             repo.checkTags(request.tagsToSet);
             repo.checkTags(request.tagsToAdd);
@@ -201,15 +212,18 @@ public class ApiResourceController {
             } else {
                 return RestResponse.<Void>error(response.getException().getMessage()).toResponse();
             }
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while updating File", e);
+            log.error("Failed to update resource", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 
     @Operation(summary = "Removes a resource", description = "Removes a resource from the Repository.")
     @PostMapping("/remove")
-    public ResponseEntity<RestResponse<Void>> removeResource(@RequestParam("repo") String repo, @RequestParam("path") String path) {
+    public ResponseEntity<RestResponse<Void>> removeResource(@RequestParam("repoId") String repo, @RequestParam("path") String path) {
         try {
             RepoId id = repoService.validateRepoId(repo);
             Path pPath = Path.of(path);
@@ -217,12 +231,15 @@ public class ApiResourceController {
             DbHelper.validateFileType(pPath);
 
             if (!resourceService.resourceExists(id, pPath)) {
-                throw new ResourceNotExistException("Resource '%s' does not exist in repository '%s'".formatted(pPath, id));
+                throw new ResourceException(id, "Resource '%s' does not exist in repository '%s'".formatted(pPath, id));
             }
 
             return RestResponse.of(resourceService.removeResource(id, pPath)).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while removing File", e);
+            log.error("Error while removing resources", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
@@ -230,7 +247,70 @@ public class ApiResourceController {
     @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
     @PostMapping("/move")
     public ResponseEntity<RestResponse<Void>> moveResource(UserId userId, RepoId repoFrom, Path from, RepoId repoTo, Path to) {
+        try {
+
+        } catch (CoreException e) {
+
+        } catch (Exception e) {
+
+        }
+
         return RestResponse.of(resourceService.move(userId, repoFrom, from, repoTo, to)).toResponse();
     }
+
+    @Operation(summary = "Adds a new Tag", description = "Adds a new Tag to the repository.")
+    @PutMapping("tag/add")
+    public ResponseEntity<RestResponse<Void>> addTag(
+            @Parameter(description = "The repoId to add the tag in.")
+            @RequestParam("repoId") String id,
+            @Parameter(description = "the id of the tag to be added.")
+            @RequestParam("tagId") String tagId,
+            @Parameter(description = "the name to display for the tag id.")
+            @RequestParam("tagName") String tagName) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            if (resourceService.tagExists(repoId, new TagId(tagId))) {
+                throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
+            }
+
+            Tag tag = new Tag(new TagId(tagId), tagName);
+            return null;
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while adding resource", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
+    @PostMapping("/tag/remove")
+    public ResponseEntity<RestResponse<Void>> removeTag(UserId userId, RepoId repoFrom, Path from, RepoId repoTo, Path to) {
+        try {
+
+        } catch (CoreException e) {
+
+        } catch (Exception e) {
+
+        }
+
+        return RestResponse.of(resourceService.move(userId, repoFrom, from, repoTo, to)).toResponse();
+    }
+
+    @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
+    @PostMapping("/tag/get")
+    public ResponseEntity<RestResponse<Void>> getTag(UserId userId, RepoId repoFrom, Path from, RepoId repoTo, Path to) {
+        try {
+
+        } catch (CoreException e) {
+
+        } catch (Exception e) {
+
+        }
+
+        return RestResponse.of(resourceService.move(userId, repoFrom, from, repoTo, to)).toResponse();
+    }
+
 
 }
