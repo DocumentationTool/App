@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,7 +30,8 @@ public class UserFunctions {
      * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) {
-        try (var statement = database.getConnection().prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")) {
             statement.setString(1, userId.toString());
             statement.setString(2, password);
             statement.setString(3, createdBy);
@@ -39,6 +41,8 @@ public class UserFunctions {
             String errorResponse = "Failed to add user";
             log.error(errorResponse, e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
@@ -51,7 +55,8 @@ public class UserFunctions {
      * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
-        try (var statement = database.getConnection().prepareStatement("INSERT INTO UserGroups(user_id, group_id) VALUES(?,?)")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("INSERT INTO UserGroups(user_id, group_id) VALUES(?,?)")) {
             statement.setString(1, userId.id());
             statement.setString(2, groupId.id());
             return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -59,11 +64,14 @@ public class UserFunctions {
             String errorResponse = "Failed to add user '%s' to group '%s'".formatted(userId, groupId);
             log.error(errorResponse, e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
     public static UpdateDatabaseResponse removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
-        try (var statement = database.getConnection().prepareStatement("DELETE FROM UserGroups WHERE user_id = ? and group_id = ?")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("DELETE FROM UserGroups WHERE user_id = ? and group_id = ?")) {
             statement.setString(1, userId.id());
             statement.setString(2, groupId.id());
             return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
@@ -71,6 +79,8 @@ public class UserFunctions {
             String errorReponse = "Error in repository '%s' while removing user '%s' from group '%s'".formatted(database.getRepoProperties().getId(), userId, groupId);
             log.error(errorReponse, e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorReponse, e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
@@ -82,7 +92,8 @@ public class UserFunctions {
      * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<List<UserId>> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) {
-        try (var statement = database.getConnection().prepareStatement("SELECT user_id FROM UserGroups WHERE group_id = ?")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("SELECT user_id FROM UserGroups WHERE group_id = ?")) {
             statement.setString(1, groupId.toString());
             try (var rs = statement.executeQuery()) {
                 List<UserId> users = new ArrayList<>();
@@ -94,12 +105,14 @@ public class UserFunctions {
         } catch (Exception e) {
             log.error("Failed to get users from group", e);
             throw new RuntimeSQLException("Failed to get users from group", e);
-
+        } finally {
+            closeConnection(connection);
         }
     }
 
     public static QueryDatabaseResponse<List<GroupId>> getGroupsFromUser(RepositoryDatabase database, UserId userId) {
-        try (var statement = database.getConnection().prepareStatement("SELECT group_id FROM UserGroups WHERE user_id = ?")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("SELECT group_id FROM UserGroups WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
                 List<GroupId> groups = new ArrayList<>();
@@ -112,11 +125,14 @@ public class UserFunctions {
             String errorResponse = "Failed to get groups from user";
             log.error(errorResponse, e);
             return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get groups from user", e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
     public static void getAllUserGroups(RepositoryDatabase database, Map<UserId, List<GroupId>> userGroups, Map<GroupId, List<UserId>> userIds) {
-        try (var statement = database.getConnection().prepareStatement("SELECT * FROM UserGroups")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("SELECT * FROM UserGroups")) {
             try (var rs = statement.executeQuery()) {
                 while (rs.next()) {
                     UserId userId = new UserId(rs.getString("user_id"));
@@ -127,12 +143,15 @@ public class UserFunctions {
             }
         } catch (Exception e) {
             log.error("Failed to get all user groups", e);
+        } finally {
+            closeConnection(connection);
         }
     }
 
 
     public static QueryDatabaseResponse<List<Group>> getAllGroups(RepositoryDatabase database) {
-        try (var statement = database.getConnection().prepareStatement("SELECT * FROM Groups")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("SELECT * FROM Groups")) {
             try (var rs = statement.executeQuery()) {
                 List<Group> groups = new ArrayList<>();
                 while (rs.next()) {
@@ -155,6 +174,8 @@ public class UserFunctions {
             String errorResponse = "Failed to get all groups";
             log.error(errorResponse, e);
             return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
@@ -196,7 +217,8 @@ public class UserFunctions {
      * @return {@link QueryDatabaseResponse}
      */
     public static QueryDatabaseResponse<UserProfile> getUser(RepositoryDatabase database, UserId userId) {
-        try (var statement = database.getConnection().prepareStatement("SELECT * FROM Users WHERE user_id = ?")) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("SELECT * FROM Users WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
                 if (rs.next()) {
@@ -221,7 +243,17 @@ public class UserFunctions {
             String errorResponse = "Failed to get user";
             log.error(errorResponse, e);
             return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
         }
+
     }
 
+    private static void closeConnection(Connection connection) {
+        try {
+            connection.close();
+        } catch (SQLException e) {
+            log.error("Error while closing connection", e);
+        }
+    }
 }

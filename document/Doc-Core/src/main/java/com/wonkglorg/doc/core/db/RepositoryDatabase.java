@@ -21,10 +21,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -183,7 +180,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     public QueryDatabaseResponse<Collection<Resource>> getResources(ResourceRequest request) {
         log.info("Retrieving resources for repo {}", repoProperties.getId());
 
-        Map<Path, Resource> resources = resourceCache; //start with the full cache
+        Map<Path, Resource> resources = new HashMap<>(resourceCache); //start with the full cache
 
         if (request.searchTerm != null || request.withData) {
             QueryDatabaseResponse<Map<Path, String>> byContent = ResourceFunctions.findByContent(this, request);
@@ -215,7 +212,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         // Handle user-specific filtering
-        Collection<Resource> resourcesToReturn = resources.values();
+        Collection<Resource> resourcesToReturn = new ArrayList<>(resources.values());
         if (request.userId == null) {
             return QueryDatabaseResponse.success(this.getRepoId(), resourcesToReturn);
         }
