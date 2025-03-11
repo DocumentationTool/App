@@ -22,15 +22,15 @@ public class ResourceUpdateRequest{
 	/**
 	 * The tags to add to the resource
 	 */
-	public List<Tag> tagsToAdd;
+	public List<String> tagsToAdd;
 	/**
 	 * The tags to remove from the resource
 	 */
-	public List<Tag> tagsToRemove;
+	public List<String> tagsToRemove;
 	/**
 	 * The tags to set on the resource removes any previous tags
 	 */
-	public List<Tag> tagsToSet;
+	public List<String> tagsToSet;
 	
 	/**
 	 * The category to set on the resource
