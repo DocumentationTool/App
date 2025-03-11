@@ -156,7 +156,7 @@ public class ResourceFunctions {
 		
 		 */
 
-        if(request.searchTerm == null && request.withData){
+        if (request.searchTerm == null) {
             sqlScript = """
                     SELECT FileData.resource_path,
                            CASE
@@ -167,32 +167,32 @@ public class ResourceFunctions {
                      WHERE FileData.resource_path LIKE ?
                      LIMIT ?;
                     """;
-        }
-
-
-        if (request.searchTerm.length() > 3) {
-            sqlScript = """
-                    SELECT FileData.resource_path,
-                           CASE
-                               WHEN ? IS NOT NULL THEN data
-                               END AS fileContent
-                      FROM FileData
-                     WHERE data MATCH ?
-                       AND FileData.resource_path LIKE ?
-                     LIMIT ?;
-                    """;
         } else {
-            sqlScript = """
-                    SELECT FileData.resource_path,
-                           CASE
-                               WHEN ? IS NOT NULL THEN data
-                               END AS fileContent
-                      FROM FileData
-                     WHERE data LIKE '%' || ? || '%'
-                       AND FileData.resource_path LIKE ?
-                     LIMIT ?;
-                    """;
+            if (request.searchTerm.length() > 3) {
+                sqlScript = """
+                        SELECT FileData.resource_path,
+                               CASE
+                                   WHEN ? IS NOT NULL THEN data
+                                   END AS fileContent
+                          FROM FileData
+                         WHERE data MATCH ?
+                           AND FileData.resource_path LIKE ?
+                         LIMIT ?;
+                        """;
+            } else {
+                sqlScript = """
+                        SELECT FileData.resource_path,
+                               CASE
+                                   WHEN ? IS NOT NULL THEN data
+                                   END AS fileContent
+                          FROM FileData
+                         WHERE data LIKE '%' || ? || '%'
+                           AND FileData.resource_path LIKE ?
+                         LIMIT ?;
+                        """;
+            }
         }
+
 
         try (PreparedStatement statement = database.getConnection().prepareStatement(sqlScript)) {
             Map<Path, String> resources = new HashMap<>();
