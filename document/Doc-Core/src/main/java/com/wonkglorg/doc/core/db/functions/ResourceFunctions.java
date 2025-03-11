@@ -39,7 +39,8 @@ public class ResourceFunctions {
      * @return {@link UpdateDatabaseResponse}
      */
     public static UpdateDatabaseResponse deleteResource(RepositoryDatabase database, Path resourcePath) {
-        try (PreparedStatement statement = database.getConnection().prepareStatement("DELETE FROM FileData WHERE resource_path = ?")) {
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
             int i = statement.executeUpdate();
             if (i == 0) {
@@ -49,6 +50,8 @@ public class ResourceFunctions {
         } catch (Exception e) {
             log.error("Failed to delete resource", e);
             return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to delete resource", e));
+        } finally {
+            closeConnection(connection);
         }
     }
 
@@ -106,15 +109,19 @@ public class ResourceFunctions {
 
     public static QueryDatabaseResponse<List<Tag>> getAllTags(RepositoryDatabase database) {
         List<Tag> tags = new ArrayList<>();
-        try (PreparedStatement statement = database.getConnection().prepareStatement("SELECT * FROM Tags")) {
+        Connection connection = database.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM Tags")) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 tags.add(new Tag(new TagId(resultSet.getString("tag_id")), resultSet.getString("tag_name")));
             }
+            return QueryDatabaseResponse.success(database.getRepoId(), tags);
         } catch (Exception e) {
             return QueryDatabaseResponse.fail(database.getRepoId(), e);
+        } finally {
+            closeConnection(connection);
         }
-        return QueryDatabaseResponse.success(database.getRepoId(), tags);
+
     }
 
     private static Resource resourceFromResultSet(ResultSet resultSet, Map<TagId, Tag> tags, String data, RepositoryDatabase database)
