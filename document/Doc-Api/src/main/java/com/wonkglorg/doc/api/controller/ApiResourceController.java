@@ -2,6 +2,7 @@ package com.wonkglorg.doc.api.controller;
 
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
+import com.wonkglorg.doc.api.json.JsonResourceEdit;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
 import com.wonkglorg.doc.core.FileRepository;
@@ -160,7 +161,7 @@ public class ApiResourceController {
                                                              @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category,
                                                              @RequestParam(value = "tagIds", required = false) List<String> tagIds,
                                                              @RequestBody String content) {
-        
+
         try {
             RepoId id = repoService.validateRepoId(repoId);
             Path resourcePath = Path.of(path);
@@ -354,9 +355,9 @@ public class ApiResourceController {
         }
     }
 
-    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
-    @PutMapping("/editing/get")
-    public ResponseEntity<RestResponse<Boolean>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+    @Operation(summary = "Checks if a resource is being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @GetMapping("/editing/get")
+    public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
         try {
             RepoId repoId = repoService.validateRepoId(id);
             Path pPath = Path.of(path);
@@ -364,19 +365,24 @@ public class ApiResourceController {
                 throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
             }
 
-            return RestResponse.success(resourceService.isBeingEdited(repoId, pPath)).toResponse();
+            JsonResourceEdit response = new JsonResourceEdit();
+            UserId editingUser = resourceService.getEditingUser(repoId, pPath);
+            response.editingUser = editingUser != null ? editingUser.id() : null;
+            response.isBeingEdited = editingUser != null;
+            response.file = path;
+            return RestResponse.success(response).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
-            return RestResponse.<Boolean>error(e.getMessage()).toResponse();
+            return RestResponse.<JsonResourceEdit>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while checking edited state ", e);
-            return RestResponse.<Boolean>error(e.getMessage()).toResponse();
+            return RestResponse.<JsonResourceEdit>error(e.getMessage()).toResponse();
         }
     }
 
-    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
-    @PutMapping("/editing/remove")
-    public void removeEditedState(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+    @Operation(summary = "Removes a file as being edited", description = "Frees up a resource from its editing lock allowing anyone to take and edit it again.")
+    @PostMapping("/editing/remove")
+    public ResponseEntity<RestResponse<Void>> removeEditedState(@RequestParam("repoId") String id, @RequestParam("path") String path) {
         try {
             RepoId repoId = repoService.validateRepoId(id);
             Path pPath = Path.of(path);
@@ -385,8 +391,13 @@ public class ApiResourceController {
             }
 
             resourceService.removeCurrentlyEdited(repoId, pPath);
+            return RestResponse.<Void>success("Removed '%s' as being edited".formatted(pPath), null).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while removing edited state ", e);
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 }

@@ -478,10 +478,10 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * Check if a file is currently being edited
      *
      * @param path the path to check
-     * @return true if it is being edited, false otherwise
+     * @return the user editing the file or null if no one is editing it
      */
-    public boolean isBeingEdited(Path path) {
-        return currentlyEdited.containsValue(path);
+    public UserId isBeingEdited(Path path) {
+        return currentlyEdited.entrySet().stream().filter(p -> p.getValue().equals(path)).map(Map.Entry::getKey).findFirst().orElse(null);
     }
 
     /**
