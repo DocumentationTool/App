@@ -24,12 +24,12 @@ export class SidebarComponent implements OnInit{
 
 
   constructor(public navigationService: NavigationService,
-              public fileService: ResourceService,
+              public resourceService: ResourceService,
               private router: Router) {
   }
 
   ngOnInit(): void {
-    this.fileService.loadFileTree()
+    this.resourceService.loadFileTree()
   }
 
 
@@ -46,17 +46,12 @@ export class SidebarComponent implements OnInit{
     return this.openRepos.has(repoKey);
   }
 
-  selectFile(file: any): void {
-    this.fileService.setSelectedFile(file)
-    this.router.navigate(['/main/view']);
-  }
-
   getAssetUrl(file: string): string {
     return file;
   }
 
   upload() {
-    this.fileService.addResource();
+    this.resourceService.addResource();
   }
 
 }

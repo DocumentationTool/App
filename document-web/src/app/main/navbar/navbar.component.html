@@ -4,14 +4,14 @@
   </div>
 
   <div class="box">
-    <a (click)="this.navigationService.onEditor()" routerLink="/main/editor" routerLinkActive="active" class="editor"
-       [routerLinkActiveOptions]="{ exact: true }">
+    <a (click)="this.navigationService.onEditor()" routerLink="/main/editor"
+       [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
       Editor
     </a>
 
-    @if (this.navigationService.isEditorActive() || this.navigationService.isPreviewActive()) {
-      <a (click)="this.navigationService.onPreview()"  routerLinkActive="active" class="preview"
-         [routerLinkActiveOptions]="{ exact: true }">
+    @if (this.navigationService.isEditorActive()) {
+      <a (click)="this.navigationService.onPreview()"
+         [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
         Preview
       </a>
     }
@@ -28,7 +28,7 @@
   @if (isSearchActive && filteredFiles.length > 0) {
     <div class="search-results">
       @for (file of filteredFiles; track file) {
-        <div class="search-box" (click)="this.fileService.setSelectedFile(file)">
+        <div class="search-box" (click)="this.fileService.onSelectResource(file)">
           <span class="file-path">{{ file.path }}</span>
           <span class="repo-id">{{ file.repoId }}</span>
         </div>
@@ -50,5 +50,3 @@
     }
   </div>
 </nav>
-
-

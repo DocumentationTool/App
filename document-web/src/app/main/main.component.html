@@ -2,10 +2,10 @@
 <div style="padding-top: 40px">
   <app-sidebar></app-sidebar>
   <div [ngClass]="{
-  'editor-sidebar': this.navigationService.isEditorOrPreviewActive() && this.navigationService.toggle(),
-  'editor': this.navigationService.isEditorOrPreviewActive() && !this.navigationService.toggle(),
-  'main-sidebar': !this.navigationService.isEditorOrPreviewActive() && this.navigationService.toggle(),
-  'main': !this.navigationService.isEditorOrPreviewActive() && !this.navigationService.toggle()
+  'editor-sidebar': this.navigationService.isEditorActive() && this.navigationService.toggle(),
+  'editor': this.navigationService.isEditorActive() && !this.navigationService.toggle(),
+  'main-sidebar': !this.navigationService.isEditorActive() && this.navigationService.toggle(),
+  'main': !this.navigationService.isEditorActive() && !this.navigationService.toggle()
 }">
     <router-outlet></router-outlet>
   </div>

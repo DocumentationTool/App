@@ -54,17 +54,4 @@ export class NavigationService{
       matrixParams: 'ignored',
     });
   }
-
-  isPreviewActive(): boolean {
-    return this.router.isActive('/main/preview', {
-      paths: 'exact',
-      queryParams: 'ignored',
-      fragment: 'ignored',
-      matrixParams: 'ignored',
-    })
-  }
-
-  isEditorOrPreviewActive(){
-    return this.isEditorActive() || this.isPreviewActive()
-  }
 }

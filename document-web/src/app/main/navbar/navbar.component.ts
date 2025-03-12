@@ -1,17 +1,18 @@
-import {Component, ElementRef, HostListener, OnInit, Resource, ViewChild} from '@angular/core';
-import {Router, RouterLink, RouterLinkActive} from '@angular/router';
+import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
+import {Router, RouterLink} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
 import {ResourceService} from '../service/resource.service';
 import {DocumentContentResponseModel} from '../../Model/DocumentContentResponseModel';
 import {Resources} from '../../Model/apiResponseFileTree';
+import {NgClass} from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   imports: [
-    RouterLinkActive,
     RouterLink,
     FormsModule,
+    NgClass,
   ],
   templateUrl: './navbar.component.html',
   standalone: true,
@@ -19,11 +20,8 @@ import {Resources} from '../../Model/apiResponseFileTree';
 })
 export class NavbarComponent implements OnInit{
   constructor(public navigationService: NavigationService,
-              private router: Router,
               public fileService: ResourceService) {
   }
-
-  documents: DocumentContentResponseModel[] = [];
 
   ngOnInit() {
     this.fileService.loadFileTree();

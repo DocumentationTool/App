@@ -4,18 +4,18 @@
       <ul>
 
         <ul>
-          <li *ngFor="let repo of fileService.fileTree()?.content | keyvalue">
+          <li *ngFor="let repo of resourceService.fileTree()?.content | keyvalue">
             <a [href]="getAssetUrl(repo.key)"
                (click)="toggleRepo(repo.key); $event.preventDefault()"
-               [ngClass]="{'active': fileService.selectedFile()?.path === repo.key}">
+               [ngClass]="{'active': resourceService.selectedFile()?.path === repo.key}">
               {{ repo.key }}
             </a>
 
             <ul *ngIf="isRepoOpen(repo.key)">
               <li *ngFor="let resource of repo.value.resources">
                 <a [href]="getAssetUrl(resource.path)"
-                   (click)="selectFile(resource); $event.preventDefault()"
-                   [ngClass]="{'active': fileService.selectedFile()?.path === resource.path && resource.repoId === fileService.selectedFile()?.repoId}">
+                   (click)="resourceService.onSelectResource(resource); $event.preventDefault()"
+                   [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
                   {{ resource.path }}
                 </a>
               </li>

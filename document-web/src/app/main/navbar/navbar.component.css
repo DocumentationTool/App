@@ -38,8 +38,10 @@
   cursor: pointer;
 }
 
-.editor.active, .preview.active {
+.editor.active, .selected {
   color: var(--textColor);
+  text-decoration: none;
+  padding: 5px 10px;
 }
 
 .ri-save-line {

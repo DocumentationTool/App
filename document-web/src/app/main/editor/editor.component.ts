@@ -5,8 +5,6 @@ import {LMarkdownEditorModule, UploadResult} from 'ngx-markdown-editor';
 import {FormsModule} from '@angular/forms';
 import {NavigationService} from '../service/navigation.service';
 import {EmptyPageComponent} from '../empty-page/empty-page.component';
-import {CanComponentDeactivate} from '../../Auth/confirmDeactivateGuard';
-
 @Component({
   selector: 'app-editor',
   imports: [
@@ -18,7 +16,7 @@ import {CanComponentDeactivate} from '../../Auth/confirmDeactivateGuard';
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.css'
 })
-export class EditorComponent implements CanComponentDeactivate {
+export class EditorComponent {
   constructor(public resourceService: ResourceService,
               public navigationService: NavigationService) {
     this.doUpload = this.doUpload.bind(this);
@@ -64,11 +62,14 @@ export class EditorComponent implements CanComponentDeactivate {
   }
 
   canDeactivate(): boolean {
-    const confirmed = window.confirm('Save changes?');
-    if (confirmed) {
-      this.resourceService.updateResource();
+    if (this.resourceService.checkForFileChanges()) {
+      const confirmed = window.confirm('Save changes?');
+      if (confirmed) {
+        this.resourceService.updateResource();
+      }
+      return confirmed;
     }
-    return confirmed;
+    return true;
   }
 
   @HostListener('window:beforeunload', ['$event'])

@@ -12,7 +12,7 @@ export class ApiResource {
 
   private baseUrl = 'http://localhost:8080/api/resource';
 
-  updateResource(repoId: string, path: string, userId: string | null, tagsToAdd: string[], tagsToRemove: string[],
+  updateResource(repoId: string | undefined, path: string | undefined, userId: string | null, tagsToAdd: string[], tagsToRemove: string[],
                  tagsToSet: string[], category: string | null, data: string, treatNullsAsValues: boolean) {
     const payload = {
       "repoId": repoId,
