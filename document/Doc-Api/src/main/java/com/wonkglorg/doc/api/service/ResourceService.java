@@ -221,8 +221,20 @@ public class ResourceService {
      * @param path the path to check
      * @return true if it is being edited, false otherwise
      */
-    public boolean isBeingEdited(RepoId id, Path path) {
+    public UserId getEditingUser(RepoId id, Path path) {
         return repoService.getRepo(id).getDatabase().isBeingEdited(path);
+    }
+
+
+    /**
+     * Check if a file is currently being edited
+     *
+     * @param id   the repo id
+     * @param path the path to check
+     * @return true if it is being edited, false otherwise
+     */
+    public boolean isBeingEdited(RepoId id,Path path) {
+        return getEditingUser(id,path) != null;
     }
 
     /**
