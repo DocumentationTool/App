@@ -256,4 +256,19 @@ public class UserFunctions {
             log.error("Error while closing connection", e);
         }
     }
+
+
+    public static UpdateDatabaseResponse deleteUser(RepositoryDatabase database, UserId userId) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("DELETE FROM Users WHERE user_id = ?")) {
+            statement.setString(1, userId.id());
+            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
+        } catch (Exception e) {
+            String errorResponse = "Failed to delete user '%s'".formatted(userId);
+            log.error(errorResponse, e);
+            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
+        }
+    }
 }

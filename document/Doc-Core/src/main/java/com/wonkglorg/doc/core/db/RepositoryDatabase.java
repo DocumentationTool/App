@@ -455,9 +455,19 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return userGroups.get(userId);
     }
 
-    public UserProfile getUser(UserId userId) {
+    public List<UserProfile> getUsers(UserId userId) {
         log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
-        return userProfiles.get(userId);
+        if (userId == null) {
+            return new ArrayList<>(userProfiles.values());
+        }
+
+        return List.of(userProfiles.get(userId));
+    }
+
+    public void removeUser(UserId userId) {
+        log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
+        UserFunctions.remove(this, userId);
+        userProfiles.remove(userId);
     }
 
     public RepoId getRepoId() {

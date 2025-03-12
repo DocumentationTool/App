@@ -283,6 +283,35 @@ public class DatabaseFunctions {
         }
     }
 
+    /**
+     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
+     *
+     * @return {@link ScriptDatabaseResponse}
+     */
+    public static ScriptDatabaseResponse initializeUserDeleteTrigger(RepositoryDatabase database) {
+        String sqlScript = """
+                CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                AFTER DELETE ON Users
+                FOR EACH ROW
+                BEGIN
+                   -- Delete related permissions
+                    DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                    DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                END;
+                """;
+        Connection connection = database.getConnection();
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sqlScript);
+            return ScriptDatabaseResponse.success(database.getRepoId());
+        } catch (Exception e) {
+            String errorResponse = "Error while setting up resource remove trigger";
+            log.error(errorResponse, e);
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
+        }
+    }
+
 
     //todo:jmd implement
     public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {

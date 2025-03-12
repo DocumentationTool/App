@@ -8,6 +8,8 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Component
 @Service
 public class UserService {
@@ -20,8 +22,9 @@ public class UserService {
 
     /**
      * Creates a new user in the database
-     * @param repoId the id of the repository
-     * @param userId the username of the user
+     *
+     * @param repoId   the id of the repository
+     * @param userId   the username of the user
      * @param password the password of the user
      * @return the response
      */
@@ -31,27 +34,30 @@ public class UserService {
 
     /**
      * Gets a user by their id
+     *
      * @param repoId the id of the repository
      * @param userId the id of the user
      * @return the user
      */
-    public UserProfile getUser(RepoId repoId, UserId userId) {
-        return repoService.getRepo(repoId).getDatabase().getUser(userId);
+    public List<UserProfile> getUsers(RepoId repoId, UserId userId) {
+        return repoService.getRepo(repoId).getDatabase().getUsers(userId);
     }
 
     /**
      * Deletes a user from the database
+     *
      * @param repoId the id of the repository
      * @param userId the userId of the user to delete
      * @return the response
      */
     public UpdateDatabaseResponse deleteUser(RepoId repoId, UserId userId) {
-        return null;
+        return repoService.getRepo(repoId).getDatabase().removeUser(userId);
     }
 
 
     public boolean userExists(RepoId repoId, UserId userId) {
-        return repoService.getRepo(repoId).getDatabase().getUser(userId) != null;
+        List<UserProfile> users = repoService.getRepo(repoId).getDatabase().getUsers(userId);
+        return users != null || !users.isEmpty();
     }
 
 }

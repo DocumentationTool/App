@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.json.JsonUsers;
+import com.wonkglorg.doc.api.json.JsonUser;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.exception.CoreException;
@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
@@ -31,7 +32,7 @@ public class ApiUserController {
     private final RepoService repoService;
     private final UserService userService;
 
-    public ApiUserController(@Lazy RepoService repoService, UserService userService) {
+    public ApiUserController(@Lazy RepoService repoService, @Lazy UserService userService) {
         this.repoService = repoService;
         this.userService = userService;
     }
@@ -41,7 +42,7 @@ public class ApiUserController {
             description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository."
     )
     @GetMapping("/get")
-    public ResponseEntity<RestResponse<Map<String, JsonUsers>>> getUser(
+    public ResponseEntity<RestResponse<List<JsonUser>>> getUsers(
             @Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
             @RequestParam(value = "repoId") String repoId,
             @Parameter(description = "The userId to search for, if none is given, returns all users in the repository.")
@@ -49,14 +50,13 @@ public class ApiUserController {
         try {
             RepoId repo = repoService.validateRepoId(repoId);
             UserId user = repoService.validateUserId(repo, userId);
-            //todo:jmd add returning user infos
-            throw new CoreException(repo, "Not implemented yet");
+            return RestResponse.success("", userService.getUsers(repo,user));
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
-            return RestResponse.<Map<String, JsonUsers>>error(e.getMessage()).toResponse();
+            return RestResponse.<Map<String, JsonUser>>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while checking edited state ", e);
-            return RestResponse.<Map<String, JsonUsers>>error(e.getMessage()).toResponse();
+            return RestResponse.<Map<String, JsonUser>>error(e.getMessage()).toResponse();
         }
     }
 
