@@ -4,6 +4,7 @@ import com.wonkglorg.doc.api.properties.RepoProperties;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.exception.NotaRepoException;
+import com.wonkglorg.doc.core.exception.NotaUserException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -75,6 +76,12 @@ public class RepoService {
         return repositories.containsKey(repoId);
     }
 
+    /**
+     * Validates if a user exists
+     * @param repoId the repo id
+     * @return the user id
+     * @throws NotaRepoException if the repo does not exist
+     */
     public RepoId validateRepoId(String repoId) throws NotaRepoException {
         if (repoId == null) {
             return null;
@@ -86,7 +93,20 @@ public class RepoService {
         }
 
         return id;
+    }
 
+
+    public UserId validateUserId(RepoId repoId, String user) throws NotaRepoException, NotaUserException {
+        if (user == null) {
+            return null;
+        }
+
+        UserId userId = new UserId(user);
+        if (!getRepo(repoId).getDatabase().userExists(userId)) {
+            throw new NotaUserException(repoId, "User '%s' does not exist".formatted(userId));
+        }
+
+        return userId;
     }
 
     @PostConstruct

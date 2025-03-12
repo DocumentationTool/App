@@ -235,6 +235,10 @@ public class ApiResourceController {
                 throw new ResourceException(id, "Resource '%s' does not exist in repository '%s'".formatted(pPath, id));
             }
 
+            if (resourceService.isBeingEdited(id, pPath)) {
+                throw new CoreException(id, "Resource '%s' is currently being edited".formatted(pPath));
+            }
+
             return RestResponse.of(resourceService.removeResource(id, pPath)).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
@@ -325,5 +329,64 @@ public class ApiResourceController {
         }
     }
 
+    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @PutMapping("/editing/set")
+    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String id, @RequestParam("path") String path, @RequestParam("userId") String userId) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+            UserId uId = repoService.validateUserId(repoId, userId);
 
+            if (resourceService.isBeingEdited(repoId, pPath)) {
+                throw new CoreException(repoId, "Resource '%s' is already being edited".formatted(pPath));
+            }
+            resourceService.setCurrentlyEdited(repoId, uId, pPath);
+            return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(pPath, uId), null).toResponse();
+        } catch (
+                CoreException e) { //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while setting edited ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @PutMapping("/editing/get")
+    public ResponseEntity<RestResponse<Boolean>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+
+            return RestResponse.success(resourceService.isBeingEdited(repoId, pPath)).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Boolean>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Boolean>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @PutMapping("/editing/remove")
+    public void removeEditedState(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+
+            resourceService.removeCurrentlyEdited(repoId, pPath);
+        } catch (Exception e) {
+            log.error("Error while removing edited state ", e);
+        }
+    }
 }
