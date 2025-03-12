@@ -470,7 +470,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
 
     public void removeUser(UserId userId) {
         log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
-        UserFunctions.remove(this, userId);
+        //UserFunctions.(this, userId);
         userProfiles.remove(userId);
     }
 
