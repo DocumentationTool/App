@@ -6,6 +6,7 @@ import {EditorComponent} from './main/editor/editor.component';
 import {PreviewComponent} from './main/preview/preview.component';
 import {ViewComponent} from './main/view/view.component';
 import {EmptyPageComponent} from './main/empty-page/empty-page.component';
+import {ConfirmDeactivateGuard} from './Auth/confirmDeactivateGuard';
 
 export const routes: Routes = [
   {
@@ -31,6 +32,7 @@ export const routes: Routes = [
       {
         path: 'editor',
         component: EditorComponent,
+        canDeactivate: [ConfirmDeactivateGuard]
       },
       {
         path: 'preview',

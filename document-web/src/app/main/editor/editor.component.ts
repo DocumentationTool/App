@@ -1,10 +1,11 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component, HostListener, OnDestroy} from '@angular/core';
 import {ResourceService} from '../service/resource.service';
 import {MarkdownModule} from 'ngx-markdown';
 import {LMarkdownEditorModule, UploadResult} from 'ngx-markdown-editor';
 import {FormsModule} from '@angular/forms';
 import {NavigationService} from '../service/navigation.service';
 import {EmptyPageComponent} from '../empty-page/empty-page.component';
+import {CanComponentDeactivate} from '../../Auth/confirmDeactivateGuard';
 
 @Component({
   selector: 'app-editor',
@@ -17,8 +18,8 @@ import {EmptyPageComponent} from '../empty-page/empty-page.component';
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.css'
 })
-export class EditorComponent implements OnDestroy {
-  constructor(public fileService: ResourceService,
+export class EditorComponent implements CanComponentDeactivate {
+  constructor(public resourceService: ResourceService,
               public navigationService: NavigationService) {
     this.doUpload = this.doUpload.bind(this);
   }
@@ -43,7 +44,7 @@ export class EditorComponent implements OnDestroy {
     const file = evt.target.files[0];
     const reader = new FileReader();
     reader.addEventListener("load", () => {
-      this.fileService.fileContent.set(this.fileService.fileContent() + `![](${reader.result})`);
+      this.resourceService.fileContent.set(this.resourceService.fileContent() + `![](${reader.result})`);
     }, false);
 
     if (file) reader.readAsDataURL(file);
@@ -62,9 +63,18 @@ export class EditorComponent implements OnDestroy {
     return content.replace(/something/g, 'new value'); // must return a string
   }
 
-  ngOnDestroy() {
-    //Check File change
-    this.fileService.checkForFileChanges();
+  canDeactivate(): boolean {
+    const confirmed = window.confirm('Save changes?');
+    if (confirmed) {
+      this.resourceService.updateResource();
+    }
+    return confirmed;
   }
 
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any): void {
+    if (this.resourceService.checkForFileChanges()) {
+      $event.returnValue = true;
+    }
+  }
 }

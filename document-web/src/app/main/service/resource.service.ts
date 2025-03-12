@@ -1,18 +1,16 @@
-import {Injectable, Resource, signal, WritableSignal} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {Injectable, signal, WritableSignal} from '@angular/core';
 import {Router} from '@angular/router';
 import {ApiResource} from '../../api/apiResource';
 import {ApiResponseFileTree, Resources} from '../../Model/apiResponseFileTree';
-import {dateTimestampProvider} from 'rxjs/internal/scheduler/dateTimestampProvider';
 
 @Injectable({
   providedIn: 'root'
 })
 
 export class ResourceService {
-  constructor(private http: HttpClient,
-              private router: Router,
-              private apiResource: ApiResource) {
+  constructor(
+    private router: Router,
+    private apiResource: ApiResource) {
   }
 
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
@@ -21,19 +19,35 @@ export class ResourceService {
   fileContentBeforeChanges = "";
 
 
-  setSelectedFile(file: any) {
-    this.selectedFile.set(file);
-    this._fileContent.set(file.data);
-    this.fileContentBeforeChanges = file.data;
-    console.log(this._fileContent())
+  setSelectedFile(file: any) { //Bei file Auswahl, den Inhalt holen
+    this.apiResource.getResource(null, file.path, file.repoId, null, [], [], true, 1).subscribe(
+      data => {
+        // Greife auf die Ressourcen des entsprechenden Repos zu
+        const resources: Resources[] | undefined = data.content[file.repoId];
+        if (resources && resources.length > 0) {
+          // Optional: Finde den Resource-Eintrag anhand des Pfads, falls es mehrere Einträge gibt
+          const resource = resources.find(r => r.path === file.path);
+          if (resource) {
+            this.selectedFile.set(resource);
+            this._fileContent.set(resource.data);
+            this.fileContentBeforeChanges = resource.data;
+            this.router.navigate(['/main/view'])
 
-    this.router.navigate(['/main/view'])
+          } else {
+            console.error("Kein Resource-Eintrag gefunden für den Pfad:", file.path);
+          }
+        } else {
+          console.error("Keine Ressourcen gefunden für repoId:", file.repoId);
+        }
+      },
+      error => {
+        console.error(error);
+      }
+    );
   }
 
   checkForFileChanges() {
-    if (this._fileContent() != this.fileContentBeforeChanges) {
-      this.updateResource();
-    }
+    return this._fileContent() != this.fileContentBeforeChanges;
   }
 
   get fileContent(): WritableSignal<string> {
@@ -45,25 +59,20 @@ export class ResourceService {
   }
 
   updateResource() {
-    if (window.confirm("Save changes?")) {
-      this.apiResource.updateResource("repo1", "testFile.md", null, [], [], [], null, "# Updated", false).subscribe(
-        data => {
-          console.log(data)
-          this.loadFileTree();
-          this.fileContentBeforeChanges = this._fileContent();
-        },
-        error => {
-          console.error(error);
-        }
-      )
-    } else {
-      //ToDo: Wenn auf abbrechen beim speichern
-      return;
-    }
+    this.apiResource.updateResource("repo1", "testFile.md", null, [], [], [], null, "# Updated", false).subscribe(
+      data => {
+        console.log(data)
+        this.loadFileTree();
+        this.fileContentBeforeChanges = this._fileContent();
+      },
+      error => {
+        console.error(error);
+      }
+    )
   }
 
   addTag() {
-    this.apiResource.addTag("repo1","1","school").subscribe(
+    this.apiResource.addTag("repo1", "1", "school").subscribe(
       data => {
         this.loadFileTree();
       },
@@ -74,7 +83,7 @@ export class ResourceService {
   }
 
   addResource() {
-    this.apiResource.addResource("repo2","TestFile1.md","Niklas.F", "", "# TestFile1 im repo2").subscribe(
+    this.apiResource.addResource("repo2", "TestFile1.md", "Niklas.F", "", "# TestFile1 im repo2").subscribe(
       data => {
         this.loadFileTree();
       },
@@ -96,7 +105,7 @@ export class ResourceService {
 
   }
 
-  moveResource(){
+  moveResource() {
 
   }
 
@@ -105,7 +114,7 @@ export class ResourceService {
   }
 
   loadFileTree() {
-    this.apiResource.loadFileTree(null, null, null, null, [], [], true, 1073741824).subscribe(
+    this.apiResource.loadFileTree(null, null, null, null, [], [], false, 1073741824).subscribe(
       data => {
         this.fileTree.set(data);
         console.log(this.fileTree());

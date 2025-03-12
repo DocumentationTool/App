@@ -13,7 +13,7 @@ import {ResourceService} from '../service/resource.service';
   styleUrl: './view.component.css'
 })
 export class ViewComponent {
-  constructor(public fileService: ResourceService) {
+  constructor(public resourceService: ResourceService) {
 
   }
 }

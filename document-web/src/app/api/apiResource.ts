@@ -1,6 +1,7 @@
 import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
-import {ApiResponseFileTree} from '../Model/apiResponseFileTree';
+import {ApiResponseFileTree, Resources} from '../Model/apiResponseFileTree';
+import {ApiResponseResource} from '../Model/apiResponseResource';
 
 @Injectable({
   providedIn: 'root'
@@ -82,9 +83,19 @@ export class ApiResource {
 
   }
 
-  getResource(repo: string, user: string) {
-    const payload = {repo, user};
-    return this.http.get(this.baseUrl + "/get");
+  getResource(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
+              whiteListTags: string[], blacklistListTags: string[], withData: boolean, returnLimit: number) {
+    const payload = {
+      "searchTerm": searchTerm,
+      "path": path,
+      "repoId": repoId,
+      "userId": userId,
+      "whiteListTags": whiteListTags,
+      "blacklistListTags": blacklistListTags,
+      "withData": withData,
+      "returnLimit": returnLimit
+    }
+    return this.http.post<ApiResponseResource>(this.baseUrl + "/get", payload);
   }
 
   loadFileTree(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,

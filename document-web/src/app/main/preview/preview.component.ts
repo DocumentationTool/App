@@ -13,7 +13,7 @@ import {ResourceService} from '../service/resource.service';
   styleUrl: './preview.component.css'
 })
 export class PreviewComponent {
-  constructor(public fileService: ResourceService) {
+  constructor(public resourceService: ResourceService) {
 
   }
 }

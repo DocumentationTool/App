@@ -15,7 +15,7 @@
               <li *ngFor="let resource of repo.value.resources">
                 <a [href]="getAssetUrl(resource.path)"
                    (click)="selectFile(resource); $event.preventDefault()"
-                   [ngClass]="{'active': fileService.selectedFile()?.path === resource.path}">
+                   [ngClass]="{'active': fileService.selectedFile()?.path === resource.path && resource.repoId === fileService.selectedFile()?.repoId}">
                   {{ resource.path }}
                 </a>
               </li>
@@ -23,11 +23,11 @@
           </li>
         </ul>
 
-          <div class="upload">
-            <i class="ri-file-upload-line ms-md-2" (click)="upload()"></i>
-          </div>
+        <div class="upload">
+          <i class="ri-file-upload-line ms-md-2" (click)="upload()"></i>
+        </div>
 
-        @if (this.navigationService.isAdmin()){
+        @if (this.navigationService.isAdmin()) {
           <div class="nav-admin">
             <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
                [routerLinkActiveOptions]="{ exact: true }">

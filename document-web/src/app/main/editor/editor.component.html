@@ -1,7 +1,7 @@
-@if (this.fileService.selectedFile()) {
+@if (this.resourceService.selectedFile()) {
   <md-editor name="Content"
              [upload]="doUpload"
-             [(ngModel)]="fileService.fileContent"
+             [(ngModel)]="resourceService.fileContent"
              [height]="'637px'"
              [mode]="this.navigationService.mode()"
              [preRender]="preRenderFunc"
