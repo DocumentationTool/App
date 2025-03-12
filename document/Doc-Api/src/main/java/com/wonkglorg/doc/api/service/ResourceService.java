@@ -213,4 +213,66 @@ public class ResourceService {
         }
     }
 
+
+    /**
+     * Check if a file is currently being edited
+     *
+     * @param id   the repo id
+     * @param path the path to check
+     * @return true if it is being edited, false otherwise
+     */
+    public UserId getEditingUser(RepoId id, Path path) {
+        return repoService.getRepo(id).getDatabase().isBeingEdited(path);
+    }
+
+
+    /**
+     * Check if a file is currently being edited
+     *
+     * @param id   the repo id
+     * @param path the path to check
+     * @return true if it is being edited, false otherwise
+     */
+    public boolean isBeingEdited(RepoId id,Path path) {
+        return getEditingUser(id,path) != null;
+    }
+
+    /**
+     * Check if a user is currently editing a file
+     *
+     * @param userId the user to check
+     * @return true if they are editing, false otherwise
+     */
+    public boolean isUserEditing(RepoId id, UserId userId) {
+        return repoService.getRepo(id).getDatabase().isUserEditing(userId);
+    }
+
+    /**
+     * Sets a user as editing a file locking it for others to edit at the same time
+     *
+     * @param userId the user editing
+     * @param path   the path to the file
+     * @return true if the file is now being edited, false otherwise
+     */
+    public void setCurrentlyEdited(RepoId id, UserId userId, Path path) {
+        repoService.getRepo(id).getDatabase().setCurrentlyEdited(userId, path);
+    }
+
+    /**
+     * Removes a user from editing a file
+     *
+     * @param userId the user to remove
+     */
+    public void removeCurrentlyEdited(RepoId id,UserId userId) {
+        repoService.getRepo(id).getDatabase().removeCurrentlyEdited(userId);
+    }
+
+    /**
+     * Removes a file from being edited
+     *
+     * @param path the path to the file
+     */
+    public void removeCurrentlyEdited(RepoId id,Path path) {
+        repoService.getRepo(id).getDatabase().removeCurrentlyEdited(path);
+    }
 }

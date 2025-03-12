@@ -2,6 +2,7 @@ package com.wonkglorg.doc.api.controller;
 
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
+import com.wonkglorg.doc.api.json.JsonResourceEdit;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
 import com.wonkglorg.doc.core.FileRepository;
@@ -160,6 +161,7 @@ public class ApiResourceController {
                                                              @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category,
                                                              @RequestParam(value = "tagIds", required = false) List<String> tagIds,
                                                              @RequestBody String content) {
+
         try {
             RepoId id = repoService.validateRepoId(repoId);
             Path resourcePath = Path.of(path);
@@ -234,6 +236,10 @@ public class ApiResourceController {
                 throw new ResourceException(id, "Resource '%s' does not exist in repository '%s'".formatted(pPath, id));
             }
 
+            if (resourceService.isBeingEdited(id, pPath)) {
+                throw new CoreException(id, "Resource '%s' is currently being edited".formatted(pPath));
+            }
+
             return RestResponse.of(resourceService.removeResource(id, pPath)).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
@@ -287,7 +293,7 @@ public class ApiResourceController {
     @Operation(summary = "Removes a Tag", description = "The tag to remove from the destination.")
     @PostMapping("/tag/remove")
     public ResponseEntity<RestResponse<Void>> removeTag(
-            @Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam("repoId") String id,
+            @Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String id,
             @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
         try {
             RepoId repoId = repoService.validateRepoId(id);
@@ -314,7 +320,6 @@ public class ApiResourceController {
             if (resourceService.tagExists(repoId, new TagId(tagId))) {
                 throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
             }
-
             return RestResponse.of(repoService.getRepo(repoId).getDatabase().getTags(new TagId(tagId))).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
@@ -325,5 +330,74 @@ public class ApiResourceController {
         }
     }
 
+    @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @PutMapping("/editing/set")
+    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String id, @RequestParam("path") String path, @RequestParam("userId") String userId) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+            UserId uId = repoService.validateUserId(repoId, userId);
 
+            if (resourceService.isBeingEdited(repoId, pPath)) {
+                throw new CoreException(repoId, "Resource '%s' is already being edited".formatted(pPath));
+            }
+            resourceService.setCurrentlyEdited(repoId, uId, pPath);
+            return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(pPath, uId), null).toResponse();
+        } catch (
+                CoreException e) { //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while setting edited ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Checks if a resource is being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @GetMapping("/editing/get")
+    public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+
+            JsonResourceEdit response = new JsonResourceEdit();
+            UserId editingUser = resourceService.getEditingUser(repoId, pPath);
+            response.editingUser = editingUser != null ? editingUser.id() : null;
+            response.isBeingEdited = editingUser != null;
+            response.file = path;
+            return RestResponse.success(response).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<JsonResourceEdit>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<JsonResourceEdit>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Removes a file as being edited", description = "Frees up a resource from its editing lock allowing anyone to take and edit it again.")
+    @PostMapping("/editing/remove")
+    public ResponseEntity<RestResponse<Void>> removeEditedState(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+        try {
+            RepoId repoId = repoService.validateRepoId(id);
+            Path pPath = Path.of(path);
+            if (!resourceService.resourceExists(repoId, pPath)) {
+                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
+            }
+
+            resourceService.removeCurrentlyEdited(repoId, pPath);
+            return RestResponse.<Void>success("Removed '%s' as being edited".formatted(pPath), null).toResponse();
+        } catch (
+                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        }
+    }
 }

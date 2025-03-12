@@ -64,6 +64,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      */
     private final Map<TagId, Tag> tagCache = new HashMap<>();
 
+    /**
+     * Keeps track of currently edited files todo add a way to every now and then confirm if its still edited
+     */
+    private final Map<UserId, Path> currentlyEdited = new HashMap<>();
+
     public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
         super(getDataSource(openInPath));
         this.repoProperties = repoProperties;
@@ -342,6 +347,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
 
     /**
      * Gets all tags from the database
+     *
      * @param tagId the tag to get
      * @return the tags
      */
@@ -350,7 +356,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         if (!tagExists(tagId)) {
             return QueryDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
         }
-        return QueryDatabaseResponse.success(this.getRepoId(), tagCache.values().stream().filter(tag -> tag.tagId().equals(tagId) || tagId==null).collect(Collectors.toList()));
+        return QueryDatabaseResponse.success(this.getRepoId(), tagCache.values().stream().filter(tag -> tag.tagId().equals(tagId) || tagId == null).collect(Collectors.toList()));
     }
 
 
@@ -467,4 +473,52 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     public Map<TagId, Tag> getTagCache() {
         return tagCache;
     }
+
+    /**
+     * Check if a file is currently being edited
+     *
+     * @param path the path to check
+     * @return the user editing the file or null if no one is editing it
+     */
+    public UserId isBeingEdited(Path path) {
+        return currentlyEdited.entrySet().stream().filter(p -> p.getValue().equals(path)).map(Map.Entry::getKey).findFirst().orElse(null);
+    }
+
+    /**
+     * Check if a user is currently editing a file
+     *
+     * @param userId the user to check
+     * @return true if they are editing, false otherwise
+     */
+    public boolean isUserEditing(UserId userId) {
+        return currentlyEdited.containsKey(userId);
+    }
+
+    /**
+     * Sets a user as editing a file locking it for others to edit at the same time
+     *
+     * @param userId the user editing
+     * @param path   the path to the file
+     * @return true if the file is now being edited, false otherwise
+     */
+    public void setCurrentlyEdited(UserId userId, Path path) {
+        currentlyEdited.put(userId, path);
+    }
+
+    /**
+     * Removes a user from editing a file
+     * @param userId the user to remove
+     */
+    public void removeCurrentlyEdited(UserId userId) {
+        currentlyEdited.remove(userId);
+    }
+
+    /**
+     * Removes a file from being edited
+     * @param path the path to the file
+     */
+    public void removeCurrentlyEdited(Path path) {
+        currentlyEdited.entrySet().removeIf(entry -> entry.getValue().equals(path));
+    }
+
 }
