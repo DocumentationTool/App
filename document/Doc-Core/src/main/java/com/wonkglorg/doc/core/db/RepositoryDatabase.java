@@ -434,19 +434,17 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return updateDatabaseResponse;
     }
 
-    public UpdateDatabaseResponse addUser(UserId userId, String password, String createdBy) {
+    public UpdateDatabaseResponse addUser(UserId userId, String password) {
         log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
-        QueryDatabaseResponse<UserProfile> response = UserFunctions.getUser(this, userId);
-
-        if (response.isError()) {
-            return UpdateDatabaseResponse.fail(this.getRepoId(), response.getException());
-        }
-
-        if (response.get() != null) {
-            log.info("Unable to add new user {}, already exists in repo '{}'", userId, repoProperties.getId());
+        if (userExists(userId)) {
             return UpdateDatabaseResponse.fail(this.getRepoId(), new UserAlreadyExistsException("The user already exists", userId));
         }
-        return UserFunctions.addUser(this, userId, password, createdBy);
+        UpdateDatabaseResponse updateDatabaseResponse = UserFunctions.addUser(this, userId, password, null);
+
+        if (updateDatabaseResponse.isSuccess()) {
+            userProfiles.put(userId, new UserProfile(userId, password, new HashSet<>(), new HashSet<>()));
+        }
+        return updateDatabaseResponse;
     }
 
     public List<UserId> getUsersFromGroup(GroupId groupId) {
@@ -457,9 +455,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return userGroups.get(userId);
     }
 
-    public QueryDatabaseResponse<UserProfile> getUser(UserId userId) {
+    public UserProfile getUser(UserId userId) {
         log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
-        return UserFunctions.getUser(this, userId);
+        return userProfiles.get(userId);
     }
 
     public RepoId getRepoId() {
@@ -507,6 +505,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
 
     /**
      * Removes a user from editing a file
+     *
      * @param userId the user to remove
      */
     public void removeCurrentlyEdited(UserId userId) {
@@ -515,6 +514,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
 
     /**
      * Removes a file from being edited
+     *
      * @param path the path to the file
      */
     public void removeCurrentlyEdited(Path path) {
