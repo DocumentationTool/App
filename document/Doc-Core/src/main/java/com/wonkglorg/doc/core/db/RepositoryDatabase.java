@@ -101,6 +101,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             log.info("Creating triggers");
             DatabaseFunctions.initializeResourceUpdateTrigger(this);
             DatabaseFunctions.initializeResourceDeleteTrigger(this);
+            DatabaseFunctions.initializeUserDeleteTrigger(this);
         } catch (RuntimeException e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
@@ -109,6 +110,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     }
 
 
+
+    //todo:jmd properly reinitialize the caches
     /**
      * Initializes the caches for the database
      */
@@ -341,6 +344,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
         }
         tagCache.remove(id);
+        //todo:jmd how to properly update the cache for resources? reget it entirely?
         return ResourceFunctions.removeTag(this, id);
     }
 

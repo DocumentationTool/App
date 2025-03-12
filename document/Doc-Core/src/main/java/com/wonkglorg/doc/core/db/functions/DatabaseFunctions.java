@@ -297,6 +297,7 @@ public class DatabaseFunctions {
                    -- Delete related permissions
                     DELETE FROM UserGroups WHERE user_id = OLD.user_id;
                     DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                    DELETE FROM UserRoles WHERE user_id = OLD.user_id;
                 END;
                 """;
         Connection connection = database.getConnection();
