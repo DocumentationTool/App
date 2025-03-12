@@ -355,7 +355,7 @@ public class ApiResourceController {
         }
     }
 
-    @Operation(summary = "Checks if a resource is being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
+    @Operation(summary = "Checks if a resource is being edited", description = "Returns information about a files editing status.")
     @GetMapping("/editing/get")
     public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
         try {
