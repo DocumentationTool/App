@@ -273,6 +273,7 @@ public class ApiResourceController {
             @RequestParam("tagId") String tagId,
             @Parameter(description = "the name to display for the tag id.")
             @RequestParam("tagName") String tagName) {
+        
         try {
             RepoId repoId = repoService.validateRepoId(id);
             if (resourceService.tagExists(repoId, new TagId(tagId))) {

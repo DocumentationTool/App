@@ -50,7 +50,7 @@ public class ApiUserController {
         try {
             RepoId repo = repoService.validateRepoId(repoId);
             UserId user = repoService.validateUserId(repo, userId);
-            return RestResponse.success("", userService.getUsers(repo,user));
+            return RestResponse.success("", userService.getUsers(repo,user).stream().map()).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
             return RestResponse.<Map<String, JsonUser>>error(e.getMessage()).toResponse();
