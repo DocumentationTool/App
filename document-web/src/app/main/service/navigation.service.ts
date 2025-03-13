@@ -4,6 +4,8 @@ import {ApiAuth} from '../../api/apiAuth';
 import {ApiResource} from '../../api/apiResource';
 import {ResourceService} from './resource.service';
 import {ApiResponseModelResourceBeingEdited} from '../../Model/apiResponseModelResourceBeingEdited';
+import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
+import {MatDialog} from '@angular/material/dialog';
 
 @Injectable({
   providedIn: 'root'
@@ -13,12 +15,15 @@ export class NavigationService {
   constructor(private router: Router,
               private apiAuth: ApiAuth,
               private apiResource: ApiResource,
-              private resourceService: ResourceService) {
+              private resourceService: ResourceService,
+              private dialog: MatDialog) {
   }
 
   toggle = signal<boolean>(true);
   isAdmin = signal<boolean>(false);
   mode = signal<string>("editor");
+  editTags = signal<boolean>(false);
+  moveResource = signal<boolean>(false);
 
   logAdminIn() {
     this.isAdmin.set(true);
@@ -79,6 +84,10 @@ export class NavigationService {
 
   onPreview() {
     this.mode.set("preview")
+  }
+
+  uploadResource() {
+    this.dialog.open(ResourceUploadComponent);
   }
 
   isEditorActive(): boolean {

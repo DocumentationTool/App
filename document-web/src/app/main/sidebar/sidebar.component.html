@@ -3,7 +3,7 @@
     <nav class="nav flex-column">
       <ul>
 
-        <ul>
+        <ul> <!--For loop für alles Repos im FileTree-->
           <li *ngFor="let repo of resourceService.fileTree()?.content | keyvalue">
             <a [href]="getAssetUrl(repo.key)"
                (click)="toggleRepo(repo.key); $event.preventDefault()"
@@ -11,9 +11,13 @@
               {{ repo.key }}
             </a>
 
-            <ul *ngIf="isRepoOpen(repo.key)">
-              <li *ngFor="let resource of repo.value.resources" (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId" (mouseleave)="hoveredResource = null">
-                <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button" (click)="openMenu($event, resource)">
+            <ul *ngIf="isRepoOpen(repo.key)"> <!--wenn Repo geöffnet, for loop für alle resourcen im Tree-->
+              <li *ngFor="let resource of repo.value.resources"
+                  (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
+                  (mouseleave)="hoveredResource = null">
+                <!--bearbeitungs button am ende des resourcen namen-->
+                <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button"
+                        (click)="openMenu($event, resource)">
                   &#x22EE;
                 </button>
                 <a [href]="getAssetUrl(resource.path)"
@@ -27,8 +31,9 @@
                      [style.top.px]="menuPosition.y"
                      [style.left.px]="menuPosition.x">
                   <ul>
-                    <li (click)="editResource(resource)">Edit Resource</li>
-                    <li (click)="deleteResource(resource)">Delete Resource</li>
+                    <li (click)="editTags(resource)">Edit tags</li>
+                    <li (click)="moveResource(resource)">Move resource</li>
+                    <li (click)="deleteResource(resource)">Delete resource</li>
                   </ul>
                 </div>
 
@@ -39,7 +44,7 @@
 
         <div class="upload">
           <input #fileInput type="file" accept=".md" style="display: none" (change)="onUpload($event)"/>
-          <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
+          <i class="ri-file-upload-line ms-md-2" (click)="navigationService.uploadResource()"></i>
         </div>
 
         @if (this.navigationService.isAdmin()) {
@@ -55,3 +60,9 @@
   </div>
 }
 
+@if (navigationService.editTags()) {
+
+}
+@if (navigationService.moveResource()){
+
+}

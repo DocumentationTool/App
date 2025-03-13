@@ -95,6 +95,7 @@ export class ResourceService {
   addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
     this.apiResource.addResource(repoId, path, createdBy, category, tagIds, data).subscribe(
       data => {
+        console.log("data",data)
         this.loadFileTree();
       },
       error => {
@@ -114,8 +115,8 @@ export class ResourceService {
   removeResource(repoId: string, path: string) {
     this.apiResource.removeResource(repoId,path).subscribe(
       data => {
-        console.log("data", data);
         //ToDo: erfolgsnachricht
+        this.loadFileTree();
       },
       error => {
         console.error(error)

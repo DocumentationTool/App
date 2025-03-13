@@ -5,6 +5,7 @@ import {ResourceService} from '../service/resource.service';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {ContentGroup, Resources} from '../../Model/apiResponseFileTree';
 import { CdkDragDrop, CdkDropList, moveItemInArray, transferArrayItem} from '@angular/cdk/drag-drop';
+import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
 
 @Component({
   selector: 'app-sidebar',
@@ -16,6 +17,7 @@ import { CdkDragDrop, CdkDropList, moveItemInArray, transferArrayItem} from '@an
     NgForOf,
     KeyValuePipe,
     NgIf,
+    ResourceUploadComponent,
 
   ],
   templateUrl: './sidebar.component.html',
@@ -126,7 +128,7 @@ export class SidebarComponent {
   }
 
 // Beispielaktionen für Menüoptionen
-  editResource(resource: Resources) {
+  editTags(resource: Resources) {
     console.log("Bearbeiten:", resource);
   }
 
@@ -136,6 +138,14 @@ export class SidebarComponent {
       this.resourceService.loadFileTree();
     }
   }
+
+  moveResource(resource: Resources) {
+
+  }
+
+
+
+
 
   onDrop(event: CdkDragDrop<any>, targetRepoKey: string, sourceRepo:string) {
     const draggedItem = event; // Das gezogene File

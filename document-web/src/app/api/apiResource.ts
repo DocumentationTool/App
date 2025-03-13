@@ -62,7 +62,7 @@ export class ApiResource {
         params = params.append('tagIds', tag); // Fügt jedes Tag als separaten Parameter hinzu
       });
     }
-    return this.http.put(this.baseUrl + "/add", data, {params: params});
+    return this.http.put(this.baseUrl + "/add", data, {params});
   }
 
   removeTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
@@ -91,9 +91,12 @@ export class ApiResource {
     return this.http.post(this.baseUrl + "/remove", params)
   }
 
-  moveResource() {
-    const params = ""
-    return this.http.post(this.baseUrl + "/move", {params})
+  moveResource(userId: string, repoFrom: string, repoTo: string) {
+    const params = new HttpParams()
+      .set('userId', userId)
+      .set('repoFrom', repoFrom)
+      .set('repoTo', repoTo)
+    return this.http.post(this.baseUrl + "/move", params)
 
   }
 

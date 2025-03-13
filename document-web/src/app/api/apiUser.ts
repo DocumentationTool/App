@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {HttpClient} from '@angular/common/http';
+import {HttpClient, HttpParams} from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
@@ -12,17 +12,25 @@ export class ApiUser {
 
 
   removeUser(repoId: string, userId: string) {
-    const params = {repoId, userId}
-    return this.http.put(this.baseUrl + "/remove", {params});
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+    return this.http.put(this.baseUrl + "/remove", params);
   }
 
   addUser(repoId: string, userId: string, password: string) {
-    const params = {repoId, userId, password}
-    return this.http.put(this.baseUrl + "/add", {params});
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+      .set('password', password)
+    return this.http.put(this.baseUrl + "/add", params);
   }
 
-  getUser(repoId: string, userId: string) {
-    const params = {repoId, userId}
+  getUser(repoId: string, userId: string | null) {
+    let params = new HttpParams()
+      .set('repoId', repoId)
+    if (userId) params = params.set('path', userId);
+
     return this.http.get(this.baseUrl + "/get", {params})
   }
 }
