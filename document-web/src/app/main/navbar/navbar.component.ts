@@ -1,16 +1,13 @@
 import {Component, ElementRef, HostListener, OnInit, ViewChild} from '@angular/core';
-import {Router, RouterLink} from '@angular/router';
 import {NavigationService} from '../service/navigation.service';
 import {FormsModule} from '@angular/forms';
 import {ResourceService} from '../service/resource.service';
-import {DocumentContentResponseModel} from '../../Model/DocumentContentResponseModel';
 import {Resources} from '../../Model/apiResponseFileTree';
 import {NgClass} from '@angular/common';
 
 @Component({
   selector: 'app-navbar',
   imports: [
-    RouterLink,
     FormsModule,
     NgClass,
   ],
@@ -18,13 +15,9 @@ import {NgClass} from '@angular/common';
   standalone: true,
   styleUrl: './navbar.component.css'
 })
-export class NavbarComponent implements OnInit{
+export class NavbarComponent{
   constructor(public navigationService: NavigationService,
-              public fileService: ResourceService) {
-  }
-
-  ngOnInit() {
-    this.fileService.loadFileTree();
+              public resourceService: ResourceService) {
   }
 
   onToggleSidebar() {
@@ -43,20 +36,28 @@ export class NavbarComponent implements OnInit{
       return;
     }
 
-    const fileTree = this.fileService.fileTree()?.content;
-    if (!fileTree) {
-      this.filteredFiles = [];
-      return;
-    }
+    const searchLower = this.searchTerm.toLowerCase();
 
-    this.filteredFiles = Object.entries(fileTree)
-      .flatMap(([repoName, group]) =>
-        group.resources.map(resource => ({ ...resource, repoName })) // Füge den Repo-Namen hinzu
-      )
-      .filter(resource => resource.path.toLowerCase().includes(this.searchTerm.toLowerCase()));
+    // Filtere die Ressourcen basierend auf Path, RepoId und Tags
+    this.filteredFiles = [];
+
+    // Durchlaufe alle Repositories und Ressourcen
+    Object.values(this.resourceService.fileTree()?.content || {}).forEach(group => {
+      group.resources.forEach(resource => {
+        // Prüfe, ob der searchTerm im Path, RepoId oder einem Tag enthalten ist
+        const pathMatch = resource.path.toLowerCase().includes(searchLower);
+        const repoIdMatch = resource.repoId.toLowerCase().includes(searchLower);
+        const tagMatch = Object.values(resource.tags).some(tag => tag.toLowerCase().includes(searchLower));
+
+        if (pathMatch || repoIdMatch || tagMatch) {
+          this.filteredFiles.push(resource);
+        }
+      });
+    });
 
     this.isSearchActive = this.filteredFiles.length > 0;
   }
+
 
 
   onSearchFocus() {

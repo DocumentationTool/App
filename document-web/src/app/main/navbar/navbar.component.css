@@ -31,29 +31,49 @@
   gap: 5px;
 }
 
-.editor, .preview {
+.preview {
   text-decoration: none;
   padding: 5px 10px;
   color: var(--secondaryTextColor);
   cursor: pointer;
+  background: none;
+  border: none;
 }
 
-.editor.active, .selected {
+.selected {
   color: var(--textColor);
   text-decoration: none;
   padding: 5px 10px;
+  background: none;
+  border: none;
 }
 
 .ri-save-line {
-  color: var(--secondaryTextColor);
+  color: var(--textColor);
   cursor: pointer;
   margin-top: 7px;
   font-size: 25px;
-  /*  ToDo: wenn änderungen weis sonst grau und kein pointer mit ngStyle*/
+  background: none;
+  border: none;
+}
+
+.ri-save-line:disabled{
+  color: var(--secondaryTextColor);
+  cursor: default;
+  margin-top: 7px;
+  font-size: 25px;
+  background: none;
+  border: none;
 }
 
 .editor:hover, .preview:hover, .ri-save-line:hover {
   color: var(--textColor);
+}
+
+.ri-save-line:hover:disabled, .preview:disabled{
+  color: var(--secondaryTextColor);
+  cursor: default;
+
 }
 
 
@@ -109,8 +129,6 @@
   font-size: 12pt;
   justify-content: space-between; /* Elemente nach links & rechts verteilen */
   display: flex;
-
-
 }
 
 .search-box:hover {

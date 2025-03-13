@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {MarkdownComponent} from "ngx-markdown";
 import {NgIf} from "@angular/common";
 import {ResourceService} from '../service/resource.service';
@@ -16,4 +16,5 @@ export class ViewComponent {
   constructor(public resourceService: ResourceService) {
 
   }
+
 }

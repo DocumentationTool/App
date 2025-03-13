@@ -1,24 +1,31 @@
-#566367
-#2c373b
-#64b32c
-
-markdown files?
-
 lacy load -> in router
 
-Ordern anlegen?
+API Response Models!
 
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 suchergebnisse mit tab und pfeiltasten
 
-bei jeder Navigation weg von editor prüfen ob änderung
-
 Files Abwählen
 
-API Response Models!
+Files verschieben
 
-Auth guard - wenn im editor niergends navigieren ohne vorher speichern
+nicht immer gesamten FileTreeladen sondern nur repo wo file hinzugefügt?
+
+Add resource PopUp mit repo ...
+
+rechtscklick auf file und löschen?
+
+Fehler Meldungen
+
+add file wie repoIds mitschicken?
+
+neues file gleich auswählen nach upload - async
+
+file sperre beim verlassen von editor wieder aufheben (nicht beim speichern sondern nur bei verlassen von editor + HTML pfad eingabe, seite schließen)
 -----------------------------------------------------------------
+install:
+@angular/cdk/drag-drop
+
 NPM:
 npm install ngx-markdown marked@^15.0.0 --save
 

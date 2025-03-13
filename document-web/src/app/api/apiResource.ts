@@ -2,6 +2,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Injectable} from '@angular/core';
 import {ApiResponseFileTree, Resources} from '../Model/apiResponseFileTree';
 import {ApiResponseResource} from '../Model/apiResponseResource';
+import {ApiResponseModelResourceBeingEdited} from '../Model/apiResponseModelResourceBeingEdited';
 
 @Injectable({
   providedIn: 'root'
@@ -38,16 +39,30 @@ export class ApiResource {
       .set('repoId', repoId)
       .set('tagId', tagId)
       .set('tagName', tagName)
-    return this.http.put(this.baseUrl + "/add", params)
+    return this.http.put(this.baseUrl + "/tag/add", params)
   }
 
-  addResource(repoId: string, path: string, createdBy: string, category: string, content: string) {
-    const params = new HttpParams()
-      .set('repoId', repoId)
-      .set('path', path)
-      .set('category', category)
-      .set('createdBy', createdBy);
-    return this.http.put(this.baseUrl + "/add", content, {params: params})
+  setResourceBeingEdited(repoId: string | undefined, path: string | undefined, userId: string) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (path) params = params.set('path', path);
+    if (path) params = params.set('userId', userId);
+    return this.http.put(this.baseUrl + "/editing/set", params)
+  }
+
+  addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
+    let params = new HttpParams();
+
+    if (repoId) params = params.set('repoId', repoId);
+    if (path) params = params.set('path', path);
+    if (createdBy) params = params.set('createdBy', createdBy);
+    if (category) params = params.set('category', category);
+    if (tagIds && tagIds.length > 0) {
+      tagIds.forEach(tag => {
+        params = params.append('tagIds', tag); // Fügt jedes Tag als separaten Parameter hinzu
+      });
+    }
+    return this.http.put(this.baseUrl + "/add", data, {params: params});
   }
 
   removeTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
@@ -71,10 +86,9 @@ export class ApiResource {
 
   removeResource(repo: string, path: string) {
     const params = new HttpParams()
-      .set('repo', repo)
+      .set('repoId', repo)
       .set('path', path)
-    return this.http.post(this.baseUrl + "/remove", {params})
-
+    return this.http.post(this.baseUrl + "/remove", params)
   }
 
   moveResource() {
@@ -111,5 +125,19 @@ export class ApiResource {
       "returnLimit": returnLimit
     }
     return this.http.post<ApiResponseFileTree>(this.baseUrl + "/get/filetree", payload);
+  }
+
+  removesResourceBeingEdited(repoId:string, path:string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('path', path)
+    return this.http.post(this.baseUrl + "/editing/remove", {params})
+  }
+
+  checksResourceBeingEdited(repoId: string | undefined, path: string | undefined) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (path) params = params.set('path', path);
+    return this.http.get<ApiResponseModelResourceBeingEdited>(this.baseUrl + "/editing/get", {params})
   }
 }

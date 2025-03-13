@@ -12,19 +12,34 @@
             </a>
 
             <ul *ngIf="isRepoOpen(repo.key)">
-              <li *ngFor="let resource of repo.value.resources">
+              <li *ngFor="let resource of repo.value.resources" (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId" (mouseleave)="hoveredResource = null">
+                <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button" (click)="openMenu($event, resource)">
+                  &#x22EE;
+                </button>
                 <a [href]="getAssetUrl(resource.path)"
                    (click)="resourceService.onSelectResource(resource); $event.preventDefault()"
                    [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
                   {{ resource.path }}
                 </a>
+
+                <div *ngIf="selectedResource === resource"
+                     class="popup-menu"
+                     [style.top.px]="menuPosition.y"
+                     [style.left.px]="menuPosition.x">
+                  <ul>
+                    <li (click)="editResource(resource)">Edit Resource</li>
+                    <li (click)="deleteResource(resource)">Delete Resource</li>
+                  </ul>
+                </div>
+
               </li>
             </ul>
           </li>
         </ul>
 
         <div class="upload">
-          <i class="ri-file-upload-line ms-md-2" (click)="upload()"></i>
+          <input #fileInput type="file" accept=".md" style="display: none" (change)="onUpload($event)"/>
+          <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
         </div>
 
         @if (this.navigationService.isAdmin()) {
@@ -39,3 +54,4 @@
     </nav>
   </div>
 }
+

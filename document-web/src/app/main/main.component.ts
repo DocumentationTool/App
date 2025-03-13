@@ -19,7 +19,7 @@ import {NavigationService} from './service/navigation.service';
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'
 })
-export class MainComponent implements OnInit{
+export class MainComponent implements OnInit {
 
   constructor(public fileService: ResourceService,
               public navigationService: NavigationService) {
@@ -28,5 +28,4 @@ export class MainComponent implements OnInit{
   ngOnInit(): void {
     this.fileService.loadFileTree();
   }
-
 }

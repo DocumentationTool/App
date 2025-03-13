@@ -4,18 +4,18 @@
   </div>
 
   <div class="box">
-    <a (click)="this.navigationService.onEditor()" routerLink="/main/editor"
+    <button (click)="this.navigationService.onEditor()" [disabled]="!this.resourceService.selectedFile()"
        [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
       Editor
-    </a>
+    </button>
 
     @if (this.navigationService.isEditorActive()) {
-      <a (click)="this.navigationService.onPreview()"
+      <button (click)="this.navigationService.onPreview()"
          [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
         Preview
-      </a>
+      </button>
     }
-    <i class="ri-save-line" (click)="this.fileService.updateResource()"></i>
+    <button class="ri-save-line" (click)="this.resourceService.updateResource()" [disabled]="!resourceService.checkForFileChanges()"></button>
   </div>
 
   <form class="search" (click)="onSearchFocus()">
@@ -28,7 +28,7 @@
   @if (isSearchActive && filteredFiles.length > 0) {
     <div class="search-results">
       @for (file of filteredFiles; track file) {
-        <div class="search-box" (click)="this.fileService.onSelectResource(file)">
+        <div class="search-box" (click)="this.resourceService.onSelectResource(file)">
           <span class="file-path">{{ file.path }}</span>
           <span class="repo-id">{{ file.repoId }}</span>
         </div>

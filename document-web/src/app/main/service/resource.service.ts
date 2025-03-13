@@ -19,43 +19,41 @@ export class ResourceService {
   fileContentBeforeChanges = "";
 
   onSelectResource(file: any) {
-    if (this.checkForFileChanges()){
-      console.log("änderung")
-      if(window.confirm("Save changes?")){
+    if (this.checkForFileChanges()) {
+      if (window.confirm("Save changes?")) {
         this.updateResource();
         this.selectResource(file);
       }
     } else {
-      console.log("keine änderung")
       this.selectResource(file);
     }
   }
 
   selectResource(file: any) { //Bei file Auswahl, den Inhalt holen
-      this.apiResource.getResource(null, file.path, file.repoId, null, [], [], true, 1).subscribe(
-        data => {
-          // Greife auf die Ressourcen des entsprechenden Repos zu
-          const resources: Resources[] | undefined = data.content[file.repoId];
-          if (resources && resources.length > 0) {
-            // Optional: Finde den Resource-Eintrag anhand des Pfads, falls es mehrere Einträge gibt
-            const resource = resources.find(r => r.path === file.path);
-            if (resource) {
-              this.selectedFile.set(resource);
-              this._fileContent.set(resource.data);
-              this.fileContentBeforeChanges = resource.data;
-              this.router.navigate(['/main/view'])
+    this.apiResource.getResource(null, file.path, file.repoId, null, [], [], true, 1).subscribe(
+      data => {
+        // Greife auf die Ressourcen des entsprechenden Repos zu
+        const resources: Resources[] | undefined = data.content[file.repoId];
+        if (resources && resources.length > 0) {
+          // Optional: Finde den Resource-Eintrag anhand des Pfads, falls es mehrere Einträge gibt
+          const resource = resources.find(r => r.path === file.path);
+          if (resource) {
+            this.selectedFile.set(resource);
+            this._fileContent.set(resource.data);
+            this.fileContentBeforeChanges = resource.data;
+            this.router.navigate(['/main/view'])
 
-            } else {
-              console.error("Kein Resource-Eintrag gefunden für den Pfad:", file.path);
-            }
           } else {
-            console.error("Keine Ressourcen gefunden für repoId:", file.repoId);
+            console.error("Kein Resource-Eintrag gefunden für den Pfad:", file.path);
           }
-        },
-        error => {
-          console.error(error);
+        } else {
+          console.error("Keine Ressourcen gefunden für repoId:", file.repoId);
         }
-      );
+      },
+      error => {
+        console.error(error);
+      }
+    );
   }
 
   checkForFileChanges() {
@@ -94,8 +92,8 @@ export class ResourceService {
     )
   }
 
-  addResource() {
-    this.apiResource.addResource("repo2", "TestFile1.md", "Niklas.F", "", "# TestFile1 im repo2").subscribe(
+  addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
+    this.apiResource.addResource(repoId, path, createdBy, category, tagIds, data).subscribe(
       data => {
         this.loadFileTree();
       },
@@ -113,8 +111,16 @@ export class ResourceService {
 
   }
 
-  removeResource() {
-
+  removeResource(repoId: string, path: string) {
+    this.apiResource.removeResource(repoId,path).subscribe(
+      data => {
+        console.log("data", data);
+        //ToDo: erfolgsnachricht
+      },
+      error => {
+        console.error(error)
+      }
+    )
   }
 
   moveResource() {

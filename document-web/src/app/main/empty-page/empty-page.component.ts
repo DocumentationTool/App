@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import {Component} from '@angular/core';
 
 @Component({
   selector: 'app-empty-page',
@@ -6,6 +6,7 @@ import { Component } from '@angular/core';
   templateUrl: './empty-page.component.html',
   styleUrl: './empty-page.component.css'
 })
-export class EmptyPageComponent {
-
+export class EmptyPageComponent{
+  constructor() {
+  }
 }
