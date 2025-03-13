@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Holds generic setup and usage Database functions
@@ -223,162 +221,79 @@ public class DatabaseFunctions {
      * @return {@link ScriptDatabaseResponse}
      */
     public static ScriptDatabaseResponse initializeTriggers(RepositoryDatabase database) {
-        List<String> triggers = new ArrayList<String>();
-        triggers.add("""
-                CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
-                AFTER DELETE ON Users
-                FOR EACH ROW
-                BEGIN
-                   -- Delete related permissions
-                    DELETE FROM UserGroups WHERE user_id = OLD.user_id;
-                    DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
-                    DELETE FROM UserRoles WHERE user_id = OLD.user_id;
-                END;
-                """);
-        Connection connection = database.getConnection();
-
-        try {
-
-            for (var trigger : triggers) {
-                try (Statement statement = connection.createStatement()) {
-                    statement.execute(trigger);
-                } catch (SQLException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }finally {
-            closeConnection(connection);
-        }
-    }
-
-
-    /**
-     * Creates a trigger that updates related resource paths when the main "Resources" Table is updated
-     *
-     * @return {@link ScriptDatabaseResponse}
-     */
-    public static ScriptDatabaseResponse initializeResourceUpdateTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS update_resource_path
-                AFTER UPDATE ON Resources
-                FOR EACH ROW
-                WHEN OLD.resource_path != NEW.resource_path
-                BEGIN
-                    -- Update related permissions
-                    UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
-                    UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
-                    -- Update related tags
-                    UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
-                    -- Update indexed data
-                    UPDATE FileData SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
-                END;
-                """;
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
-            //noinspection ConstantExpression,LanguageMismatch
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                    AFTER DELETE ON Users
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                        DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                        DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                    END;
+                    """);
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS update_resource_path
+                    AFTER UPDATE ON Resources
+                    FOR EACH ROW
+                    WHEN OLD.resource_path != NEW.resource_path
+                    BEGIN
+                        -- Update related permissions
+                        UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+                        UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+                        -- Update related tags
+                        UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
+                        -- Update indexed data
+                        UPDATE FileData SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
+                    AFTER DELETE ON Resources
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM GroupPermissions WHERE path = OLD.resource_path;
+                        DELETE FROM UserPermissions WHERE path = OLD.resource_path;
+                        --Delete Related Tags
+                        DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
+                        --Delete Indexed Data
+                        DELETE FROM FileData WHERE resource_path = OLD.resource_path;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                    AFTER DELETE ON Users
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                        DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                        DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_tag_cleanup
+                    AFTER DELETE ON Tags
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related tagid
+                        DELETE FROM ResourceTags WHERE tag_id = OLD.tag_id;
+                    END;
+                    """);
         } catch (Exception e) {
-            String errorResponse = "Error while setting up resource update trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            log.error(e.getMessage(), e);
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(e.getMessage(), e));
         } finally {
             closeConnection(connection);
         }
+        return ScriptDatabaseResponse.success(database.getRepoId());
     }
-
-    /**
-     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
-     *
-     * @return {@link ScriptDatabaseResponse}
-     */
-    public static ScriptDatabaseResponse initializeResourceDeleteTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
-                AFTER DELETE ON Resources
-                FOR EACH ROW
-                BEGIN
-                   -- Delete related permissions
-                    DELETE FROM GroupPermissions WHERE path = OLD.resource_path;
-                    DELETE FROM UserPermissions WHERE path = OLD.resource_path;
-                    --Delete Related Tags
-                    DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
-                    --Delete Indexed Data
-                    DELETE FROM FileData WHERE resource_path = OLD.resource_path;
-                END;
-                """;
-        Connection connection = database.getConnection();
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
-        } catch (Exception e) {
-            String errorResponse = "Error while setting up resource remove trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
-    /**
-     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
-     *
-     * @return {@link ScriptDatabaseResponse}
-     */
-    public static ScriptDatabaseResponse initializeUserDeleteTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
-                AFTER DELETE ON Users
-                FOR EACH ROW
-                BEGIN
-                   -- Delete related permissions
-                    DELETE FROM UserGroups WHERE user_id = OLD.user_id;
-                    DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
-                    DELETE FROM UserRoles WHERE user_id = OLD.user_id;
-                END;
-                """;
-        Connection connection = database.getConnection();
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
-        } catch (Exception e) {
-            String errorResponse = "Error while setting up resource remove trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
-
-    /**
-     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
-     *
-     * @return {@link ScriptDatabaseResponse}
-     */
-    public static ScriptDatabaseResponse initializeUserDeleteTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS delete_tag_cleanup
-                AFTER DELETE ON Tags
-                FOR EACH ROW
-                BEGIN
-                   -- Delete related permissions
-                    DELETE FROM ResourceTags WHERE tag_id = OLD.tag_id;
-                END;
-                """;
-        Connection connection = database.getConnection();
-        try (Statement statement = connection.createStatement()) {
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
-        } catch (Exception e) {
-            String errorResponse = "Error while setting up resource remove trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
 
     //todo:jmd implement
     public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {

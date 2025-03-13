@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.api.service;
 
+import com.wonkglorg.doc.core.exception.NotaUserException;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
@@ -57,7 +58,16 @@ public class UserService {
 
     public boolean userExists(RepoId repoId, UserId userId) {
         List<UserProfile> users = repoService.getRepo(repoId).getDatabase().getUsers(userId);
-        return users != null || !users.isEmpty();
+        return users != null && !users.isEmpty();
+    }
+
+
+    public UserId validateUser(RepoId repoId, String userId) {
+        UserId id = new UserId(userId);
+        if (!repoService.getRepo(repoId).getDatabase().userExists(id)) {
+            throw new NotaUserException(repoId, "User '%s' does not exist".formatted(userId));
+        }
+        return id;
     }
 
 }

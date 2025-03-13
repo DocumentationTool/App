@@ -99,9 +99,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         try {
             DatabaseFunctions.initializeDatabase(this);
             log.info("Creating triggers");
-            DatabaseFunctions.initializeResourceUpdateTrigger(this);
-            DatabaseFunctions.initializeResourceDeleteTrigger(this);
-            DatabaseFunctions.initializeUserDeleteTrigger(this);
+            DatabaseFunctions.initializeTriggers(this);
             //todo:jmd add more triggers for users
         } catch (RuntimeException e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
@@ -468,7 +466,18 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             return new ArrayList<>(userProfiles.values());
         }
 
-        return List.of(userProfiles.get(userId));
+
+        List<UserProfile> profiles = new ArrayList<>();
+        profiles.add(userProfiles.get(userId));
+        return profiles;
+    }
+
+
+    public List<UserProfile> getAllUsers() {
+        log.info("Finding all users in repo '{}'.", repoProperties.getId());
+        List<UserProfile> profiles = new ArrayList<>();
+        profiles.addAll(userProfiles.values());
+        return profiles;
     }
 
     public UpdateDatabaseResponse deleteUser(UserId userId) {
@@ -540,5 +549,4 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     public void removeCurrentlyEdited(Path path) {
         currentlyEdited.entrySet().removeIf(entry -> entry.getValue().equals(path));
     }
-
 }

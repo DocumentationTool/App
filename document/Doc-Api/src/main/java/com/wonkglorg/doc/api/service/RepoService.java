@@ -78,6 +78,7 @@ public class RepoService {
 
     /**
      * Validates if a user exists
+     *
      * @param repoId the repo id
      * @return the user id
      * @throws NotaRepoException if the repo does not exist
@@ -95,6 +96,10 @@ public class RepoService {
         return id;
     }
 
+    public RepoId validateRepoId(RepoId repoId) throws NotaRepoException {
+        return validateRepoId(repoId.toString());
+    }
+
 
     public UserId validateUserId(RepoId repoId, String user) throws NotaRepoException, NotaUserException {
         if (user == null) {
@@ -107,6 +112,10 @@ public class RepoService {
         }
 
         return userId;
+    }
+
+    public void validateUserId(RepoId repoId, UserId user) throws NotaRepoException, NotaUserException {
+        validateUserId(repoId, user.id());
     }
 
     @PostConstruct
