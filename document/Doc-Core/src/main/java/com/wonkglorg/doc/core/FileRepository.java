@@ -1,14 +1,12 @@
 package com.wonkglorg.doc.core;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
-import com.wonkglorg.doc.core.exception.InvalidTagException;
 import com.wonkglorg.doc.core.git.GitRepo;
 import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
-import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
@@ -98,19 +96,17 @@ public class FileRepository {
         request.repoId = repoProperties.getId().id();
         request.userId = null;
 
-        QueryDatabaseResponse<Collection<Resource>> resourceRequest = dataDB.getResources(request);
-        if (resourceRequest.isError()) {
-            log.error("Error while checking for changes: {}", resourceRequest.getErrorMessage());
-            return;
-        }
-
-        Collection<Resource> resources = resourceRequest.get();
+        List<Resource> resources = dataDB.getResources(request);
+        
         Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
+        
         List<Path> newResources = foundFiles.stream().filter(f -> resources.stream().noneMatch(r -> r.resourcePath().equals(f))).toList();
+        
         List<Path> deletedResources = resources.stream()
                 .map(Resource::resourcePath)
                 .filter(path -> foundFiles.stream().noneMatch(path::equals))
                 .toList();
+        
         List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 
         //pull any changes from the remote

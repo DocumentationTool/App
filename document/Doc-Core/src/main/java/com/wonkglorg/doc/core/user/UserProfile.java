@@ -9,6 +9,7 @@ import com.wonkglorg.doc.core.permissions.Role;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -28,9 +29,8 @@ public class UserProfile {
         this.roles = roles;
         this.passwordHash = passwordHash;
     }
-
-    //todo:jmd implement
-    public Collection<Resource> getAllowedResources(Collection<Resource> resources) {
+    
+    public List<Resource> getAllowedResources(List<Resource> resources) {
         return resources;
     }
 
