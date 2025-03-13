@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.json.JsonPermissions;
+import com.wonkglorg.doc.api.json.JsonPermission;
 import com.wonkglorg.doc.api.service.RepoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_PERMISSION;
@@ -37,7 +38,7 @@ public class ApiPermissionController {
             description = "Returns a list of permissions the user has. If a repository is given, only returns permissions for that repository. If none is given, returns permissions for all repositories."
     )
     @GetMapping("user/get")
-    public ResponseEntity<RestResponse<Map<String,JsonPermissions>>> getUserPermissions(
+    public ResponseEntity<RestResponse<Map<String,List<JsonPermission>>>> getUserPermissions(
             @Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.")
             @RequestParam(value = "repoId", required = false) String repoId,
             @Parameter(description = "The userId to retrieve the permissions for. If none or an invalid one is given, returns an error code.")
@@ -84,7 +85,7 @@ public class ApiPermissionController {
             description = "Returns the list of permissions a specific group has in a given repository."
     )
     @GetMapping("group/get")
-    public ResponseEntity<RestResponse<Map<String,JsonPermissions>>> getGroupPermissions(
+    public ResponseEntity<RestResponse<Map<String,List<JsonPermission>>>> getGroupPermissions(
             @Parameter(description = "The repoId to search the group's permissions in.")
             @RequestParam("repoId") String repoId,
             @Parameter(description = "The groupId to retrieve the permissions for.")

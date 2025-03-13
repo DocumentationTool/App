@@ -28,7 +28,7 @@ public class ApiRepoController {
             description = "Returns a list of repos and their properties"
     )
     @GetMapping("repository/get")
-    public ResponseEntity<RestResponse<List<JsonRepo>>> getUserPermissions() {
+    public ResponseEntity<RestResponse<List<JsonRepo>>> getRepos() {
         return RestResponse.success(JsonRepo.from(repoService.getProperties())).toResponse();
     }
 

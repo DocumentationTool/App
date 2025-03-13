@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Holds generic setup and usage Database functions
@@ -216,6 +218,41 @@ public class DatabaseFunctions {
     }
 
     /**
+     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
+     *
+     * @return {@link ScriptDatabaseResponse}
+     */
+    public static ScriptDatabaseResponse initializeTriggers(RepositoryDatabase database) {
+        List<String> triggers = new ArrayList<String>();
+        triggers.add("""
+                CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                AFTER DELETE ON Users
+                FOR EACH ROW
+                BEGIN
+                   -- Delete related permissions
+                    DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                    DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                    DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                END;
+                """);
+        Connection connection = database.getConnection();
+
+        try {
+
+            for (var trigger : triggers) {
+                try (Statement statement = connection.createStatement()) {
+                    statement.execute(trigger);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }finally {
+            closeConnection(connection);
+        }
+    }
+
+
+    /**
      * Creates a trigger that updates related resource paths when the main "Resources" Table is updated
      *
      * @return {@link ScriptDatabaseResponse}
@@ -298,6 +335,35 @@ public class DatabaseFunctions {
                     DELETE FROM UserGroups WHERE user_id = OLD.user_id;
                     DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
                     DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                END;
+                """;
+        Connection connection = database.getConnection();
+        try (Statement statement = connection.createStatement()) {
+            statement.execute(sqlScript);
+            return ScriptDatabaseResponse.success(database.getRepoId());
+        } catch (Exception e) {
+            String errorResponse = "Error while setting up resource remove trigger";
+            log.error(errorResponse, e);
+            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+        } finally {
+            closeConnection(connection);
+        }
+    }
+
+
+    /**
+     * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
+     *
+     * @return {@link ScriptDatabaseResponse}
+     */
+    public static ScriptDatabaseResponse initializeUserDeleteTrigger(RepositoryDatabase database) {
+        String sqlScript = """
+                CREATE TRIGGER IF NOT EXISTS delete_tag_cleanup
+                AFTER DELETE ON Tags
+                FOR EACH ROW
+                BEGIN
+                   -- Delete related permissions
+                    DELETE FROM ResourceTags WHERE tag_id = OLD.tag_id;
                 END;
                 """;
         Connection connection = database.getConnection();

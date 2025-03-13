@@ -6,6 +6,7 @@ import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.user.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
 
@@ -50,13 +50,17 @@ public class ApiUserController {
         try {
             RepoId repo = repoService.validateRepoId(repoId);
             UserId user = repoService.validateUserId(repo, userId);
-            return RestResponse.success("", userService.getUsers(repo,user));
+
+            List<UserProfile> users = userService.getUsers(repo, user);
+            List<JsonUser> jsonUsers = users.stream().map(JsonUser::new).toList();
+
+            return RestResponse.success("", jsonUsers).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
-            return RestResponse.<Map<String, JsonUser>>error(e.getMessage()).toResponse();
+            return RestResponse.<List<JsonUser>>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while checking edited state ", e);
-            return RestResponse.<Map<String, JsonUser>>error(e.getMessage()).toResponse();
+            log.error("Error while getting users ", e);
+            return RestResponse.<List<JsonUser>>error(e.getMessage()).toResponse();
         }
     }
 

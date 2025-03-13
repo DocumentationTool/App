@@ -102,6 +102,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             DatabaseFunctions.initializeResourceUpdateTrigger(this);
             DatabaseFunctions.initializeResourceDeleteTrigger(this);
             DatabaseFunctions.initializeUserDeleteTrigger(this);
+            //todo:jmd add more triggers for users
         } catch (RuntimeException e) {
             log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
         }
@@ -110,8 +111,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
     }
 
 
-
     //todo:jmd properly reinitialize the caches
+
     /**
      * Initializes the caches for the database
      */
@@ -344,8 +345,10 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
             return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
         }
         tagCache.remove(id);
-        //todo:jmd how to properly update the cache for resources? reget it entirely?
-        return ResourceFunctions.removeTag(this, id);
+        UpdateDatabaseResponse updateDatabaseResponse = ResourceFunctions.removeTag(this, id);
+        //remove tags from resource cache
+        resourceCache.values().forEach(r -> r.getResourceTags().remove(id));
+        return updateDatabaseResponse;
     }
 
 
@@ -468,10 +471,13 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return List.of(userProfiles.get(userId));
     }
 
-    public void removeUser(UserId userId) {
+    public UpdateDatabaseResponse deleteUser(UserId userId) {
         log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
-        //UserFunctions.(this, userId);
-        userProfiles.remove(userId);
+        var updateDatabaseResponse = UserFunctions.deleteUser(this, userId);
+        if (updateDatabaseResponse.isSuccess()) {
+            userProfiles.remove(userId);
+        }
+        return updateDatabaseResponse;
     }
 
     public RepoId getRepoId() {

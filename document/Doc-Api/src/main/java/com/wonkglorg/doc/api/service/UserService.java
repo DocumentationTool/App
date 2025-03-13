@@ -51,7 +51,7 @@ public class UserService {
      * @return the response
      */
     public UpdateDatabaseResponse deleteUser(RepoId repoId, UserId userId) {
-        return repoService.getRepo(repoId).getDatabase().removeUser(userId);
+        return repoService.getRepo(repoId).getDatabase().deleteUser(userId);
     }
 
 
