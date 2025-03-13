@@ -183,7 +183,8 @@ public class ApiResourceController{
 				tags = new ArrayList<>();
 			}
 			Resource resource = new Resource(resourcePath, createdBy, id, category, tags, content);
-			return RestResponse.of(resourceService.insertResource(resource)).toResponse();
+			resourceService.insertResource(resource);
+			return RestResponse.<Void>success(null).toResponse();
 		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
