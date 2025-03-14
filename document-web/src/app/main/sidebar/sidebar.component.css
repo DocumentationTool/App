@@ -64,11 +64,20 @@ li a.active {
 
 .upload:hover {
   cursor: pointer;
+  opacity: 80%;
 }
 
-.bottom {
+.createNewFile{
+  font-size: 40px;
   position: fixed;
-  bottom: 10px;
+  bottom: 5px;
+  left: 50px;
+  color: var(--textColor);
+}
+
+.createNewFile:hover{
+  cursor: pointer;
+  opacity: 80%;
 }
 
 ul > li > a {

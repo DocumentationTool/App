@@ -15,6 +15,7 @@ export class ResourceService {
 
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
   selectedFile = signal<Resources | null>(null); //Das derzeit ausgewählte File
+  editingFile = signal<Resources | null>(null)
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
 
@@ -56,6 +57,11 @@ export class ResourceService {
     );
   }
 
+  removeFileEditing() {
+    console.log("remove FIle Edit: ", this.editingFile()?.repoId, this.editingFile()?.path)
+    this.apiResource.removesResourceBeingEdited(this.editingFile()?.repoId, this.editingFile()?.path)
+  }
+
   checkForFileChanges() {
     return this._fileContent() != this.fileContentBeforeChanges;
   }
@@ -69,7 +75,7 @@ export class ResourceService {
   }
 
   updateResource() {
-    this.apiResource.updateResource(this.selectedFile()?.repoId, this.selectedFile()?.path, null, [], [], [], null, this.fileContent(), false).subscribe(
+    this.apiResource.updateResource(this.editingFile()?.repoId, this.editingFile()?.path, null, [], [], [], null, this.fileContent(), false).subscribe(
       data => {
         console.log(data)
         this.loadFileTree();

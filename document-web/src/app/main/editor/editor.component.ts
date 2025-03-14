@@ -5,6 +5,7 @@ import {LMarkdownEditorModule, UploadResult} from 'ngx-markdown-editor';
 import {FormsModule} from '@angular/forms';
 import {NavigationService} from '../service/navigation.service';
 import {EmptyPageComponent} from '../empty-page/empty-page.component';
+
 @Component({
   selector: 'app-editor',
   imports: [
@@ -16,7 +17,7 @@ import {EmptyPageComponent} from '../empty-page/empty-page.component';
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.css'
 })
-export class EditorComponent {
+export class EditorComponent implements OnDestroy {
   constructor(public resourceService: ResourceService,
               public navigationService: NavigationService) {
     this.doUpload = this.doUpload.bind(this);
@@ -27,8 +28,6 @@ export class EditorComponent {
   }
 
   onEditorLoaded(editor: { setShowPrintMargin: (arg0: boolean) => void; }) {
-    console.log(`ACE Editor Ins: `, editor);
-
     editor.setShowPrintMargin(false)
   }
 
@@ -77,5 +76,9 @@ export class EditorComponent {
     if (this.resourceService.checkForFileChanges()) {
       $event.returnValue = true;
     }
+  }
+
+  ngOnDestroy() {
+    this.resourceService.removeFileEditing();
   }
 }

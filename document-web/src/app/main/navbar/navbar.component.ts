@@ -28,6 +28,8 @@ export class NavbarComponent{
   searchTerm: string = '';
   filteredFiles: Resources[] = [];
   isSearchActive: boolean = false;
+  isFilterActive: boolean = false;
+  isTagFilterActive: boolean = false;
   @ViewChild('searchInput') searchInput!: ElementRef;
 
   search() {
@@ -58,12 +60,22 @@ export class NavbarComponent{
     this.isSearchActive = this.filteredFiles.length > 0;
   }
 
+  onFilter() {
+    this.isFilterActive = !this.isFilterActive;
+    this.isTagFilterActive = false;
 
+  }
+
+  onTags(){
+    this.isFilterActive = false;
+    this.isTagFilterActive = true;
+  }
 
   onSearchFocus() {
     if (this.searchTerm.trim() !== '') {
       this.isSearchActive = true;
     }
+    this.isFilterActive = false;
     this.searchInput.nativeElement.focus();
   }
 

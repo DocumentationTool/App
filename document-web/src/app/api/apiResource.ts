@@ -91,11 +91,13 @@ export class ApiResource {
     return this.http.post(this.baseUrl + "/remove", params)
   }
 
-  moveResource(userId: string, repoFrom: string, repoTo: string) {
+  moveResource(userId: string, repoFrom: string, pathFrom:string, repoTo: string, pathTo:string) {
     const params = new HttpParams()
       .set('userId', userId)
       .set('repoFrom', repoFrom)
+      .set('pathFrom', pathFrom)
       .set('repoTo', repoTo)
+      .set('pathTo', pathTo)
     return this.http.post(this.baseUrl + "/move", params)
 
   }
@@ -130,10 +132,10 @@ export class ApiResource {
     return this.http.post<ApiResponseFileTree>(this.baseUrl + "/get/filetree", payload);
   }
 
-  removesResourceBeingEdited(repoId:string, path:string) {
-    const params = new HttpParams()
-      .set('repoId', repoId)
-      .set('path', path)
+  removesResourceBeingEdited(repoId: string | undefined, path: string | undefined) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (path) params = params.set('path', path);
     return this.http.post(this.baseUrl + "/editing/remove", {params})
   }
 

@@ -3,9 +3,9 @@ import {NavigationService} from '../service/navigation.service';
 import {KeyValue, KeyValuePipe, NgClass, NgForOf, NgIf} from '@angular/common';
 import {ResourceService} from '../service/resource.service';
 import {RouterLink, RouterLinkActive} from '@angular/router';
-import {ContentGroup, Resources} from '../../Model/apiResponseFileTree';
-import { CdkDragDrop, CdkDropList, moveItemInArray, transferArrayItem} from '@angular/cdk/drag-drop';
-import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
+import {Resources} from '../../Model/apiResponseFileTree';
+import {CdkDragDrop} from '@angular/cdk/drag-drop';
+
 
 @Component({
   selector: 'app-sidebar',
@@ -17,7 +17,6 @@ import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.
     NgForOf,
     KeyValuePipe,
     NgIf,
-    ResourceUploadComponent,
 
   ],
   templateUrl: './sidebar.component.html',
@@ -26,7 +25,7 @@ import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.
 })
 export class SidebarComponent {
   openRepos: Set<string> = new Set();
-  menuPosition = { x: 0, y: 0 };
+  menuPosition = {x: 0, y: 0};
   selectedResource: Resources | null = null;
 
   constructor(public navigationService: NavigationService,
@@ -92,7 +91,7 @@ export class SidebarComponent {
       this.category = null;
       this.tagIds = null;
 
-      this.resourceService.addResource(this.repoId, this.path, this.createdBy, this.category, this.tagIds, this.data)
+      this.navigationService.uploadNewResource(this.data, this.path);
     };
     reader.readAsText(file);
   }
@@ -117,7 +116,7 @@ export class SidebarComponent {
   openMenu(event: MouseEvent, resource: Resources) {
     event.stopPropagation();
     this.selectedResource = resource;
-    this.menuPosition = { x: event.clientX, y: event.clientY };
+    this.menuPosition = {x: event.clientX, y: event.clientY};
 
   }
 
@@ -133,7 +132,7 @@ export class SidebarComponent {
   }
 
   deleteResource(resource: Resources) {
-    if (window.confirm("Do you really want to delete '" + resource.path + "' in Repo: '" + resource.repoId + "'?")){
+    if (window.confirm("Do you really want to delete '" + resource.path + "' in Repo: '" + resource.repoId + "'?")) {
       this.resourceService.removeResource(resource.repoId, resource.path);
       this.resourceService.loadFileTree();
     }
@@ -144,10 +143,7 @@ export class SidebarComponent {
   }
 
 
-
-
-
-  onDrop(event: CdkDragDrop<any>, targetRepoKey: string, sourceRepo:string) {
+  onDrop(event: CdkDragDrop<any>, targetRepoKey: string, sourceRepo: string) {
     const draggedItem = event; // Das gezogene File
     const previousRepo = event.previousContainer.data; // Das vorherige Repo
     const newRepo = targetRepoKey; // Das Ziel-Repo

@@ -4,8 +4,9 @@ import {ApiAuth} from '../../api/apiAuth';
 import {ApiResource} from '../../api/apiResource';
 import {ResourceService} from './resource.service';
 import {ApiResponseModelResourceBeingEdited} from '../../Model/apiResponseModelResourceBeingEdited';
-import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
+import {ResourceCreateNewComponent} from '../popUp/resource-createNew/resource-createNew.component';
 import {MatDialog} from '@angular/material/dialog';
+import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
 
 @Injectable({
   providedIn: 'root'
@@ -67,6 +68,7 @@ export class NavigationService {
   editedResourceCheck(data: ApiResponseModelResourceBeingEdited) {
     if (!data.content.isBeingEdited) { //Abfrage ob file editiert wird
       let userId = "Niklas" //ToDo: user id dynamic   -- user anlegen sonst bad request!
+      console.log("File Editing")
       // this.apiResource.setResourceBeingEdited(this.resourceService.selectedFile()?.repoId, this.resourceService.selectedFile()?.path, userId).subscribe(
       //   data => {
       //     console.log("data ", data)
@@ -77,6 +79,7 @@ export class NavigationService {
       // )
       this.router.navigate(['/main/editor'])
       this.mode.set("editor")
+      this.resourceService.editingFile.set(this.resourceService.selectedFile());
     } else {
       console.log("file is being edited")
     }
@@ -86,8 +89,15 @@ export class NavigationService {
     this.mode.set("preview")
   }
 
-  uploadResource() {
-    this.dialog.open(ResourceUploadComponent);
+  createNewResource() {
+    this.dialog.open(ResourceCreateNewComponent);
+  }
+
+  uploadNewResource(data: string, path: string){
+    this.dialog.open(ResourceUploadComponent,
+      {
+        data: {data,path}
+      });
   }
 
   isEditorActive(): boolean {

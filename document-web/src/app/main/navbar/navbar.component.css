@@ -76,6 +76,7 @@
 
 }
 
+/*----------------------------------SearchInput----------------------------------*/
 
 .search {
   position: fixed;
@@ -113,25 +114,38 @@
   color: var(--textColor);
 }
 
-.search-results {
+.ri-arrow-right-s-fill, .ri-arrow-down-s-fill{
+  margin-left: 100px;
+  padding-right: 5px;
+  color: var(--textColor);
+}
+
+.ri-arrow-right-s-fill:hover, .ri-arrow-down-s-fill:hover{
+  opacity: 80%;
+  cursor: pointer;
+}
+
+/*----------------------------------SearchBox----------------------------------*/
+
+.search-box {
   position: fixed;
   left: 30%;
   top: 55px;
   margin-left: 15%;
   border-radius: 10px;
   width: 350px;
-  background: white;
+  background: var(--textColor);
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-.search-box {
+.search-results {
   padding: 5px;
   font-size: 12pt;
   justify-content: space-between; /* Elemente nach links & rechts verteilen */
   display: flex;
 }
 
-.search-box:hover {
+.search-results:hover {
   background: lightgray;
   cursor: pointer;
 }
@@ -149,7 +163,61 @@
   white-space: nowrap;
   opacity: 50%;
 }
+/*----------------------------------FilterBox----------------------------------*/
+.filter-box{
+  position: fixed;
+  left: 45%;
+  top: 55px;
+  margin-left: 15%;
+  border-radius: 10px;
+  width: 130px;
+  background: var(--textColor);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
 
+.filter-results{
+  padding: 5px;
+  font-size: 12pt;
+  display: flex;
+}
+
+.filter-results:hover{
+  background: lightgray;
+  cursor: pointer;
+}
+
+/*----------------------------------TagBox----------------------------------*/
+
+.tag-box {
+  position: fixed;
+  left: 30%;
+  top: 55px;
+  margin-left: 15%;
+  border-radius: 10px;
+  width: 350px;
+  background: var(--textColor);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.tag-results {
+  padding: 5px;
+  font-size: 12pt;
+  display: flex;
+  justify-content: space-between; /* Elemente nach links & rechts verteilen */
+}
+
+.tag-results:hover {
+
+}
+
+.ri-checkbox-blank-line{
+
+}
+.ri-checkbox-blank-line:hover{
+  cursor: pointer;
+}
+
+/*----------------------------------Profile----------------------------------*/
 .profile {
   position: fixed;
   top: 10px;

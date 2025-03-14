@@ -44,7 +44,11 @@
 
         <div class="upload">
           <input #fileInput type="file" accept=".md" style="display: none" (change)="onUpload($event)"/>
-          <i class="ri-file-upload-line ms-md-2" (click)="navigationService.uploadResource()"></i>
+          <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
+        </div>
+
+        <div class="createNewFile">
+          <i class="ri-add-line ms-md-2" (click)="navigationService.createNewResource()"></i>
         </div>
 
         @if (this.navigationService.isAdmin()) {
@@ -60,9 +64,6 @@
   </div>
 }
 
-@if (navigationService.editTags()) {
-
-}
-@if (navigationService.moveResource()){
+@if (navigationService.moveResource()) {
 
 }

@@ -5,20 +5,19 @@ API Response Models!
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 suchergebnisse mit tab und pfeiltasten
 
-Files Abwählen
-
-Files verschieben
-
 nicht immer gesamten FileTreeladen sondern nur repo wo file hinzugefügt?
 
+Files verschieben
 Add resource/edit tag/move resource - PopUp mit repo ...
-move resource Parameter??
+
+MatToolTip
 
 Fehler Meldungen
 
 neues file gleich auswählen nach upload - async
 
 file sperre beim verlassen von editor wieder aufheben (nicht beim speichern sondern nur bei verlassen von editor + HTML pfad eingabe, seite schließen)
+file edit wird bei ng destroy entfernt und bei, file wechsel -> probleme bei Fenster schließen/navigieren mit html zurücktasten
 -----------------------------------------------------------------
 install:
 @angular/cdk/drag-drop

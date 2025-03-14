@@ -5,37 +5,72 @@
 
   <div class="box">
     <button (click)="this.navigationService.onEditor()" [disabled]="!this.resourceService.selectedFile()"
-       [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
+            [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
       Editor
     </button>
 
     @if (this.navigationService.isEditorActive()) {
       <button (click)="this.navigationService.onPreview()"
-         [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
+              [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
         Preview
       </button>
     }
-    <button class="ri-save-line" (click)="this.resourceService.updateResource()" [disabled]="!resourceService.checkForFileChanges()"></button>
+    <button class="ri-save-line" (click)="this.resourceService.updateResource()"
+            [disabled]="!resourceService.checkForFileChanges()"></button>
   </div>
 
-  <form class="search" (click)="onSearchFocus()">
+  <!------------------------------------------Search Bar------------------------------------------------------------>
+  <form class="search" >
     <span class="ri-search-line" (click)="onSearchFocus()"></span>
     <input class="search-input" #searchInput (focus)="onSearchFocus()" name="search" placeholder="Search"
            autocomplete="off"
            [(ngModel)]="searchTerm" (input)="search()">
+    @if (isFilterActive) {
+      <span class="ri-arrow-down-s-fill" (click)="onFilter()"></span>
+    } @else {
+      <span class="ri-arrow-right-s-fill" (click)="onFilter()"></span>
+    }
   </form>
-
-  @if (isSearchActive && filteredFiles.length > 0) {
-    <div class="search-results">
+<!------------------------------------------Search results------------------------------------------------------------>
+  @if (isSearchActive && filteredFiles.length > 0 && !this.isFilterActive) {
+    <div class="search-box">
       @for (file of filteredFiles; track file) {
-        <div class="search-box" (click)="this.resourceService.onSelectResource(file)">
+        <div class="search-results" (click)="this.resourceService.onSelectResource(file)">
           <span class="file-path">{{ file.path }}</span>
           <span class="repo-id">{{ file.repoId }}</span>
         </div>
       }
     </div>
   }
-
+  <!------------------------------------------Filter Options------------------------------------------------------------>
+  @if (this.isFilterActive) {
+    <div class="filter-box">
+      <div class="filter-results" >
+        <span class="ri-checkbox-blank-line"></span>
+        <span class="filter-item">Path</span>
+      </div>
+      <div class="filter-results" (click)="onTags()">
+        <span class="filter-item">Tags</span>
+      </div>
+      <div class="filter-results">
+        <span class="filter-item">Tags</span>
+      </div>
+    </div>
+  }
+  <!------------------------------------------Tag Filter------------------------------------------------------------>
+  @if (this.isTagFilterActive) {
+    <div class="tag-box">
+      <div class="tag-results" >
+        <span class="ri-checkbox-blank-line">Tag</span>
+        <span class="ri-checkbox-blank-line">Tag</span>
+        <span class="ri-checkbox-blank-line">Tag</span>
+      </div>
+      <div class="tag-results">
+        <span class="tag-item">Tags</span>
+      </div>
+    </div>
+  }
+  <!------------------------------------------Profil ------------------------------------------------------------>
   <div class="profile" (click)="toggleDropdown()">
     Profile
     @if (isDropdownOpen) {
