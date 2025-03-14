@@ -3,7 +3,6 @@ package com.wonkglorg.doc.core.objects;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Represents a resource in the database
@@ -15,7 +14,7 @@ public final class Resource {
     private final LocalDateTime modifiedAt;
     private final String modifiedBy;
     private final RepoId repoId;
-    private final Map<TagId, Tag> resourceTags;
+    private final List<TagId> resourceTags = new ArrayList<>();
     private final boolean isEditable;
     private final String category;
     private String data;
@@ -26,7 +25,7 @@ public final class Resource {
                     LocalDateTime modifiedAt,
                     String modifiedBy,
                     RepoId repoId,
-                    Map<TagId, Tag> resourceTags,
+                    List<TagId> resourceTags,
                     boolean isEditable,
                     String category,
                     String data) {
@@ -37,24 +36,20 @@ public final class Resource {
         this.modifiedAt = modifiedAt;
         this.modifiedBy = modifiedBy;
         this.repoId = repoId;
-        this.resourceTags = new HashMap<>(resourceTags);
+        this.resourceTags.addAll(resourceTags);
         this.isEditable = isEditable;
         this.category = category;
         this.data = data;
     }
 
-    public Resource(Path resourcePath, String creator, RepoId repoId, String category, HashMap<TagId, Tag> tags, String data) {
-        this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, false, category, data);
-    }
-
-    public Resource(Path resourcePath, String creator, RepoId repoId, String category, List<Tag> tags, String data) {
+    public Resource(Path resourcePath, String creator, RepoId repoId, String category, List<TagId> tags, String data) {
         this(resourcePath,
                 LocalDateTime.now(),
                 creator,
                 LocalDateTime.now(),
                 creator,
                 repoId,
-                tags.stream().collect(Collectors.toMap(Tag::tagId, tag -> tag, (existing, replacement) -> existing, HashMap::new)),
+                tags,
                 false,
                 category,
                 data);

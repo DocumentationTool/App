@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
+import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.git.GitRepo;
 import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.Resource;
@@ -97,16 +98,16 @@ public class FileRepository {
         request.userId = null;
 
         List<Resource> resources = dataDB.getResources(request);
-        
+
         Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
-        
+
         List<Path> newResources = foundFiles.stream().filter(f -> resources.stream().noneMatch(r -> r.resourcePath().equals(f))).toList();
-        
+
         List<Path> deletedResources = resources.stream()
                 .map(Resource::resourcePath)
                 .filter(path -> foundFiles.stream().noneMatch(path::equals))
                 .toList();
-        
+
         List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 
         //pull any changes from the remote
@@ -140,17 +141,18 @@ public class FileRepository {
      * @param tags the tags to check
      * @throws InvalidTagException if the tag does not exist
      */
-    public void checkTags(List<String> tags) throws InvalidTagException {
+    public void checkTags(Set<TagId> tags) throws InvalidTagException {
         if (tags == null) {
             return;
         }
-        for (String tag : tags) {
-            if (!getDatabase().tagExists(new TagId(tag))) {
-                throw new InvalidTagException(repoProperties.getId(), "Tag '%s' does not exist".formatted(tag));
+        for (var tag : tags) {
+            if (!getDatabase().tagExists(tag)) {
+                throw new InvalidTagException("Tag '%s' does not exist in '%s'".formatted(tag, repoProperties.getId()));
 
             }
         }
     }
+
 
     /**
      * Adds a file to the database
@@ -212,7 +214,7 @@ public class FileRepository {
                         lastCommitDetailsForFile.getAuthorIdent().getName(),
                         repoProperties.getId(),
                         null,
-                        new HashMap<>(),
+                        new ArrayList<>(),
                         content);
             }
             resources.add(newResource);
