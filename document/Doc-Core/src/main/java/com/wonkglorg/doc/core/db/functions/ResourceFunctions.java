@@ -65,7 +65,7 @@ public class ResourceFunctions {
 
             for (Resource resource : resources) {
                 var tags = fetchTagsForResources(connection, resource.resourcePath().toString());
-                resource.setTags(tags);
+                resource.setTags(tags.keySet());
             }
             return resources;
         } catch (SQLException e) {
