@@ -114,24 +114,17 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * Initializes the caches for the database
      */
     private void initializeCaches() {
-        QueryDatabaseResponse<List<Resource>> resources = ResourceFunctions.getAllResources(this);
-        if (resources.isError()) {
-            log.error("Error while getting resources for repo '{}'", repoProperties.getId(), resources.getException());
-        } else {
-            log.info("Caching {} resources for repo '{}'", resources.get().size(), repoProperties.getId());
-            resources.get().forEach(resource -> resourceCache.put(resource.resourcePath(), resource));
+        List<Resource> resources = ResourceFunctions.getAllResources(this);
+        for(Resource resource : resources){
+            resourceCache.put(resource.resourcePath(), resource);
         }
 
         var allTags = ResourceFunctions.getAllTags(this);
-
-        if (allTags.isError()) {
-            log.error("Error while getting tags for repo '{}'", repoProperties.getId(), allTags.getException());
-        } else {
-            log.info("Cache {} tags for repo '{}'", allTags.get().size(), repoProperties.getId());
-            allTags.get().forEach(tag -> tagCache.put(tag.tagId(), tag));
+        for(Tag tag : allTags){
+            tagCache.put(tag.tagId(), tag);
         }
 
-        QueryDatabaseResponse<List<UserProfile>> allUsers = UserFunctions.getAllUsers(this);
+        var allUsers = UserFunctions.getAllUsers(this);
 
         if (allUsers.isError()) {
             log.error("Error while getting users for repo '{}'", repoProperties.getId(), allUsers.getException());

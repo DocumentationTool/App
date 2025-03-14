@@ -2,6 +2,7 @@ package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.ResourcePath;
 import com.wonkglorg.doc.core.objects.RoleId;
@@ -34,7 +35,7 @@ public class PermissionFunctions {
      * @param userId   the user to get permissions for
      * @return a list of permissions for the user
      */
-    public static QueryDatabaseResponse<Set<Permission<UserId>>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
+    public static Set<Permission<UserId>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM UserPermissions WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
@@ -46,12 +47,12 @@ public class PermissionFunctions {
                             new ResourcePath(rs.getString("path")),
                             database.getRepoId()));
                 }
-                return QueryDatabaseResponse.success(database.getRepoId(), permissions);
+                return permissions;
             }
         } catch (Exception e) {
             String errorResponse = "Failed to get permissions for user";
             log.error(errorResponse, e);
-            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         } finally {
             closeConnection(connection);
         }
@@ -82,7 +83,7 @@ public class PermissionFunctions {
         }
     }
 
-    public static QueryDatabaseResponse<Set<Role>> getRolesForUser(RepositoryDatabase database, UserId userId) {
+    public static Set<Role> getRolesForUser(RepositoryDatabase database, UserId userId) {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("SELECT * FROM UserRoles WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
@@ -91,12 +92,12 @@ public class PermissionFunctions {
                 while (rs.next()) {
                     roles.add(new Role(RoleId.of(rs.getString("role_id")), rs.getString("role")));
                 }
-                return QueryDatabaseResponse.success(database.getRepoId(), roles);
+                return roles;
             }
         } catch (Exception e) {
             String errorResponse = "Failed to get roles for user";
             log.error(errorResponse, e);
-            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         } finally {
             closeConnection(connection);
         }

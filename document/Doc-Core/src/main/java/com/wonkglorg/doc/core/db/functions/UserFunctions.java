@@ -181,7 +181,7 @@ public class UserFunctions {
     }
 
 
-    public static QueryDatabaseResponse<List<UserProfile>> getAllUsers(RepositoryDatabase database) {
+    public static List<UserProfile> getAllUsers(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("SELECT * FROM Users")) {
             try (var rs = statement.executeQuery()) {
@@ -191,22 +191,14 @@ public class UserFunctions {
                     String passwordHash = rs.getString("password_hash");
                     var userPermissions = PermissionFunctions.getPermissionsForUser(database, new UserId(userId));
                     var userRoles = PermissionFunctions.getRolesForUser(database, new UserId(userId));
-
-                    if (userPermissions.isError()) {
-                        return QueryDatabaseResponse.fail(database.getRepoId(), userPermissions.getException());
-                    }
-                    if (userRoles.isError()) {
-                        return QueryDatabaseResponse.fail(database.getRepoId(), userRoles.getException());
-                    }
-
-                    users.add(new UserProfile(new UserId(userId), passwordHash, userPermissions.get(), userRoles.get()));
+                    users.add(new UserProfile(new UserId(userId), passwordHash, userPermissions, userRoles));
                 }
-                return QueryDatabaseResponse.success(database.getRepoId(), users);
+                return users;
             }
         } catch (Exception e) {
             String errorResponse = "Failed to get all users";
             log.error(errorResponse, e);
-            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
