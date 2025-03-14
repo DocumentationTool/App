@@ -74,13 +74,10 @@ export class ApiResource {
     return this.http.post(this.baseUrl + "/tag/remove", {params: params})
   }
 
-  getTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
-    const params = new HttpParams()
-      .set('repoFrom', repoFrom)
-      .set('from', from)
-      .set('repoTo', repoTo)
-      .set('to', to);
-    return this.http.post(this.baseUrl + "/tag/get", {params: params})
+  getTag(repoId: string | null) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    return this.http.post(this.baseUrl + "/tag/get", {params})
 
   }
 

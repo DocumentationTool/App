@@ -77,7 +77,6 @@
 }
 
 /*----------------------------------SearchInput----------------------------------*/
-
 .search {
   position: fixed;
   left: 30%;
@@ -114,19 +113,18 @@
   color: var(--textColor);
 }
 
-.ri-arrow-right-s-fill, .ri-arrow-down-s-fill{
+.ri-arrow-left-s-fill, .ri-arrow-down-s-fill{
   margin-left: 100px;
   padding-right: 5px;
   color: var(--textColor);
 }
 
-.ri-arrow-right-s-fill:hover, .ri-arrow-down-s-fill:hover{
+.ri-arrow-left-s-fill:hover, .ri-arrow-down-s-fill:hover{
   opacity: 80%;
   cursor: pointer;
 }
 
 /*----------------------------------SearchBox----------------------------------*/
-
 .search-box {
   position: fixed;
   left: 30%;
@@ -163,29 +161,6 @@
   white-space: nowrap;
   opacity: 50%;
 }
-/*----------------------------------FilterBox----------------------------------*/
-.filter-box{
-  position: fixed;
-  left: 45%;
-  top: 55px;
-  margin-left: 15%;
-  border-radius: 10px;
-  width: 130px;
-  background: var(--textColor);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-.filter-results{
-  padding: 5px;
-  font-size: 12pt;
-  display: flex;
-}
-
-.filter-results:hover{
-  background: lightgray;
-  cursor: pointer;
-}
-
 /*----------------------------------TagBox----------------------------------*/
 
 .tag-box {
@@ -214,6 +189,22 @@
 
 }
 .ri-checkbox-blank-line:hover{
+  cursor: pointer;
+}
+
+.ri-check-line{
+  color: var(--greenColor);
+}
+
+.ri-check-line:hover{
+  cursor: pointer;
+}
+
+.ri-close-line{
+  color: red;
+}
+
+.ri-close-line:hover{
   cursor: pointer;
 }
 

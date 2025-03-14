@@ -6,6 +6,7 @@ export interface ApiResponseFileTree {
 
 export interface ContentGroup {
   resources: Resources[];
+  children: Record<string, ContentGroup>;
 }
 
 export interface Resources {

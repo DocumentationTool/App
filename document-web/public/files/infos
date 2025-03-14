@@ -4,6 +4,9 @@ API Response Models!
 
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 suchergebnisse mit tab und pfeiltasten
+tooltip bei prefix
+ausrichtung ergebnisse suche
+https://stackoverflow.com/questions/2952196/ant-path-style-patterns
 
 nicht immer gesamten FileTreeladen sondern nur repo wo file hinzugefügt?
 

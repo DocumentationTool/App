@@ -20,57 +20,44 @@
   </div>
 
   <!------------------------------------------Search Bar------------------------------------------------------------>
-  <form class="search" >
-    <span class="ri-search-line" (click)="onSearchFocus()"></span>
+  <form class="search">
+    <span class="ri-search-line" (click)="onSearchResource()"></span>
     <input class="search-input" #searchInput (focus)="onSearchFocus()" name="search" placeholder="Search"
            autocomplete="off"
-           [(ngModel)]="searchTerm" (input)="search()">
-    @if (isFilterActive) {
-      <span class="ri-arrow-down-s-fill" (click)="onFilter()"></span>
+           [(ngModel)]="searchTerm">
+    @if (isTagFilterActive) {
+      <span class="ri-arrow-down-s-fill" (click)="onTagFilter()"></span>
     } @else {
-      <span class="ri-arrow-right-s-fill" (click)="onFilter()"></span>
+      <span class="ri-arrow-left-s-fill" (click)="onTagFilter()"></span>
     }
   </form>
-<!------------------------------------------Search results------------------------------------------------------------>
-  @if (isSearchActive && filteredFiles.length > 0 && !this.isFilterActive) {
+  <!------------------------------------------Search results------------------------------------------------------------>
+  @if (isSearchActive && searchResults && !this.isTagFilterActive) {
     <div class="search-box">
-      @for (file of filteredFiles; track file) {
-        <div class="search-results" (click)="this.resourceService.onSelectResource(file)">
-          <span class="file-path">{{ file.path }}</span>
-          <span class="repo-id">{{ file.repoId }}</span>
+      <div *ngFor="let repo of searchResults.content | keyvalue" class="repo-group">
+        <div *ngFor="let resource of repo.value" class="search-results"
+             (click)="resourceService.onSelectResource(resource)">
+          <span class="file-path">{{ resource.path }}</span>
+          <span class="repo-id">{{ resource.repoId }}</span>
         </div>
-      }
-    </div>
-  }
-  <!------------------------------------------Filter Options------------------------------------------------------------>
-  @if (this.isFilterActive) {
-    <div class="filter-box">
-      <div class="filter-results" >
-        <span class="ri-checkbox-blank-line"></span>
-        <span class="filter-item">Path</span>
-      </div>
-      <div class="filter-results" (click)="onTags()">
-        <span class="filter-item">Tags</span>
-      </div>
-      <div class="filter-results">
-        <span class="filter-item">Tags</span>
       </div>
     </div>
+
   }
   <!------------------------------------------Tag Filter------------------------------------------------------------>
   @if (this.isTagFilterActive) {
     <div class="tag-box">
-      <div class="tag-results" >
-        <span class="ri-checkbox-blank-line">Tag</span>
-        <span class="ri-checkbox-blank-line">Tag</span>
-        <span class="ri-checkbox-blank-line">Tag</span>
-      </div>
-      <div class="tag-results">
-        <span class="tag-item">Tags</span>
+      <div class="tag-results" *ngFor="let tagRow of splitTagsIntoRows(allTags, 3)">
+      <span *ngFor="let tag of tagRow"
+            [class]="dynamicCheckBox(tag)"
+            (click)="onTag(tag)">
+        {{ tag }}
+      </span>
       </div>
     </div>
   }
-  <!------------------------------------------Profil ------------------------------------------------------------>
+
+  <!-----------------------------------------------Profil------------------------------------------------------------->
   <div class="profile" (click)="toggleDropdown()">
     Profile
     @if (isDropdownOpen) {

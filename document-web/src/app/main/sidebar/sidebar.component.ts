@@ -1,9 +1,9 @@
 import {Component, HostListener} from '@angular/core';
 import {NavigationService} from '../service/navigation.service';
-import {KeyValue, KeyValuePipe, NgClass, NgForOf, NgIf} from '@angular/common';
+import {KeyValuePipe, NgClass, NgIf} from '@angular/common';
 import {ResourceService} from '../service/resource.service';
 import {RouterLink, RouterLinkActive} from '@angular/router';
-import {Resources} from '../../Model/apiResponseFileTree';
+import {ContentGroup, Resources} from '../../Model/apiResponseFileTree';
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
 
 
@@ -14,7 +14,6 @@ import {CdkDragDrop} from '@angular/cdk/drag-drop';
     NgClass,
     RouterLink,
     RouterLinkActive,
-    NgForOf,
     KeyValuePipe,
     NgIf,
 
@@ -47,6 +46,10 @@ export class SidebarComponent {
 
   getAssetUrl(file: string): string {
     return file;
+  }
+
+  get contentMap(): Map<string, ContentGroup> {
+    return new Map(Object.entries(this.resourceService.fileTree()?.content ?? {}));
   }
 
   repoId: string = ""
@@ -162,4 +165,5 @@ export class SidebarComponent {
       console.log("auf resource")
     }
   }
+
 }

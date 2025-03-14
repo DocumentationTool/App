@@ -2,46 +2,91 @@
   <div class="left-sidebar">
     <nav class="nav flex-column">
       <ul>
+        <!-------------------------------------------For loop für alle Repos im FileTree--------------------------------------->
+        <ul>
+          @for (entry of (resourceService.content?.content ?? {}) | keyvalue; track entry.key) {
+            <li>
+              <a [href]="getAssetUrl(entry.key)"
+                 (click)="toggleRepo(entry.key); $event.preventDefault()"
+                 [ngClass]="{'active': resourceService.selectedFile()?.path === entry.key}">
+                {{ entry.key }}
+              </a>
+              <!-------------------------wenn Repo geöffnet, for loop für alle resourcen im Tree------------------------->
+              @if (isRepoOpen(entry.key)) {
+                <ul>
+                  @for (resource of entry.value.resources; track resource.path) {
+                    <li (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
+                        (mouseleave)="hoveredResource = null">
+                      <!--------------------bearbeitungs button am ende des resourcen namen---------------------------------->
+                      <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button"
+                              (click)="openMenu($event, resource)">
+                        &#x22EE;
+                      </button>
+                      <!---------------------------------------Resourcen name ----------------------------------------------->
+                      <a [href]="getAssetUrl(resource.path)"
+                         (click)="resourceService.onSelectResource(resource); $event.preventDefault()"
+                         [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
+                        {{ resource.path }}
+                      </a>
+                      <!---------------------------------------Edit Resource ------------------------------------------------>
+                      <div *ngIf="selectedResource === resource"
+                           class="popup-menu"
+                           [style.top.px]="menuPosition.y"
+                           [style.left.px]="menuPosition.x">
+                        <ul>
+                          <li (click)="editTags(resource)">Edit tags</li>
+                          <li (click)="moveResource(resource)">Move resource</li>
+                          <li (click)="deleteResource(resource)">Delete resource</li>
+                        </ul>
+                      </div>
+                    </li>
+                  }
+                  @for (child of (entry.value.children) | keyvalue; track child.key) {
+                    <li>
+                      <a [href]="getAssetUrl(child.key)"
+                         (click)="toggleRepo(child.key); $event.preventDefault()"
+                         [ngClass]="{'active': resourceService.selectedFile()?.path === child.key}">
+                        {{ child.key }}
+                      </a>
+                      @if (isRepoOpen(child.key)){
+                        @for (resource of child.value.resources; track resource.path) {
+                          <li (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
+                              (mouseleave)="hoveredResource = null">
+                            <!--------------------bearbeitungs button am ende des resourcen namen---------------------------------->
+                            <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button"
+                                    (click)="openMenu($event, resource)">
+                              &#x22EE;
+                            </button>
+                            <!---------------------------------------Resourcen name ----------------------------------------------->
+                            <a [href]="getAssetUrl(resource.path)"
+                               (click)="resourceService.onSelectResource(resource); $event.preventDefault()"
+                               [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
+                              {{ resource.path }}
+                            </a>
+                            <!---------------------------------------Edit Resource ------------------------------------------------>
+                            <div *ngIf="selectedResource === resource"
+                                 class="popup-menu"
+                                 [style.top.px]="menuPosition.y"
+                                 [style.left.px]="menuPosition.x">
+                              <ul>
+                                <li (click)="editTags(resource)">Edit tags</li>
+                                <li (click)="moveResource(resource)">Move resource</li>
+                                <li (click)="deleteResource(resource)">Delete resource</li>
+                              </ul>
+                            </div>
+                          </li>
+                        }
+                      }
 
-        <ul> <!--For loop für alles Repos im FileTree-->
-          <li *ngFor="let repo of resourceService.fileTree()?.content | keyvalue">
-            <a [href]="getAssetUrl(repo.key)"
-               (click)="toggleRepo(repo.key); $event.preventDefault()"
-               [ngClass]="{'active': resourceService.selectedFile()?.path === repo.key}">
-              {{ repo.key }}
-            </a>
-
-            <ul *ngIf="isRepoOpen(repo.key)"> <!--wenn Repo geöffnet, for loop für alle resourcen im Tree-->
-              <li *ngFor="let resource of repo.value.resources"
-                  (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
-                  (mouseleave)="hoveredResource = null">
-                <!--bearbeitungs button am ende des resourcen namen-->
-                <button *ngIf="hoveredResource === resource.path + ' ' + resource.repoId" class="menu-button"
-                        (click)="openMenu($event, resource)">
-                  &#x22EE;
-                </button>
-                <a [href]="getAssetUrl(resource.path)"
-                   (click)="resourceService.onSelectResource(resource); $event.preventDefault()"
-                   [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
-                  {{ resource.path }}
-                </a>
-
-                <div *ngIf="selectedResource === resource"
-                     class="popup-menu"
-                     [style.top.px]="menuPosition.y"
-                     [style.left.px]="menuPosition.x">
-                  <ul>
-                    <li (click)="editTags(resource)">Edit tags</li>
-                    <li (click)="moveResource(resource)">Move resource</li>
-                    <li (click)="deleteResource(resource)">Delete resource</li>
-                  </ul>
-                </div>
-
-              </li>
-            </ul>
-          </li>
+                    </li>
+                  }
+                </ul>
+              }
+            </li>
+          }
         </ul>
 
+        <!---------------------------------------------File Upload----- ----------------------------------------------->
         <div class="upload">
           <input #fileInput type="file" accept=".md" style="display: none" (change)="onUpload($event)"/>
           <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>

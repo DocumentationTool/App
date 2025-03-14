@@ -2,6 +2,7 @@ import {Injectable, signal, WritableSignal} from '@angular/core';
 import {Router} from '@angular/router';
 import {ApiResource} from '../../api/apiResource';
 import {ApiResponseFileTree, Resources} from '../../Model/apiResponseFileTree';
+import {ApiResponseResource} from '../../Model/apiResponseResource';
 
 @Injectable({
   providedIn: 'root'
@@ -16,6 +17,7 @@ export class ResourceService {
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
   selectedFile = signal<Resources | null>(null); //Das derzeit ausgewählte File
   editingFile = signal<Resources | null>(null)
+  searchResults = signal<ApiResponseResource | null> (null);
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
 
@@ -101,7 +103,7 @@ export class ResourceService {
   addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
     this.apiResource.addResource(repoId, path, createdBy, category, tagIds, data).subscribe(
       data => {
-        console.log("data",data)
+        console.log("data", data)
         this.loadFileTree();
       },
       error => {
@@ -114,12 +116,12 @@ export class ResourceService {
 
   }
 
-  getTag() {
-
+  getTag(repoId: string | null) {
+    this.apiResource.getTag(repoId)
   }
 
   removeResource(repoId: string, path: string) {
-    this.apiResource.removeResource(repoId,path).subscribe(
+    this.apiResource.removeResource(repoId, path).subscribe(
       data => {
         //ToDo: erfolgsnachricht
         this.loadFileTree();
@@ -134,8 +136,16 @@ export class ResourceService {
 
   }
 
-  getResource() {
-
+  getResource(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
+              whiteListTags: string[], blacklistListTags: string[]) {
+    this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
+      data => {
+        this.searchResults.set(data);
+      },
+      error => {
+        console.error(error)
+      }
+    )
   }
 
   loadFileTree() {
@@ -143,10 +153,15 @@ export class ResourceService {
       data => {
         this.fileTree.set(data);
         console.log(this.fileTree());
+        console.log(this.fileTree()?.content);
       },
       error => {
         console.error('Error loading file tree:', error);
       }
     );
+  }
+
+  get content(){
+    return this.fileTree();
   }
 }
