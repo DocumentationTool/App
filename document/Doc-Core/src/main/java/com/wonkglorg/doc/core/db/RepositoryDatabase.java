@@ -311,7 +311,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      *
      * @param tag the tag to add
      */
-    public UpdateDatabaseResponse addTag(Tag tag) {
+    public UpdateDatabaseResponse createTag(Tag tag) {
         log.info("Adding tag {} for repo {}", tag, repoProperties.getId());
         if (tagExists(tag.tagId())) {
             return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag already exists"));
@@ -350,6 +350,15 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         }
         return QueryDatabaseResponse.success(this.getRepoId(),
                 tagCache.values().stream().filter(tag -> tag.tagId().equals(tagId) || tagId == null).collect(Collectors.toList()));
+    }
+
+
+    /**
+     * Gets all tags from the database
+     * @return the tags
+     */
+    public List<Tag> getTags() {
+        return new ArrayList<>(tagCache.values());
     }
 
     /**

@@ -213,7 +213,8 @@ public class ApiResourceController {
             @RequestParam("repoTo") String repoTo,
             @RequestParam("pathTo") String to) {
         try {
-            return RestResponse.of(resourceService.move(new UserId(userId), new RepoId(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to))).toResponse();
+            resourceService.move(new UserId(userId), new RepoId(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
+            return RestResponse.<Void>success("Successfully moved '%s' to '%s'".formatted(from, to), null).toResponse();
         } catch (CoreException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
@@ -224,40 +225,28 @@ public class ApiResourceController {
 
     @Operation(summary = "Adds a new Tag", description = "Adds a new Tag to the repository.")
     @PutMapping("tag/add")
-    public ResponseEntity<RestResponse<Void>> addTag(@Parameter(description = "The repoId to add the tag in.") @RequestParam("repoId") String id,
+    public ResponseEntity<RestResponse<Void>> addTag(@Parameter(description = "The repoId to add the tag in.") @RequestParam("repoId") String repoId,
                                                      @Parameter(description = "the id of the tag to be added.") @RequestParam("tagId") String tagId,
                                                      @Parameter(description = "the name to display for the tag id.") @RequestParam("tagName") String tagName) {
-
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            if (resourceService.tagExists(repoId, new TagId(tagId))) {
-                throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
-            }
-
-            Tag tag = new Tag(new TagId(tagId), tagName);
-            return RestResponse.of(repoService.getRepo(repoId).getDatabase().addTag(tag)).toResponse();
-        } catch (
-                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            resourceService.createTag(new RepoId(repoId), new Tag(new TagId(tagId), tagName));
+            return RestResponse.<Void>success("Created tag '%s' in repo '%s'".formatted(tagId, repoId), null).toResponse();
+        } catch (ClientException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while adding resource", e);
+            log.error("Error while adding tag", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 
-    @Operation(summary = "Removes a Tag", description = "The tag to remove from the destination.")
+    @Operation(summary = "Removes a Tag", description = "The tag to remove from the repository.")
     @PostMapping("/tag/remove")
-    public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String id,
+    public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String repoId,
                                                         @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            if (resourceService.tagExists(repoId, new TagId(tagId))) {
-                throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
-            }
-
-            return RestResponse.of(repoService.getRepo(repoId).getDatabase().removeTag(new TagId(tagId))).toResponse();
-        } catch (
-                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            resourceService.removeTag(new RepoId(repoId), new TagId(tagId));
+            return RestResponse.<Void>success("Removed tag '%s' from repo '%s'".formatted(tagId, repoId), null).toResponse();
+        } catch (CoreException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while adding resource", e);
@@ -265,18 +254,13 @@ public class ApiResourceController {
         }
     }
 
-    @Operation(summary = "Moves a resource", description = "The tag to retrieve")
+    @Operation(summary = "Retrieves all Tags", description = "Retrieves all tags from a specific repository.")
     @PostMapping("/tag/get")
-    public ResponseEntity<RestResponse<List<Tag>>> getTags(@Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam("repoId") String id,
-                                                           @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
+    public ResponseEntity<RestResponse<List<Tag>>> getTags(@Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam(value = "repoId", required = false) String repoId) {
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            if (resourceService.tagExists(repoId, new TagId(tagId))) {
-                throw new CoreException(repoId, "Tag '%s' already exists in repository '%s'".formatted(tagId, repoId));
-            }
-            return RestResponse.of(repoService.getRepo(repoId).getDatabase().getTags(new TagId(tagId))).toResponse();
-        } catch (
-                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            List<Tag> tags = resourceService.getTags(repoId == null ? RepoId.ALL_REPOS : new RepoId(repoId));
+            return RestResponse.success(tags).toResponse();
+        } catch (CoreException e) {
             return RestResponse.<List<Tag>>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while adding resource", e);
@@ -286,21 +270,11 @@ public class ApiResourceController {
 
     @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
     @PutMapping("/editing/set")
-    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String id,
+    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String repoId,
                                                          @RequestParam("path") String path,
                                                          @RequestParam("userId") String userId) {
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            Path pPath = Path.of(path);
-            if (!resourceService.resourceExists(repoId, pPath)) {
-                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
-            }
-            UserId uId = userService.validateUserId(repoId, userId);
-
-            if (resourceService.isBeingEdited(repoId, pPath)) {
-                throw new CoreException(repoId, "Resource '%s' is already being edited".formatted(pPath));
-            }
-            resourceService.setCurrentlyEdited(repoId, uId, pPath);
+            resourceService.setCurrentlyEdited(new RepoId(repoId), new UserId(userId), Path.of(path));
             return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(pPath, uId), null).toResponse();
         } catch (
                 CoreException e) { //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder

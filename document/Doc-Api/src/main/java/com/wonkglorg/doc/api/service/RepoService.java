@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.TagId;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -133,5 +134,4 @@ public class RepoService {
             throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
         }
     }
-
 }
