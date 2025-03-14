@@ -2,18 +2,16 @@ package com.wonkglorg.doc.core.db;
 
 import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.dbs.SqliteDatabase;
-import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
 import com.wonkglorg.doc.core.db.functions.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
 import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
+import com.wonkglorg.doc.core.exception.client.TagExistsException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
-import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
-import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import com.zaxxer.hikari.HikariConfig;
@@ -297,13 +295,13 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      * @param resource the resource to insert
      * @return the row count affected, -1 if an error occurred
      */
-    public UpdateDatabaseResponse insertResource(Resource resource) throws ClientException {
+    public void insertResource(Resource resource) throws ClientException {
         log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
         if (resourceExists(resource.resourcePath())) {
-            return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Resource already exists"));
+            throw new ClientException("Resource '%s' in '%s' already exists".formatted(resource.resourcePath(), resource.repoId()));
         }
+        ResourceFunctions.insertResource(this, resource);
         resourceCache.put(resource.resourcePath(), resource);
-        return ResourceFunctions.insertResource(this, resource);
     }
 
     /**
@@ -311,13 +309,13 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      *
      * @param tag the tag to add
      */
-    public UpdateDatabaseResponse createTag(Tag tag) {
+    public void createTag(Tag tag) {
         log.info("Adding tag {} for repo {}", tag, repoProperties.getId());
         if (tagExists(tag.tagId())) {
-            return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag already exists"));
+            throw new TagExistsException("Tag '%s' already exists".formatted(tag.tagId()));
         }
         tagCache.put(tag.tagId(), tag);
-        return ResourceFunctions.addTag(this, tag);
+        ResourceFunctions.addTag(this, tag);
     }
 
     /**
@@ -325,16 +323,12 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      *
      * @param id the id of the tag to remove
      */
-    public UpdateDatabaseResponse removeTag(TagId id) {
+    public void removeTag(TagId id) {
         log.info("Removing tag {} for repo {}", id, repoProperties.getId());
-        if (!tagExists(id)) {
-            return UpdateDatabaseResponse.fail(this.getRepoId(), new RuntimeException("Tag does not exist"));
-        }
+        ResourceFunctions.removeTag(this, id);
         tagCache.remove(id);
-        UpdateDatabaseResponse updateDatabaseResponse = ResourceFunctions.removeTag(this, id);
         //remove tags from resource cache
         resourceCache.values().forEach(r -> r.getResourceTags().remove(id));
-        return updateDatabaseResponse;
     }
 
     /**
@@ -355,6 +349,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
 
     /**
      * Gets all tags from the database
+     *
      * @return the tags
      */
     public List<Tag> getTags() {
@@ -440,21 +435,17 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
      *
      * @param userId   the username of the user (does not validate if the user already exists that should be done beforehand)
      * @param password the password of the user
-     * @return
+     * @return true if the user was created, false otherwise
      */
-    public UpdateDatabaseResponse createUser(UserId userId, String password) {
+    public boolean createUser(UserId userId, String password) {
         log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
 
-        if (userExists(userId)) {
-            return UpdateDatabaseResponse.fail(repoId, new NotaRepoException(repoId, "User '%s' already exists".formatted(userId)));
-        }
+        boolean isAdded = UserFunctions.addUser(this, userId, password, null);
 
-        UpdateDatabaseResponse updateDatabaseResponse = UserFunctions.addUser(this, userId, password, null);
-
-        if (updateDatabaseResponse.isSuccess()) {
+        if (isAdded) {
             userProfiles.put(userId, new UserProfile(userId, password, new HashSet<>(), new HashSet<>()));
         }
-        return updateDatabaseResponse;
+        return isAdded;
     }
 
     public List<UserId> getUsersFromGroup(GroupId groupId) {
@@ -483,13 +474,19 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return profiles;
     }
 
-    public UpdateDatabaseResponse deleteUser(UserId userId) {
+    /**
+     * Deletes a user from the database
+     *
+     * @param userId the user to delete
+     * @return true if the user was deleted, false otherwise
+     */
+    public boolean deleteUser(UserId userId) {
         log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
-        var updateDatabaseResponse = UserFunctions.deleteUser(this, userId);
-        if (updateDatabaseResponse.isSuccess()) {
+        var wasDeleted = UserFunctions.deleteUser(this, userId);
+        if (wasDeleted) {
             userProfiles.remove(userId);
         }
-        return updateDatabaseResponse;
+        return wasDeleted;
     }
 
     public RepoId getRepoId() {
@@ -553,4 +550,13 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         currentlyEdited.entrySet().removeIf(entry -> entry.getValue().equals(path));
     }
 
+    public void createGroup(GroupId groupId) {
+        log.info("Creating group '{}' in repo '{}'", groupId, repoProperties.getId());
+        groupCache.put(groupId, new Group(groupId, new HashSet<>()));
+        UserFunctions.createGroup(this, groupId);
+    }
+
+    public void deleteGroup(GroupId groupId) {
+        UserFunctions.deleteGroup(this, groupId);
+    }
 }

@@ -148,7 +148,6 @@ public class FileRepository {
         for (var tag : tags) {
             if (!getDatabase().tagExists(tag)) {
                 throw new InvalidTagException("Tag '%s' does not exist in '%s'".formatted(tag, repoProperties.getId()));
-
             }
         }
     }

@@ -2,6 +2,7 @@ package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
@@ -29,18 +30,18 @@ public class UserFunctions {
      * @param createdBy the admin or system who created this user
      * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) {
+    public static boolean addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")) {
             statement.setString(1, userId.toString());
             statement.setString(2, password);
             statement.setString(3, createdBy);
             statement.setString(4, createdBy);
-            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
+            return true;
         } catch (Exception e) {
             String errorResponse = "Failed to add user";
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         } finally {
             closeConnection(connection);
         }
@@ -258,17 +259,25 @@ public class UserFunctions {
     }
 
 
-    public static UpdateDatabaseResponse deleteUser(RepositoryDatabase database, UserId userId) {
+    public static boolean deleteUser(RepositoryDatabase database, UserId userId) {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("DELETE FROM Users WHERE user_id = ?")) {
             statement.setString(1, userId.id());
-            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
+            return statement.executeUpdate() > 0;
         } catch (Exception e) {
-            String errorResponse = "Failed to delete user '%s'".formatted(userId);
+            String errorResponse = "Failed to delete user '%s' in '%s'".formatted(userId, database.getRepoId());
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         } finally {
             closeConnection(connection);
         }
+    }
+
+    public static boolean createGroup(RepositoryDatabase database, GroupId groupId) {
+        throw new RuntimeException("Group creation not implemented yet");
+    }
+
+    public static void deleteGroup(RepositoryDatabase database, GroupId groupId) {
+        throw new RuntimeException("Group deletion not implemented yet");
     }
 }

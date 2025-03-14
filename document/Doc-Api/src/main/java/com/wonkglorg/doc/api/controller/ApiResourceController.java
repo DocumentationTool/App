@@ -3,11 +3,8 @@ package com.wonkglorg.doc.api.controller;
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.json.JsonResourceEdit;
-import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.ResourceService;
-import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.exception.CoreException;
-import com.wonkglorg.doc.core.exception.ResourceException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
@@ -16,7 +13,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,13 +32,9 @@ import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_RES
 public class ApiResourceController {
     private static final Logger log = LoggerFactory.getLogger(ApiResourceController.class);
     private final ResourceService resourceService;
-    private final RepoService repoService;
-    private final UserService userService;
 
-    public ApiResourceController(@Lazy RepoService repoService, ResourceService resourceService, UserService userService) {
+    public ApiResourceController(ResourceService resourceService) {
         this.resourceService = resourceService;
-        this.repoService = repoService;
-        this.userService = userService;
     }
 
     @Operation(summary = "Gets a resource", description = """
@@ -148,12 +140,7 @@ public class ApiResourceController {
             The data the file should contain.
             """)
     @PutMapping("/add")
-    public ResponseEntity<RestResponse<Void>> insertResource(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
-                                                             @Parameter(description = "The path to the resource.") @RequestParam("path") String path,
-                                                             @Parameter(description = "The user who created the resource.") @RequestParam("createdBy") String createdBy,
-                                                             @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category,
-                                                             @RequestParam(value = "tagIds", required = false) List<String> tagIds,
-                                                             @RequestBody String content) {
+    public ResponseEntity<RestResponse<Void>> insertResource(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId, @Parameter(description = "The path to the resource.") @RequestParam("path") String path, @Parameter(description = "The user who created the resource.") @RequestParam("createdBy") String createdBy, @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category, @RequestParam(value = "tagIds", required = false) List<String> tagIds, @RequestBody String content) {
         try {
             List<TagId> tags;
             if (tagIds != null && !tagIds.isEmpty()) {
@@ -206,12 +193,7 @@ public class ApiResourceController {
 
     @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
     @PostMapping("/move")
-    public ResponseEntity<RestResponse<Void>> moveResource(
-            @RequestParam("userId") String userId,
-            @RequestParam("repoFrom") String repoFrom,
-            @RequestParam("pathFrom") String from,
-            @RequestParam("repoTo") String repoTo,
-            @RequestParam("pathTo") String to) {
+    public ResponseEntity<RestResponse<Void>> moveResource(@RequestParam("userId") String userId, @RequestParam("repoFrom") String repoFrom, @RequestParam("pathFrom") String from, @RequestParam("repoTo") String repoTo, @RequestParam("pathTo") String to) {
         try {
             resourceService.move(new UserId(userId), new RepoId(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
             return RestResponse.<Void>success("Successfully moved '%s' to '%s'".formatted(from, to), null).toResponse();
@@ -225,9 +207,7 @@ public class ApiResourceController {
 
     @Operation(summary = "Adds a new Tag", description = "Adds a new Tag to the repository.")
     @PutMapping("tag/add")
-    public ResponseEntity<RestResponse<Void>> addTag(@Parameter(description = "The repoId to add the tag in.") @RequestParam("repoId") String repoId,
-                                                     @Parameter(description = "the id of the tag to be added.") @RequestParam("tagId") String tagId,
-                                                     @Parameter(description = "the name to display for the tag id.") @RequestParam("tagName") String tagName) {
+    public ResponseEntity<RestResponse<Void>> addTag(@Parameter(description = "The repoId to add the tag in.") @RequestParam("repoId") String repoId, @Parameter(description = "the id of the tag to be added.") @RequestParam("tagId") String tagId, @Parameter(description = "the name to display for the tag id.") @RequestParam("tagName") String tagName) {
         try {
             resourceService.createTag(new RepoId(repoId), new Tag(new TagId(tagId), tagName));
             return RestResponse.<Void>success("Created tag '%s' in repo '%s'".formatted(tagId, repoId), null).toResponse();
@@ -241,8 +221,7 @@ public class ApiResourceController {
 
     @Operation(summary = "Removes a Tag", description = "The tag to remove from the repository.")
     @PostMapping("/tag/remove")
-    public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String repoId,
-                                                        @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
+    public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String repoId, @Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
         try {
             resourceService.removeTag(new RepoId(repoId), new TagId(tagId));
             return RestResponse.<Void>success("Removed tag '%s' from repo '%s'".formatted(tagId, repoId), null).toResponse();
@@ -270,12 +249,10 @@ public class ApiResourceController {
 
     @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
     @PutMapping("/editing/set")
-    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String repoId,
-                                                         @RequestParam("path") String path,
-                                                         @RequestParam("userId") String userId) {
+    public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String repoId, @RequestParam("path") String path, @RequestParam("userId") String userId) {
         try {
             resourceService.setCurrentlyEdited(new RepoId(repoId), new UserId(userId), Path.of(path));
-            return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(pPath, uId), null).toResponse();
+            return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(path, repoId), null).toResponse();
         } catch (
                 CoreException e) { //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
             return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -287,22 +264,15 @@ public class ApiResourceController {
 
     @Operation(summary = "Checks if a resource is being edited", description = "Returns information about a files editing status.")
     @GetMapping("/editing/get")
-    public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+    public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String repoId, @RequestParam("path") String path) {
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            Path pPath = Path.of(path);
-            if (!resourceService.resourceExists(repoId, pPath)) {
-                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
-            }
-
+            UserId editingUser = resourceService.getEditingUser(new RepoId(repoId), Path.of(path));
             JsonResourceEdit response = new JsonResourceEdit();
-            UserId editingUser = resourceService.getEditingUser(repoId, pPath);
             response.editingUser = editingUser != null ? editingUser.id() : null;
             response.isBeingEdited = editingUser != null;
             response.file = path;
             return RestResponse.success(response).toResponse();
-        } catch (
-                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+        } catch (ClientException e) {
             return RestResponse.<JsonResourceEdit>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while checking edited state ", e);
@@ -312,16 +282,10 @@ public class ApiResourceController {
 
     @Operation(summary = "Removes a file as being edited", description = "Frees up a resource from its editing lock allowing anyone to take and edit it again.")
     @PostMapping("/editing/remove")
-    public ResponseEntity<RestResponse<Void>> removeEditedState(@RequestParam("repoId") String id, @RequestParam("path") String path) {
+    public ResponseEntity<RestResponse<Void>> removeEditedState(@RequestParam("repoId") String repoId, @RequestParam("path") String path) {
         try {
-            RepoId repoId = repoService.validateRepoId(id);
-            Path pPath = Path.of(path);
-            if (!resourceService.resourceExists(repoId, pPath)) {
-                throw new ResourceException(repoId, "Resource '%s' does not exist in repository '%s'".formatted(pPath, repoId));
-            }
-
-            resourceService.removeCurrentlyEdited(repoId, pPath);
-            return RestResponse.<Void>success("Removed '%s' as being edited".formatted(pPath), null).toResponse();
+            resourceService.removeCurrentlyEdited(RepoId.of(repoId), Path.of(path));
+            return RestResponse.<Void>success("Removed '%s' as being edited".formatted(path), null).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
             return RestResponse.<Void>error(e.getMessage()).toResponse();

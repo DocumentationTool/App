@@ -1,10 +1,7 @@
 package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
-import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
-import com.wonkglorg.doc.core.response.ScriptDatabaseResponse;
-import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
-import jdk.jshell.spi.ExecutionControl;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +21,9 @@ public class DatabaseFunctions {
     }
 
     /**
-     * Initializes the database with the required tables
-     *
-     * @return {@link ScriptDatabaseResponse}
+     * Initializes the database with the required tables and constraints
      */
-    public static ScriptDatabaseResponse initializeDatabase(RepositoryDatabase database) {
+    public static void initializeDatabase(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             statement.execute("PRAGMA foreign_keys = OFF");
@@ -186,30 +181,23 @@ public class DatabaseFunctions {
             statement.execute("INSERT OR IGNORE INTO Roles(role_id, role_name) VALUES ('user', 'User')");
 
             statement.execute("PRAGMA foreign_keys = ON");
-            return ScriptDatabaseResponse.success(database.getRepoId());
         } catch (Exception e) {
-            String errorResponse = "Error while initializing the database";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException("Error while initializing the database in '%s'".formatted(database.getRepoId()), e);
         } finally {
             closeConnection(connection);
-            ;
         }
     }
 
     /**
      * Rebuilds the FTS table when called, this is a slow operation and should only be done when there is a specific need to do so
      */
-    public static UpdateDatabaseResponse rebuildFts(RepositoryDatabase database) {
+    public static void rebuildFts(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             //noinspection SqlResolve on purpose sql plugin doesn't recognize the fts specific commands
-            int i = statement.executeUpdate(("INSERT INTO FileData(FileData) VALUES ('rebuild')"));
-            return UpdateDatabaseResponse.success(database.getRepoId(), i);
+            statement.executeUpdate(("INSERT INTO FileData(FileData) VALUES ('rebuild')"));
         } catch (Exception e) {
-            String errorResponse = "Error while rebuilding FTS";
-            log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException("Error while rebuilding FTS in '%s'".formatted(database.getRepoId()), e);
         } finally {
             closeConnection(connection);
         }
@@ -217,10 +205,8 @@ public class DatabaseFunctions {
 
     /**
      * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
-     *
-     * @return {@link ScriptDatabaseResponse}
      */
-    public static ScriptDatabaseResponse initializeTriggers(RepositoryDatabase database) {
+    public static void initializeTriggers(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             statement.execute("""
@@ -287,22 +273,11 @@ public class DatabaseFunctions {
                     END;
                     """);
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(e.getMessage(), e));
+            throw new CoreSqlException("Error while initializing the database", e);
         } finally {
             closeConnection(connection);
         }
-        return ScriptDatabaseResponse.success(database.getRepoId());
     }
-
-    //todo:jmd implement
-    public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
-        /*
-        try (var statement = database.getConnection().prepareStatement("")) {}
-        */
-        return UpdateDatabaseResponse.fail(database.getRepoId(), new ExecutionControl.NotImplementedException("Method not implemented yet"));
-    }
-
 
     private static void closeConnection(Connection connection) {
         try {

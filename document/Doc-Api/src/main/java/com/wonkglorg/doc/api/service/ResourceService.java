@@ -20,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Component
 @Service
@@ -61,8 +62,8 @@ public class ResourceService {
      * @param path   the path
      * @return true if the resource exists
      */
-    public boolean resourceExists(RepoId repoId, Path path) throws NotaRepoException {
-        return repoService.getRepo(repoId).getDatabase().resourceExists(path).get();
+    public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
+        return repoService.getRepo(repoId).getDatabase().resourceExists(path);
     }
 
     /**
@@ -75,7 +76,7 @@ public class ResourceService {
     public boolean tagExists(RepoId repoId, TagId tagId) {
         try {
             return repoService.getRepo(repoId).getDatabase().tagExists(tagId);
-        } catch (NotaRepoException e) {
+        } catch (InvalidTagException e) {
             return false;
         }
     }
@@ -108,7 +109,7 @@ public class ResourceService {
         for (TagId id : ids) {
             Tag tag = repo.getDatabase().getTagCache().get(id);
             if (tag == null) {
-                throw new InvalidTagException(repoId, "Tag '%s' does not exist".formatted(id));
+                throw new InvalidTagException("Tag '%s' does not exist".formatted(id));
             }
             tags.add(tag);
         }
@@ -118,6 +119,7 @@ public class ResourceService {
 
     /**
      * Gets all tags in a repository or all repositories if specified
+     *
      * @param repoId the repo id
      * @return the tags
      */
@@ -248,9 +250,10 @@ public class ResourceService {
         if (!resourceExists(id, path)) {
             throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, id));
         }
-        repo.checkTags(request.tagsToSet);
-        repo.checkTags(request.tagsToAdd);
-        repo.checkTags(request.tagsToRemove);
+
+        repo.checkTags(request.tagsToSet.stream().map(TagId::new).collect(Collectors.toSet()));
+        repo.checkTags(request.tagsToAdd.stream().map(TagId::new).collect(Collectors.toSet()));
+        repo.checkTags(request.tagsToRemove.stream().map(TagId::new).collect(Collectors.toSet()));
 
         Resource resource = repo.getDatabase().updateResourceData(request);
         repo.addResourceAndCommit(resource);
@@ -260,12 +263,14 @@ public class ResourceService {
     /**
      * Check if a file is currently being edited
      *
-     * @param id   the repo id
-     * @param path the path to check
-     * @return true if it is being edited, false otherwise
+     * @param repoId the repo repoId
+     * @param path   the path to check
+     * @return the user editing the file or null if not being edited
      */
-    public UserId getEditingUser(RepoId id, Path path) {
-        return repoService.getRepo(id).getDatabase().isBeingEdited(path);
+    public UserId getEditingUser(RepoId repoId, Path path) {
+        repoService.validateRepoId(repoId);
+        validateResource(repoId, path);
+        return repoService.getRepo(repoId).getDatabase().isBeingEdited(path);
     }
 
     /**
@@ -294,18 +299,14 @@ public class ResourceService {
      *
      * @param userId the user editing
      * @param path   the path to the file
-     * @return true if the file is now being edited, false otherwise
      */
     public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path) {
         repoService.validateRepoId(repoId);
         validateResource(repoId, path);
-        UserId uId = userService.validateUserId(repoId, userId);
-
-        if (resourceService.isBeingEdited(repoId, pPath)) {
-            throw new CoreException(repoId, "Resource '%s' is already being edited".formatted(pPath));
+        userService.validateUserId(repoId, userId);
+        if (isBeingEdited(repoId, path)) {
+            throw new CoreException("Resource '%s' in '%s' is already being edited by '%s'".formatted(path, repoId, userId));
         }
-
-
         repoService.getRepo(repoId).getDatabase().setCurrentlyEdited(userId, path);
     }
 
@@ -329,8 +330,10 @@ public class ResourceService {
      *
      * @param userId the user to remove
      */
-    public void removeCurrentlyEdited(RepoId id, UserId userId) {
-        repoService.getRepo(id).getDatabase().removeCurrentlyEdited(userId);
+    public void removeCurrentlyEdited(RepoId repoId, UserId userId) {
+        repoService.validateRepoId(repoId);
+        userService.validateUserId(repoId, userId);
+        repoService.getRepo(repoId).getDatabase().removeCurrentlyEdited(userId);
     }
 
     /**
@@ -339,6 +342,8 @@ public class ResourceService {
      * @param path the path to the file
      */
     public void removeCurrentlyEdited(RepoId id, Path path) {
+        repoService.validateRepoId(id);
+        validateResource(id, path);
         repoService.getRepo(id).getDatabase().removeCurrentlyEdited(path);
     }
 
