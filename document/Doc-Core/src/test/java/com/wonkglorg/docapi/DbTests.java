@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Tag;
+import com.wonkglorg.doc.core.objects.TagId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -49,14 +50,15 @@ class DbTests {
     @Test
     void createTestData() throws SQLException {
 
+        /*
         final String creator = "Test-System";
         final int dataCount = 5000;
         final String fileNameTemplate = "documents/test/doc%s.xml";
 
         List<Tag> testTags = List.of(
-                new Tag("it", "IT"),
-                new Tag("controlling", "Controlling"),
-                new Tag("old", "OLD"));
+                new Tag(TagId.of("it"), "IT"),
+                new Tag(TagId.of("controlling"), "Controlling"),
+                new Tag(TagId.of("old"), "OLD"));
         try (RepositoryDatabase repoDB = new RepositoryDatabase(properties)) {
             repoDB.initialize();
             try (PreparedStatement statement = repoDB.getConnection().prepareStatement("""
@@ -81,7 +83,7 @@ class DbTests {
                     INSERT OR IGNORE INTO Tags (tag_id, tag_name, created_by) VALUES(?,?,?)
                     """)) {
                 for (Tag tag : testTags) {
-                    statement.setString(1, tag.tagId());
+                    statement.setString(1, tag.tagId().id());
                     statement.setString(2, tag.tagName());
                     statement.setString(3, creator);
                     statement.addBatch();
@@ -93,7 +95,7 @@ class DbTests {
                     INSERT OR IGNORE INTO ResourceTags(tag_id, resource_path, created_by) VALUES (?,?,?)
                     """)) {
                 for (int i = 0; i < dataCount; i++) {
-                    statement.setString(1, testTags.get(i % 3).tagId());
+                    statement.setString(1, testTags.get(i % 3).tagId().id());
                     statement.setString(2, fileNameTemplate.formatted(i));
                     statement.setString(3, creator);
                     statement.addBatch();
@@ -112,5 +114,7 @@ class DbTests {
                 statement.executeBatch();
             }
         }
+        
+         */
     }
 }

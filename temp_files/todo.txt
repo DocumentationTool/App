@@ -113,3 +113,14 @@ Ant Path matching
 
 
 https://stackoverflow.com/questions/2952196/ant-path-style-patterns
+
+
+
+
+
+✅ Use MockMvc for unit tests (fast execution).
+✅ Use TestRestTemplate for integration tests.
+✅ Use RestAssured for API contract testing.
+✅ Use Cucumber for BDD-style tests.
+✅ Use Gatling for performance/load testing.
+✅ Use Testcontainers for real database interactions in tests.
