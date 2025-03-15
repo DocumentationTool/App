@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -19,7 +20,7 @@ public final class Resource{
 	private final LocalDateTime modifiedAt;
 	private final String modifiedBy;
 	private final RepoId repoId;
-	private final List<TagId> resourceTags = new ArrayList<>();
+	private final Set<TagId> resourceTags = new HashSet<>();
 	private final boolean isEditable;
 	private final String category;
 	private String data;
@@ -30,7 +31,7 @@ public final class Resource{
 					LocalDateTime modifiedAt,
 					String modifiedBy,
 					RepoId repoId,
-					List<TagId> resourceTags,
+					Set<TagId> resourceTags,
 					boolean isEditable,
 					String category,
 					String data) {
@@ -47,7 +48,7 @@ public final class Resource{
 		this.data = data;
 	}
 	
-	public Resource(Path resourcePath, String creator, RepoId repoId, String category, List<TagId> tags, String data) {
+	public Resource(Path resourcePath, String creator, RepoId repoId, String category, Set<TagId> tags, String data) {
 		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, false, category, data);
 	}
 	
@@ -83,7 +84,7 @@ public final class Resource{
 		return repoId;
 	}
 	
-	public List<TagId> getResourceTags() {
+	public Set<TagId> getResourceTags() {
 		return resourceTags;
 	}
 	
@@ -106,7 +107,7 @@ public final class Resource{
 				modifiedAt,
 				modifiedBy,
 				repoId,
-				new ArrayList<>(resourceTags),
+				new HashSet<>(resourceTags),
 				isEditable,
 				category,
 				data);

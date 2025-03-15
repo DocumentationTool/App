@@ -19,8 +19,11 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_RESOURCE;
 
@@ -142,11 +145,11 @@ public class ApiResourceController {
     @PutMapping("/add")
     public ResponseEntity<RestResponse<Void>> insertResource(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId, @Parameter(description = "The path to the resource.") @RequestParam("path") String path, @Parameter(description = "The user who created the resource.") @RequestParam("createdBy") String createdBy, @Parameter(description = "The category of the resource.") @RequestParam(value = "category", required = false) String category, @RequestParam(value = "tagIds", required = false) List<String> tagIds, @RequestBody String content) {
         try {
-            List<TagId> tags;
+            Set<TagId> tags;
             if (tagIds != null && !tagIds.isEmpty()) {
-                tags = tagIds.stream().map(TagId::new).toList();
+                tags = tagIds.stream().map(TagId::new).collect(Collectors.toSet());
             } else {
-                tags = new ArrayList<>();
+                tags = new HashSet<>();
             }
 
             Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repoId), category, tags, content);

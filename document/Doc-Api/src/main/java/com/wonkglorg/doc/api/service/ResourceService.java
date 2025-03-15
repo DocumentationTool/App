@@ -148,7 +148,7 @@ public class ResourceService {
             throw new ClientException("The resource '%s' already exists in repository '%s'".formatted(path, id));
         }
         FileRepository repo = repoService.getRepo(id);
-        repo.checkTags(resource.getResourceTags().keySet());
+        repo.checkTags(resource.getResourceTags());
         repo.getDatabase().insertResource(resource);
         repo.addResourceAndCommit(resource);
     }

@@ -163,9 +163,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	/**
 	 * Gets all resources from this database without its data filled in
-	 *
-	 * @return
-	 * @throws RuntimeSQLException
+	 *n
 	 */
 	public List<Resource> getResources(ResourceRequest request) throws CoreException {
 		Map<Path, Resource> resources = new HashMap<>(resourceCache);
@@ -192,8 +190,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		resources = resources.entrySet()
 							 .stream()
 							 .filter(entry -> request.whiteListTags.isEmpty() ||
-											  entry.getValue().hasAnyTag(request.whiteListTags))
-							 .filter(entry -> request.blacklistTags.isEmpty() || !entry.getValue().hasAnyTag(request.blacklistTags))
+											  entry.getValue().hasAnyTag(request.whiteListTags.stream().map(TagId::new).collect(Collectors.toList())))
+							 .filter(entry -> request.blacklistTags.isEmpty() ||
+											  !entry.getValue().hasAnyTag(request.blacklistTags.stream().map(TagId::new).collect(Collectors.toList())))
 							 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		
 		// Handle user-specific filtering

@@ -2,9 +2,9 @@ package com.wonkglorg.doc.api.json;
 
 import com.wonkglorg.doc.core.objects.Resource;
 
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -16,7 +16,7 @@ public class JsonResource{
 	public String createdBy;
 	public String createdAt;
 	public String category;
-	public Map<String, String> tags = new HashMap<>();
+	public Set<String> tags = new HashSet<>();
 	public String lastModifiedBy;
 	public String lastModifiedAt;
 	public boolean isEditable;
@@ -32,8 +32,8 @@ public class JsonResource{
 		lastModifiedAt = resource.getModifiedAt();
 		data = resource.data();
 		isEditable = resource.isEditable();
-		for(var tag : resource.getResourceTags().values()){
-			tags.put(tag.tagId().id(), tag.tagName());
+		for(var tag : resource.getResourceTags()){
+			tags.add(tag.id());
 		}
 	}
 	

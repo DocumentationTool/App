@@ -156,7 +156,7 @@ public class ResourceFunctions {
                 DateHelper.parseDateTime(resultSet.getString("last_modified_at")),
                 resultSet.getString("last_modified_by"),
                 database.getRepoProperties().getId(),
-                new ArrayList<>(tags),
+                new HashSet<>(tags),
                 !database.getRepoProperties().isReadOnly(),
                 resultSet.getString("category"),
                 data);

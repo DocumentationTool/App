@@ -207,13 +207,13 @@ public class FileRepository {
             String content = readData(gitRepo, file);
             if (lastCommitDetailsForFile == null) {
                 log.error("File '{}' was not added by git", file);
-                newResource = new Resource(file, "system", repoProperties.getId(), null, new ArrayList<>(), content);
+                newResource = new Resource(file, "system", repoProperties.getId(), null, new HashSet<>(), content);
             } else {
                 newResource = new Resource(file,
                         lastCommitDetailsForFile.getAuthorIdent().getName(),
                         repoProperties.getId(),
                         null,
-                        new ArrayList<>(),
+                        new HashSet<>(),
                         content);
             }
             resources.add(newResource);
