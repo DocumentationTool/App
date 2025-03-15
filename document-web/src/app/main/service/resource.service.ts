@@ -33,7 +33,7 @@ export class ResourceService {
   }
 
   selectResource(file: any) { //Bei file Auswahl, den Inhalt holen
-    this.apiResource.getResource(null, file.path, file.repoId, null, [], [], true, 1).subscribe(
+    this.apiResource.getResource(null, this.splitResourcePath(file.path), file.repoId, null, [], [], true, 1).subscribe(
       data => {
         // Greife auf die Ressourcen des entsprechenden Repos zu
         const resources: Resources[] | undefined = data.content[file.repoId];
@@ -163,5 +163,9 @@ export class ResourceService {
 
   get content(){
     return this.fileTree();
+  }
+
+  splitResourcePath(path: string) {
+    return path.split("\\").pop() || '';
   }
 }

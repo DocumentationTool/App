@@ -1,22 +1,18 @@
 import {Component, HostListener} from '@angular/core';
 import {NavigationService} from '../service/navigation.service';
-import {KeyValuePipe, NgClass, NgIf} from '@angular/common';
 import {ResourceService} from '../service/resource.service';
 import {RouterLink, RouterLinkActive} from '@angular/router';
 import {ContentGroup, Resources} from '../../Model/apiResponseFileTree';
 import {CdkDragDrop} from '@angular/cdk/drag-drop';
+import {TreeChildComponent} from './tree-child/tree-child.component';
 
 
 @Component({
   selector: 'app-sidebar',
   imports: [
-
-    NgClass,
     RouterLink,
     RouterLinkActive,
-    KeyValuePipe,
-    NgIf,
-
+    TreeChildComponent,
   ],
   templateUrl: './sidebar.component.html',
   standalone: true,
