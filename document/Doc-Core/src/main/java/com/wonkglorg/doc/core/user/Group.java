@@ -2,6 +2,7 @@ package com.wonkglorg.doc.core.user;
 
 import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.GroupId;
+import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class Group {
     private String modifiedBy;
     private LocalDateTime lastModified;
     private final Set<Permission<GroupId>> permissions = new HashSet<>();
+    private final Set<UserId> userIds = new HashSet<>();
 
     public Group(GroupId id, String name, String createdBy, LocalDateTime creationDate, String modifiedBy, LocalDateTime lastModified) {
         this.id = id;
@@ -72,5 +74,9 @@ public class Group {
 
     public Set<Permission<GroupId>> getPermissions() {
         return permissions;
+    }
+
+    public Set<UserId> getUserIds() {
+        return userIds;
     }
 }

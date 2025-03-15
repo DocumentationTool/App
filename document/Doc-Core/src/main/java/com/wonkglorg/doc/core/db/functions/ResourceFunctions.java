@@ -2,15 +2,14 @@ package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.DbHelper;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
-import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
+import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
-import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
-import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,20 +35,15 @@ public class ResourceFunctions {
      * Deletes a specific resource and all its related data in ResourceData, Tags and Permissions
      *
      * @param resourcePath the path to the resource
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse deleteResource(RepositoryDatabase database, Path resourcePath) {
+    public static void deleteResource(RepositoryDatabase database, Path resourcePath) {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
-            int i = statement.executeUpdate();
-            if (i == 0) {
-                return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource does not exist"));
-            }
-            return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully deleted resource '%s'".formatted(resourcePath.toString()), i);
+            statement.executeUpdate();
         } catch (Exception e) {
             log.error("Failed to delete resource", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to delete resource", e));
+            throw new CoreSqlException("Failed to delete resource", e);
         } finally {
             closeConnection(connection);
         }
@@ -57,10 +51,8 @@ public class ResourceFunctions {
 
     /**
      * Retrieves a list of all resources contained in the given repository databases table(without its content attached)
-     *
-     * @return {@link QueryDatabaseResponse}
      */
-    public static QueryDatabaseResponse<List<Resource>> getAllResources(RepositoryDatabase database) {
+    public static List<Resource> getAllResources(RepositoryDatabase database) {
         Connection connection = database.getConnection();
 
         List<Resource> resources = new ArrayList<>();
@@ -68,24 +60,19 @@ public class ResourceFunctions {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
-                resources.add(resourceFromResultSet(resultSet, new HashMap<>(), null, database));
+                resources.add(resourceFromResultSet(resultSet, new HashSet<>(), null, database));
             }
 
             for (Resource resource : resources) {
                 var tags = fetchTagsForResources(connection, resource.resourcePath().toString());
-                resource.setTags(tags);
+                resource.setTags(tags.keySet());
             }
-
-            return QueryDatabaseResponse.success(database.getRepoId(), resources);
+            return resources;
         } catch (SQLException e) {
             log.error("Failed to get all resources", e);
-            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to get all resources", e));
+            throw new CoreSqlException("Failed to get all resources", e);
         } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                log.error("Failed to close connection", e);
-            }
+            closeConnection(connection);
         }
     }
 
@@ -107,7 +94,7 @@ public class ResourceFunctions {
         return tags;
     }
 
-    public static QueryDatabaseResponse<List<Tag>> getAllTags(RepositoryDatabase database) {
+    public static List<Tag> getAllTags(RepositoryDatabase database) {
         List<Tag> tags = new ArrayList<>();
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM Tags")) {
@@ -115,9 +102,9 @@ public class ResourceFunctions {
             while (resultSet.next()) {
                 tags.add(new Tag(new TagId(resultSet.getString("tag_id")), resultSet.getString("tag_name")));
             }
-            return QueryDatabaseResponse.success(database.getRepoId(), tags);
+            return tags;
         } catch (Exception e) {
-            return QueryDatabaseResponse.fail(database.getRepoId(), e);
+            throw new CoreSqlException("Failed to get all tags", e);
         } finally {
             closeConnection(connection);
         }
@@ -129,37 +116,39 @@ public class ResourceFunctions {
      *
      * @param database the database to add the tag to
      * @param tag      the tag to add
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse addTag(RepositoryDatabase database, Tag tag) {
+    public static void addTag(RepositoryDatabase database, Tag tag) {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO Tags(tag_id, tag_name) VALUES(?, ?)")) {
             statement.setString(1, tag.tagId().id());
             statement.setString(2, tag.tagName());
-            return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully added tag '%s' to repo '%s'".formatted(tag.tagId().id(), database.getRepoId()), statement.executeUpdate());
         } catch (Exception e) {
             log.error("Failed to add tag", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to add tag", e));
+            throw new CoreSqlException("Failed to add tag '%s' to '%s'".formatted(tag.tagId(), database.getRepoId()), e);
         } finally {
             closeConnection(connection);
         }
     }
 
-    public static UpdateDatabaseResponse removeTag(RepositoryDatabase database, TagId tagId) {
+    /**
+     * Removes a tag from the database
+     *
+     * @param database the database to remove the tag from
+     * @param tagId    the tag to remove
+     */
+    public static void removeTag(RepositoryDatabase database, TagId tagId) {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM Tags WHERE tag_id = ?")) {
             statement.setString(1, tagId.id());
-            return UpdateDatabaseResponse.success(database.getRepoId(), "Successfully removed tag '%s' from repo '%s'".formatted(tagId.id(), database.getRepoId()), statement.executeUpdate());
+            statement.executeUpdate();
         } catch (Exception e) {
-            log.error("Failed to remove tag", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to remove tag", e));
+            throw new CoreSqlException("Failed to remove tag '%s'".formatted(tagId.id()), e);
         } finally {
             closeConnection(connection);
         }
     }
 
-
-    private static Resource resourceFromResultSet(ResultSet resultSet, Map<TagId, Tag> tags, String data, RepositoryDatabase database)
+    private static Resource resourceFromResultSet(ResultSet resultSet, Set<TagId> tags, String data, RepositoryDatabase database)
             throws SQLException {
         return new Resource(Path.of(resultSet.getString("resource_path")),
                 DateHelper.parseDateTime(resultSet.getString("created_at")),
@@ -167,7 +156,7 @@ public class ResourceFunctions {
                 DateHelper.parseDateTime(resultSet.getString("last_modified_at")),
                 resultSet.getString("last_modified_by"),
                 database.getRepoProperties().getId(),
-                tags,
+                new HashSet<>(tags),
                 !database.getRepoProperties().isReadOnly(),
                 resultSet.getString("category"),
                 data);
@@ -177,26 +166,9 @@ public class ResourceFunctions {
      * Finds all resources with the matching search term in its data
      *
      * @param request the resource request
-     * @return {@link QueryDatabaseResponse} with the paths of matching resourc es and an optional data field if  specified in the request
      */
-    public static QueryDatabaseResponse<Map<Path, String>> findByContent(RepositoryDatabase database, ResourceRequest request) {
+    public static Map<Path, String> findByContent(RepositoryDatabase database, ResourceRequest request) throws CoreException {
         String sqlScript;
-
-        //needs seperation sqlite gave me an error on matches clause when doing it in 1 statement with optional matches
-        //old sql:
-		/*
-					SELECT resource_path,
-			       CASE
-			           WHEN 't' IS NOT NULL THEN data
-			           END AS fileContent
-			FROM FileData
-			WHERE ('This' IS NULL -- Full-text search or LIKE-based search (in case the token is too short)
-			    OR (LENGTH('This') >= 3 AND data MATCH 'This')
-			    OR (LENGTH('This') < 3 AND data LIKE '%' || 'This' || '%'))
-			  AND resource_path LIKE '%'
-			LIMIT 10;
-		
-		 */
 
         if (request.searchTerm == null) {
             sqlScript = """
@@ -235,7 +207,6 @@ public class ResourceFunctions {
             }
         }
 
-
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement(sqlScript)) {
             Map<Path, String> resources = new HashMap<>();
@@ -250,17 +221,14 @@ public class ResourceFunctions {
             }
 
             if (resources.isEmpty()) {
-                return QueryDatabaseResponse.success(database.getRepoId(),
-                        "No files found matching search term: '%s'".formatted(request.searchTerm),
-                        resources);
+                return new HashMap<>();
             }
 
-            return QueryDatabaseResponse.success(database.getRepoId(), resources);
+            return resources;
 
         } catch (Exception e) {
             log.error("Failed to find resource by content", e);
-            return QueryDatabaseResponse.fail(database.getRepoId(),
-                    new RuntimeSQLException("Failed to find resource by text '%s'".formatted(request.searchTerm), e));
+            throw new CoreSqlException("An unexpected error occured while searching resources!", e);
         } finally {
             closeConnection(connection);
         }
@@ -270,9 +238,8 @@ public class ResourceFunctions {
      * Inserts a new resource into the database also inserts the data into the FileData table if it was set
      *
      * @param resource the resource to add
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse insertResource(RepositoryDatabase database, Resource resource) {
+    public static void insertResource(RepositoryDatabase database, Resource resource) {
         Connection connection = database.getConnection();
         try {
 
@@ -284,12 +251,11 @@ public class ResourceFunctions {
                 ResultSet resultSet = statement.executeQuery();
                 resourceExists = resultSet.next() && resultSet.getBoolean(1);
             } catch (Exception e) {
-                log.error("Failed to check if resource exists", e);
-                return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to check if resource exists", e));
+                throw new CoreSqlException("Failed to check if resource exists", e);
             }
 
             if (resourceExists) {
-                return UpdateDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Resource already exists"));
+                throw new CoreException("Resource already exists");
             }
 
             String sqlResourceInsert = """
@@ -298,34 +264,21 @@ public class ResourceFunctions {
                     VALUES(?, ?, ?, ?, ?, ?)
                     
                     """;
-            try (PreparedStatement statement = connection.prepareStatement(sqlResourceInsert
-            )) {
-                statement.setString(1, resource.
-                        resourcePath().toString());
-                statement.setString(2, DateHelper.
-                        fromDateTime(resource.createdAt()));
+            try (PreparedStatement statement = connection.prepareStatement(sqlResourceInsert)) {
+                statement.setString(1, resource.resourcePath().toString());
+                statement.setString(2, DateHelper.fromDateTime(resource.createdAt()));
                 statement.setString(3, resource.createdBy());
-                statement.setString(4,
-                        DateHelper.fromDateTime(resource.modifiedAt()));
+                statement.setString(4, DateHelper.fromDateTime(resource.modifiedAt()));
                 statement.setString(5, resource.modifiedBy());
-                statement.setString(6, resource.
-                        category());
+                statement.setString(6, resource.category());
                 affectedRows = statement.executeUpdate();
-            } catch (
-                    Exception e) {
+            } catch (Exception e) {
                 log.error("Failed to insert resource", e);
-                return UpdateDatabaseResponse.
-                        fail(
-
-                                database.getRepoId(), new RuntimeSQLException("Failed to insert resource", e))
-                        ;
+                throw new CoreSqlException("An unexpected error occured while inserting resource!", e);
             }
 
             if (resource.data() == null) { //no data to insert so we skip the next part
-                return UpdateDatabaseResponse.success(database.getRepoId(),
-                        "Added Resource '%s'".formatted(resource.
-                                resourcePath()), affectedRows
-                );
+                return;
             }
 
             String sqlDataInsert = """
@@ -334,16 +287,13 @@ public class ResourceFunctions {
                     VALUES(?,?)
                     """;
             try (PreparedStatement statement = connection.prepareStatement(sqlDataInsert)) {
-                statement.setString(1,
-                        resource.resourcePath().toString());
+                statement.setString(1, resource.resourcePath().toString());
                 statement.setString(2, resource.data());
                 affectedRows += statement.executeUpdate();
             } catch (Exception e) {
                 log.error("Failed to insert resource data", e);
-                return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(
-                        "Failed to insert resource data", e));
+                throw new CoreSqlException("An unexpected error occured while inserting resource data!", e);
             }
-            return UpdateDatabaseResponse.success(database.getRepoId(), "Added Resource '%s'".formatted(resource.resourcePath()), affectedRows);
         } finally {
             closeConnection(connection);
         }
@@ -354,26 +304,19 @@ public class ResourceFunctions {
      *
      * @param oldPath the path to change
      * @param newPath the path to change it to
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse updatePath(RepositoryDatabase database, Path oldPath, Path newPath) {
+    public static void updatePath(RepositoryDatabase database, Path oldPath, Path newPath) {
         log.info("Updating resource path '{}' to '{}'", oldPath, newPath);
         Connection connection = database.getConnection();
-        try (PreparedStatement statement = connection
-                .prepareStatement("UPDATE Resources SET resource_path = ? WHERE resource_path = ?")) {
+        try (PreparedStatement statement = connection.prepareStatement("UPDATE Resources SET resource_path = ? WHERE resource_path = ?")) {
             statement.setString(1, newPath.toString());
             statement.setString(2, oldPath.toString());
-            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
         } catch (Exception e) {
             String errorResponse = "Failed to update resource path from '%s' to '%s'".formatted(oldPath, newPath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         } finally {
-            try {
-                connection.close();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
+            closeConnection(connection);
         }
     }
 
@@ -381,12 +324,10 @@ public class ResourceFunctions {
      * Updates a resources data
      *
      * @param request the resource request
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static QueryDatabaseResponse<Resource> updateResource(RepositoryDatabase database, ResourceUpdateRequest request) {
+    public static Resource updateResource(RepositoryDatabase database, ResourceUpdateRequest request) {
         Connection connection = database.getConnection();
         try {
-
             connection.setAutoCommit(false);
             if (request.data != null) {
                 updateResourceData(connection, database, Path.of(request.path), request.data);
@@ -411,7 +352,7 @@ public class ResourceFunctions {
                 } catch (Exception e) {
                     String errorResponse = "Failed to update resource '%s'".formatted(request.path);
                     log.error(errorResponse, e);
-                    return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+                    throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path), e);
                 }
             }
 
@@ -429,13 +370,9 @@ public class ResourceFunctions {
                 //gets the updated resource
                 Resource resource = getResource(connection, database, Path.of(request.path));
                 if (resource == null) {
-                    return QueryDatabaseResponse.fail(database.getRepoId(), new IllegalArgumentException("Error while fetching updated resource!"));
+                    throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path));
                 }
-                return QueryDatabaseResponse.success(database.getRepoId(), "Successfully updated '%s' in repository '%s'".formatted(resource.resourcePath().toString(), resource.repoId()), resource);
-            } catch (Exception e) {
-                String errorResponse = "Failed to update resource '%s'".formatted(request.path);
-                log.error(errorResponse, e);
-                return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+                return resource;
             }
         } catch (SQLException e) {
             try {
@@ -443,8 +380,8 @@ public class ResourceFunctions {
             } catch (SQLException ex) {
                 log.error("Failed to rollback transaction", ex);
             }
-            log.error("Failed to update resource", e);
-            return QueryDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to update resource", e));
+            log.error("Failed to update resource '{}'", request.path, e);
+            throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path), e);
         } finally {
             try {
                 connection.setAutoCommit(true);
@@ -469,7 +406,7 @@ public class ResourceFunctions {
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
                 var tags = fetchTagsForResources(connection, path.toString());
-                return resourceFromResultSet(resultSet, tags, null, database);
+                return resourceFromResultSet(resultSet, tags.keySet(), null, database);
             }
             return null;
         } catch (SQLException e) {
@@ -478,15 +415,15 @@ public class ResourceFunctions {
         }
     }
 
-    private static UpdateDatabaseResponse updateResourceData(Connection connection, RepositoryDatabase database, Path resourcePath, String data) {
+    private static void updateResourceData(Connection connection, RepositoryDatabase database, Path resourcePath, String data) {
         try (PreparedStatement statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")) {
             statement.setString(1, data);
             statement.setString(2, resourcePath.toString());
-            return UpdateDatabaseResponse.success(database.getRepoId(), statement.executeUpdate());
+            statement.executeUpdate();
         } catch (Exception e) {
             String errorResponse = "Failed to update resource data at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
@@ -499,17 +436,17 @@ public class ResourceFunctions {
      * @param tags
      * @return
      */
-    private static UpdateDatabaseResponse updateResourceTagsSet(Connection connection,
-                                                                RepositoryDatabase database,
-                                                                Path resourcePath,
-                                                                List<String> tags) {
+    private static void updateResourceTagsSet(Connection connection,
+                                              RepositoryDatabase database,
+                                              Path resourcePath,
+                                              List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
             statement.executeUpdate();
         } catch (Exception e) {
             String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
 
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")) {
@@ -518,11 +455,10 @@ public class ResourceFunctions {
                 statement.setString(2, tag);
                 statement.addBatch();
             }
-            return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
         } catch (Exception e) {
             String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
@@ -531,20 +467,19 @@ public class ResourceFunctions {
      *
      * @param connection the connection to the database
      * @param tags       the tags to add
-     * @return {@link UpdateDatabaseResponse}
      */
-    private static UpdateDatabaseResponse addMissingTags(Connection connection, List<Tag> tags) {
+    private static void addMissingTags(Connection connection, List<Tag> tags) {
         try (PreparedStatement statement = connection.prepareStatement("INSERT OR IGNORE INTO Tags(tag_id, tag_name) VALUES(?, ?)")) {
             for (Tag tag : tags) {
                 statement.setString(1, tag.tagId().id());
                 statement.setString(2, tag.tagName());
                 statement.addBatch();
             }
-            return UpdateDatabaseResponse.success(null, Arrays.stream(statement.executeBatch()).sum());
+            statement.executeBatch();
         } catch (Exception e) {
             String errorResponse = "Failed to add missing tags";
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(null, new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
@@ -557,21 +492,21 @@ public class ResourceFunctions {
      * @param tags
      * @return
      */
-    private static UpdateDatabaseResponse updateResourceTagsRemove(Connection connection,
-                                                                   RepositoryDatabase database,
-                                                                   Path resourcePath,
-                                                                   List<String> tags) {
+    private static void updateResourceTagsRemove(Connection connection,
+                                                 RepositoryDatabase database,
+                                                 Path resourcePath,
+                                                 List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")) {
             for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
                 statement.setString(2, tag);
                 statement.addBatch();
             }
-            return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
+            statement.executeBatch();
         } catch (Exception e) {
             String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
@@ -584,21 +519,21 @@ public class ResourceFunctions {
      * @param tags
      * @return
      */
-    private static UpdateDatabaseResponse updateResourceTagsAdd(Connection connection,
-                                                                RepositoryDatabase database,
-                                                                Path resourcePath,
-                                                                List<String> tags) {
+    private static void updateResourceTagsAdd(Connection connection,
+                                              RepositoryDatabase database,
+                                              Path resourcePath,
+                                              List<String> tags) {
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")) {
             for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
                 statement.setString(2, tag);
                 statement.addBatch();
             }
-            return UpdateDatabaseResponse.success(database.getRepoId(), Arrays.stream(statement.executeBatch()).sum());
+            statement.executeBatch();
         } catch (Exception e) {
             String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
             log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException(errorResponse, e);
         }
     }
 
@@ -609,9 +544,8 @@ public class ResourceFunctions {
      *
      * @param database  the database to insert the resources into
      * @param resources the resources to insert
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse batchInsertResources(RepositoryDatabase database, List<Resource> resources) {
+    public static void batchInsertResources(RepositoryDatabase database, List<Resource> resources) {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;
@@ -641,7 +575,6 @@ public class ResourceFunctions {
                 }
                 affectedRows += Arrays.stream(statement.executeBatch()).sum();
                 connection.commit();
-                return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
             }
         } catch (Exception e) {
             try {
@@ -650,14 +583,9 @@ public class ResourceFunctions {
                 log.error("This should not happen", ex);
             }
             log.error("Failed to batch insert resources", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to batch insert resources", e));
+            throw new CoreSqlException("Failed to batch insert resources", e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-                connection.close();
-            } catch (SQLException e) {
-                log.error("This should never happen", e);
-            }
+            closeConnection(connection);
         }
     }
 
@@ -666,9 +594,8 @@ public class ResourceFunctions {
      *
      * @param database  the database to update the resources in
      * @param resources the resources to update
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse batchUpdateResources(RepositoryDatabase database, List<Resource> resources) {
+    public static void batchUpdateResources(RepositoryDatabase database, List<Resource> resources) {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;
@@ -711,8 +638,6 @@ public class ResourceFunctions {
             }
 
             connection.commit();
-            return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
-
         } catch (Exception e) {
             try {
                 connection.rollback();
@@ -720,14 +645,9 @@ public class ResourceFunctions {
                 log.error("Rollback failed", ex);
             }
             log.error("Failed to batch update resources", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to batch update resources", e));
+            throw new CoreSqlException("Failed to batch update resources", e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-                closeConnection(connection);
-            } catch (SQLException e) {
-                log.error("Failed to close connection", e);
-            }
+            closeConnection(connection);
         }
     }
 
@@ -736,9 +656,8 @@ public class ResourceFunctions {
      *
      * @param database      the database to delete the resources from
      * @param resourcePaths the list of resource paths to delete
-     * @return {@link UpdateDatabaseResponse}
      */
-    public static UpdateDatabaseResponse batchDeleteResources(RepositoryDatabase database, List<Path> resourcePaths) {
+    public static void batchDeleteResources(RepositoryDatabase database, List<Path> resourcePaths) {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;
@@ -763,8 +682,6 @@ public class ResourceFunctions {
             }
 
             connection.commit();
-            return UpdateDatabaseResponse.success(database.getRepoId(), affectedRows);
-
         } catch (Exception e) {
             try {
                 connection.rollback();
@@ -772,14 +689,9 @@ public class ResourceFunctions {
                 log.error("Rollback failed", ex);
             }
             log.error("Failed to batch delete resources", e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException("Failed to batch delete resources", e));
+            throw new CoreSqlException("Failed to batch delete resources", e);
         } finally {
-            try {
-                connection.setAutoCommit(true);
-                closeConnection(connection);
-            } catch (SQLException e) {
-                log.error("Failed to close connection", e);
-            }
+            closeConnection(connection);
         }
     }
 

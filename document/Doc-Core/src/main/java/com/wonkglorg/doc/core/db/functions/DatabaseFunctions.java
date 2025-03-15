@@ -1,10 +1,7 @@
 package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
-import com.wonkglorg.doc.core.db.exception.RuntimeSQLException;
-import com.wonkglorg.doc.core.response.ScriptDatabaseResponse;
-import com.wonkglorg.doc.core.response.UpdateDatabaseResponse;
-import jdk.jshell.spi.ExecutionControl;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +21,9 @@ public class DatabaseFunctions {
     }
 
     /**
-     * Initializes the database with the required tables
-     *
-     * @return {@link ScriptDatabaseResponse}
+     * Initializes the database with the required tables and constraints
      */
-    public static ScriptDatabaseResponse initializeDatabase(RepositoryDatabase database) {
+    public static void initializeDatabase(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             statement.execute("PRAGMA foreign_keys = OFF");
@@ -186,65 +181,23 @@ public class DatabaseFunctions {
             statement.execute("INSERT OR IGNORE INTO Roles(role_id, role_name) VALUES ('user', 'User')");
 
             statement.execute("PRAGMA foreign_keys = ON");
-            return ScriptDatabaseResponse.success(database.getRepoId());
         } catch (Exception e) {
-            String errorResponse = "Error while initializing the database";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException("Error while initializing the database in '%s'".formatted(database.getRepoId()), e);
         } finally {
             closeConnection(connection);
-            ;
         }
     }
 
     /**
      * Rebuilds the FTS table when called, this is a slow operation and should only be done when there is a specific need to do so
      */
-    public static UpdateDatabaseResponse rebuildFts(RepositoryDatabase database) {
+    public static void rebuildFts(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             //noinspection SqlResolve on purpose sql plugin doesn't recognize the fts specific commands
-            int i = statement.executeUpdate(("INSERT INTO FileData(FileData) VALUES ('rebuild')"));
-            return UpdateDatabaseResponse.success(database.getRepoId(), i);
+            statement.executeUpdate(("INSERT INTO FileData(FileData) VALUES ('rebuild')"));
         } catch (Exception e) {
-            String errorResponse = "Error while rebuilding FTS";
-            log.error(errorResponse, e);
-            return UpdateDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
-        } finally {
-            closeConnection(connection);
-        }
-    }
-
-    /**
-     * Creates a trigger that updates related resource paths when the main "Resources" Table is updated
-     *
-     * @return {@link ScriptDatabaseResponse}
-     */
-    public static ScriptDatabaseResponse initializeResourceUpdateTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS update_resource_path
-                AFTER UPDATE ON Resources
-                FOR EACH ROW
-                WHEN OLD.resource_path != NEW.resource_path
-                BEGIN
-                    -- Update related permissions
-                    UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
-                    UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
-                    -- Update related tags
-                    UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
-                    -- Update indexed data
-                    UPDATE FileData SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
-                END;
-                """;
-        Connection connection = database.getConnection();
-        try (Statement statement = connection.createStatement()) {
-            //noinspection ConstantExpression,LanguageMismatch
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
-        } catch (Exception e) {
-            String errorResponse = "Error while setting up resource update trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException("Error while rebuilding FTS in '%s'".formatted(database.getRepoId()), e);
         } finally {
             closeConnection(connection);
         }
@@ -252,46 +205,79 @@ public class DatabaseFunctions {
 
     /**
      * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
-     *
-     * @return {@link ScriptDatabaseResponse}
      */
-    public static ScriptDatabaseResponse initializeResourceDeleteTrigger(RepositoryDatabase database) {
-        String sqlScript = """
-                CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
-                AFTER DELETE ON Resources
-                FOR EACH ROW
-                BEGIN
-                   -- Delete related permissions
-                    DELETE FROM GroupPermissions WHERE path = OLD.resource_path;
-                    DELETE FROM UserPermissions WHERE path = OLD.resource_path;
-                    --Delete Related Tags
-                    DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
-                    --Delete Indexed Data
-                    DELETE FROM FileData WHERE resource_path = OLD.resource_path;
-                END;
-                """;
+    public static void initializeTriggers(RepositoryDatabase database) {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
-            statement.execute(sqlScript);
-            return ScriptDatabaseResponse.success(database.getRepoId());
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                    AFTER DELETE ON Users
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                        DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                        DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                    END;
+                    """);
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS update_resource_path
+                    AFTER UPDATE ON Resources
+                    FOR EACH ROW
+                    WHEN OLD.resource_path != NEW.resource_path
+                    BEGIN
+                        -- Update related permissions
+                        UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+                        UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+                        -- Update related tags
+                        UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
+                        -- Update indexed data
+                        UPDATE FileData SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_resource_cleanup
+                    AFTER DELETE ON Resources
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM GroupPermissions WHERE path = OLD.resource_path;
+                        DELETE FROM UserPermissions WHERE path = OLD.resource_path;
+                        --Delete Related Tags
+                        DELETE FROM ResourceTags WHERE resource_path = OLD.resource_path;
+                        --Delete Indexed Data
+                        DELETE FROM FileData WHERE resource_path = OLD.resource_path;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
+                    AFTER DELETE ON Users
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related permissions
+                        DELETE FROM UserGroups WHERE user_id = OLD.user_id;
+                        DELETE FROM UserPermissions WHERE user_id= OLD.user_id;
+                        DELETE FROM UserRoles WHERE user_id = OLD.user_id;
+                    END;
+                    """);
+
+            statement.execute("""
+                    CREATE TRIGGER IF NOT EXISTS delete_tag_cleanup
+                    AFTER DELETE ON Tags
+                    FOR EACH ROW
+                    BEGIN
+                       -- Delete related tagid
+                        DELETE FROM ResourceTags WHERE tag_id = OLD.tag_id;
+                    END;
+                    """);
         } catch (Exception e) {
-            String errorResponse = "Error while setting up resource remove trigger";
-            log.error(errorResponse, e);
-            return ScriptDatabaseResponse.fail(database.getRepoId(), new RuntimeSQLException(errorResponse, e));
+            throw new CoreSqlException("Error while initializing the database", e);
         } finally {
             closeConnection(connection);
         }
     }
-
-
-    //todo:jmd implement
-    public static UpdateDatabaseResponse logChange(RepositoryDatabase database) {
-        /*
-        try (var statement = database.getConnection().prepareStatement("")) {}
-        */
-        return UpdateDatabaseResponse.fail(database.getRepoId(), new ExecutionControl.NotImplementedException("Method not implemented yet"));
-    }
-
 
     private static void closeConnection(Connection connection) {
         try {
