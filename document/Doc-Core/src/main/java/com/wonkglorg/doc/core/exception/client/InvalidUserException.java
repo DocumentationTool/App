@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.exception.client;
 
-public class InvalidUserException extends RuntimeException{
+public class InvalidUserException extends ClientException{
 	public InvalidUserException() {
 	}
 	

@@ -3,7 +3,9 @@ package com.wonkglorg.doc.api.service;
 import com.wonkglorg.doc.api.properties.RepoProperties;
 import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.RepoProperty;
+import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
+import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.objects.RepoId;
 import jakarta.annotation.PostConstruct;
 import org.apache.logging.log4j.LogManager;
@@ -49,7 +51,7 @@ public class RepoService{
 			repositories.put(repoProperty.getId(), repository);
 			try{
 				repository.initialize();
-			} catch(GitAPIException e){
+			} catch(GitAPIException | CoreException | InvalidUserException e){
 				log.error("Failed to initialize repository '{}'", repoProperty.getId(), e);
 			}
 		}
@@ -61,7 +63,7 @@ public class RepoService{
 	 * @param repoId the id of the repository
 	 * @return the repository
 	 */
-	public FileRepository getRepo(RepoId repoId) {
+	public FileRepository getRepo(RepoId repoId) throws InvalidRepoException {
 		validateRepoId(repoId);
 		return repositories.get(repoId);
 	}
@@ -94,7 +96,7 @@ public class RepoService{
 	 * @param repoId the repo id to validate
 	 * @return the user id
 	 */
-	public RepoId validateRepoId(String repoId, boolean allowNull) {
+	public RepoId validateRepoId(String repoId, boolean allowNull) throws InvalidRepoException {
 		if(repoId == null && allowNull){
 			return RepoId.ALL_REPOS;
 		}

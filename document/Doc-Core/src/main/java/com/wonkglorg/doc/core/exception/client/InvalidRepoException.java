@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.exception.client;
 
-public class InvalidRepoException extends RuntimeException{
+public class InvalidRepoException extends ClientException{
 	public InvalidRepoException() {
 	}
 	

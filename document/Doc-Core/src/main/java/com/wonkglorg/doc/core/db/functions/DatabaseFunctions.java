@@ -23,7 +23,7 @@ public class DatabaseFunctions {
     /**
      * Initializes the database with the required tables and constraints
      */
-    public static void initializeDatabase(RepositoryDatabase database) {
+    public static void initializeDatabase(RepositoryDatabase database) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             statement.execute("PRAGMA foreign_keys = OFF");
@@ -191,7 +191,7 @@ public class DatabaseFunctions {
     /**
      * Rebuilds the FTS table when called, this is a slow operation and should only be done when there is a specific need to do so
      */
-    public static void rebuildFts(RepositoryDatabase database) {
+    public static void rebuildFts(RepositoryDatabase database) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             //noinspection SqlResolve on purpose sql plugin doesn't recognize the fts specific commands
@@ -206,7 +206,7 @@ public class DatabaseFunctions {
     /**
      * Creates a trigger that deletes all accompanying tables resources when the main "Resources" table gets deleted
      */
-    public static void initializeTriggers(RepositoryDatabase database) {
+    public static void initializeTriggers(RepositoryDatabase database) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (Statement statement = connection.createStatement()) {
             statement.execute("""

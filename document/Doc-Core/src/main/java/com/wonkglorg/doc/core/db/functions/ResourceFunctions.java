@@ -36,7 +36,7 @@ public class ResourceFunctions {
      *
      * @param resourcePath the path to the resource
      */
-    public static void deleteResource(RepositoryDatabase database, Path resourcePath) {
+    public static void deleteResource(RepositoryDatabase database, Path resourcePath) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
@@ -52,7 +52,7 @@ public class ResourceFunctions {
     /**
      * Retrieves a list of all resources contained in the given repository databases table(without its content attached)
      */
-    public static List<Resource> getAllResources(RepositoryDatabase database) {
+    public static List<Resource> getAllResources(RepositoryDatabase database) throws CoreSqlException {
         Connection connection = database.getConnection();
 
         List<Resource> resources = new ArrayList<>();
@@ -94,7 +94,7 @@ public class ResourceFunctions {
         return tags;
     }
 
-    public static List<Tag> getAllTags(RepositoryDatabase database) {
+    public static List<Tag> getAllTags(RepositoryDatabase database) throws CoreSqlException {
         List<Tag> tags = new ArrayList<>();
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("SELECT * FROM Tags")) {
@@ -117,7 +117,7 @@ public class ResourceFunctions {
      * @param database the database to add the tag to
      * @param tag      the tag to add
      */
-    public static void addTag(RepositoryDatabase database, Tag tag) {
+    public static void addTag(RepositoryDatabase database, Tag tag) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO Tags(tag_id, tag_name) VALUES(?, ?)")) {
             statement.setString(1, tag.tagId().id());
@@ -136,7 +136,7 @@ public class ResourceFunctions {
      * @param database the database to remove the tag from
      * @param tagId    the tag to remove
      */
-    public static void removeTag(RepositoryDatabase database, TagId tagId) {
+    public static void removeTag(RepositoryDatabase database, TagId tagId) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM Tags WHERE tag_id = ?")) {
             statement.setString(1, tagId.id());
@@ -239,7 +239,7 @@ public class ResourceFunctions {
      *
      * @param resource the resource to add
      */
-    public static void insertResource(RepositoryDatabase database, Resource resource) {
+    public static void insertResource(RepositoryDatabase database, Resource resource) throws CoreException {
         Connection connection = database.getConnection();
         try {
 
@@ -305,7 +305,7 @@ public class ResourceFunctions {
      * @param oldPath the path to change
      * @param newPath the path to change it to
      */
-    public static void updatePath(RepositoryDatabase database, Path oldPath, Path newPath) {
+    public static void updatePath(RepositoryDatabase database, Path oldPath, Path newPath) throws CoreSqlException {
         log.info("Updating resource path '{}' to '{}'", oldPath, newPath);
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("UPDATE Resources SET resource_path = ? WHERE resource_path = ?")) {
@@ -325,7 +325,7 @@ public class ResourceFunctions {
      *
      * @param request the resource request
      */
-    public static Resource updateResource(RepositoryDatabase database, ResourceUpdateRequest request) {
+    public static Resource updateResource(RepositoryDatabase database, ResourceUpdateRequest request) throws CoreSqlException {
         Connection connection = database.getConnection();
         try {
             connection.setAutoCommit(false);
@@ -415,7 +415,8 @@ public class ResourceFunctions {
         }
     }
 
-    private static void updateResourceData(Connection connection, RepositoryDatabase database, Path resourcePath, String data) {
+    private static void updateResourceData(Connection connection, RepositoryDatabase database, Path resourcePath, String data)
+			throws CoreSqlException {
         try (PreparedStatement statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")) {
             statement.setString(1, data);
             statement.setString(2, resourcePath.toString());
@@ -439,7 +440,7 @@ public class ResourceFunctions {
     private static void updateResourceTagsSet(Connection connection,
                                               RepositoryDatabase database,
                                               Path resourcePath,
-                                              List<String> tags) {
+                                              List<String> tags) throws CoreSqlException {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")) {
             statement.setString(1, resourcePath.toString());
             statement.executeUpdate();
@@ -468,7 +469,7 @@ public class ResourceFunctions {
      * @param connection the connection to the database
      * @param tags       the tags to add
      */
-    private static void addMissingTags(Connection connection, List<Tag> tags) {
+    private static void addMissingTags(Connection connection, List<Tag> tags) throws CoreSqlException {
         try (PreparedStatement statement = connection.prepareStatement("INSERT OR IGNORE INTO Tags(tag_id, tag_name) VALUES(?, ?)")) {
             for (Tag tag : tags) {
                 statement.setString(1, tag.tagId().id());
@@ -495,7 +496,7 @@ public class ResourceFunctions {
     private static void updateResourceTagsRemove(Connection connection,
                                                  RepositoryDatabase database,
                                                  Path resourcePath,
-                                                 List<String> tags) {
+                                                 List<String> tags) throws CoreSqlException {
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")) {
             for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
@@ -522,7 +523,7 @@ public class ResourceFunctions {
     private static void updateResourceTagsAdd(Connection connection,
                                               RepositoryDatabase database,
                                               Path resourcePath,
-                                              List<String> tags) {
+                                              List<String> tags) throws CoreSqlException {
         try (PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")) {
             for (var tag : tags) {
                 statement.setString(1, resourcePath.toString());
@@ -545,7 +546,7 @@ public class ResourceFunctions {
      * @param database  the database to insert the resources into
      * @param resources the resources to insert
      */
-    public static void batchInsertResources(RepositoryDatabase database, List<Resource> resources) {
+    public static void batchInsertResources(RepositoryDatabase database, List<Resource> resources) throws CoreSqlException {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;
@@ -595,7 +596,7 @@ public class ResourceFunctions {
      * @param database  the database to update the resources in
      * @param resources the resources to update
      */
-    public static void batchUpdateResources(RepositoryDatabase database, List<Resource> resources) {
+    public static void batchUpdateResources(RepositoryDatabase database, List<Resource> resources) throws CoreSqlException {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;
@@ -657,7 +658,7 @@ public class ResourceFunctions {
      * @param database      the database to delete the resources from
      * @param resourcePaths the list of resource paths to delete
      */
-    public static void batchDeleteResources(RepositoryDatabase database, List<Path> resourcePaths) {
+    public static void batchDeleteResources(RepositoryDatabase database, List<Path> resourcePaths) throws CoreSqlException {
         Connection connection = database.getConnection();
         try {
             int affectedRows = 0;

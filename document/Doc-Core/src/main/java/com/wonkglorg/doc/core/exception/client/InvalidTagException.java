@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.exception.client;
 
-public class InvalidTagException extends RuntimeException{
+public class InvalidTagException extends ClientException{
 	public InvalidTagException() {
 	}
 	
