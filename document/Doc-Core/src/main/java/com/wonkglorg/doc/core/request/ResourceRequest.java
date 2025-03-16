@@ -38,6 +38,36 @@ public class ResourceRequest{
 	 */
 	public int returnLimit = 999999999;
 	
+	public ResourceRequest(String searchTerm,
+						   String path,
+						   String repoId,
+						   String userId,
+						   List<String> whiteListTags,
+						   List<String> blacklistTags,
+						   boolean withData,
+						   int returnLimit) {
+		this.searchTerm = searchTerm;
+		this.path = path;
+		this.repoId = repoId;
+		this.userId = userId;
+		this.whiteListTags = whiteListTags;
+		this.blacklistTags = blacklistTags;
+		this.withData = withData;
+		this.returnLimit = returnLimit;
+	}
+	
+	public ResourceRequest() {
+	}
+	
+	public ResourceRequest(String searchTerm, String path, String repoId, String userId, boolean withData, int returnLimit) {
+		this.searchTerm = searchTerm;
+		this.path = path;
+		this.repoId = repoId;
+		this.userId = userId;
+		this.withData = withData;
+		this.returnLimit = returnLimit;
+	}
+	
 	public String getSearchTerm() {
 		return searchTerm;
 	}

@@ -22,7 +22,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -165,9 +164,10 @@ public class ApiResourceController{
 				tags = new HashSet<>();
 			}
 			
+			//todo:jmd if paths start with / they never count as "already existing"
 			Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repoId), category, tags, content);
 			resourceService.insertResource(resource);
-			return RestResponse.<Void>success("Successfully inserted Resource!", null).toResponse();
+			return RestResponse.<Void>success("Successfully inserted '%s' Resource!".formatted(path), null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){

@@ -92,6 +92,11 @@ public class DbHelper{
 			throw new InvalidPathException("Path '%s' cannot contain '%' duo to SQL issues".formatted(pathStr));
 		}
 		
+		
+		if(pathStr.startsWith("/") || pathStr.startsWith("\\")){
+			throw new InvalidPathException("Path '%s' cannot start with a '/'".formatted(pathStr));
+		}
+		
 		if(path.isAbsolute()){
 			throw new InvalidPathException("Path '%s' cannot be absolute".formatted(pathStr));
 		}
