@@ -252,7 +252,6 @@ public class UserService {
      * @return the filtered resources
      */
     public List<Resource> filterUsingGroupPermissions(RepoId repoId, GroupId groupId, List<Resource> resources) {
-
         return resources;
     }
 
