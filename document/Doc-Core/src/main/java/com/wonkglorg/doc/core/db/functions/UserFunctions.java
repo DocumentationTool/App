@@ -26,7 +26,7 @@ public class UserFunctions{
 	 * @param password their hashed password
 	 * @param createdBy the admin or system who created this user
 	 */
-	public static boolean addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) {
+	public static boolean addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")){
 			statement.setString(1, userId.toString());
@@ -50,7 +50,7 @@ public class UserFunctions{
 	 * @param userId the user to add
 	 * @param groupId the group to add them to
 	 */
-	public static void addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
+	public static void addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("INSERT INTO UserGroups(user_id, group_id) VALUES(?,?)")){
 			statement.setString(1, userId.id());
@@ -65,7 +65,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static void removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) {
+	public static void removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("DELETE FROM UserGroups WHERE user_id = ? and group_id = ?")){
 			statement.setString(1, userId.id());
@@ -88,7 +88,7 @@ public class UserFunctions{
 	 * @param database the database to add the user from / to
 	 * @param groupId the groups id
 	 */
-	public static List<UserId> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) {
+	public static List<UserId> getUsersFromGroup(RepositoryDatabase database, GroupId groupId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT user_id FROM UserGroups WHERE group_id = ?")){
 			statement.setString(1, groupId.toString());
@@ -107,7 +107,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) {
+	public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT group_id FROM UserGroups WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
@@ -145,7 +145,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static List<Group> getAllGroups(RepositoryDatabase database) {
+	public static List<Group> getAllGroups(RepositoryDatabase database) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT * FROM Groups")){
 			try(var rs = statement.executeQuery()){
@@ -172,7 +172,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static List<UserProfile> getAllUsers(RepositoryDatabase database) {
+	public static List<UserProfile> getAllUsers(RepositoryDatabase database) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT * FROM Users")){
 			try(var rs = statement.executeQuery()){
@@ -199,7 +199,7 @@ public class UserFunctions{
 	 * @param database the database to get the user from
 	 * @param userId the id of the user to get
 	 */
-	public static UserProfile getUser(RepositoryDatabase database, UserId userId) {
+	public static UserProfile getUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT * FROM Users WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
@@ -230,7 +230,7 @@ public class UserFunctions{
 		}
 	}
 	
-	public static boolean deleteUser(RepositoryDatabase database, UserId userId) {
+	public static boolean deleteUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("DELETE FROM Users WHERE user_id = ?")){
 			statement.setString(1, userId.id());

@@ -1,7 +1,10 @@
 package com.wonkglorg.doc.core;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
+import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
+import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.git.GitRepo;
 import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.Resource;
@@ -61,7 +64,7 @@ public class FileRepository {
      *
      * @throws GitAPIException if there is an error with the git repo
      */
-    public void initialize() throws GitAPIException {
+    public void initialize() throws GitAPIException, CoreException, InvalidUserException {
         log.info("Looking for repo in: '{}'", repoProperties.getPath());
         gitRepo = new GitRepo(repoProperties);
         Optional<Path> file = gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperties.getDbName()), UNTRACKED, MODIFIED, ADDED);
@@ -82,14 +85,14 @@ public class FileRepository {
             try {
                 log.info("Update task for repo '{}'", repoProperties.getId());
                 checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
-            } catch (GitAPIException e) {
+            } catch (GitAPIException | CoreException | InvalidUserException e) {
                 log.error("Error while checking for changes", e);
             }
-        }, 10, 10, TimeUnit.MINUTES);
+		}, 10, 10, TimeUnit.MINUTES);
 
     }
 
-    private void checkFileChanges(Set<Path> foundFiles) {
+    private void checkFileChanges(Set<Path> foundFiles) throws CoreException, InvalidUserException {
         log.info("Checking for changes in {} files", foundFiles.size());
 
         ResourceRequest request = new ResourceRequest();
@@ -199,7 +202,7 @@ public class FileRepository {
      *
      * @param newFiles the files to add
      */
-    private void addNewFiles(List<Path> newFiles) {
+    private void addNewFiles(List<Path> newFiles) throws CoreSqlException {
         List<Resource> resources = new ArrayList<>();
         for (Path file : newFiles) {
             RevCommit lastCommitDetailsForFile = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -229,7 +232,7 @@ public class FileRepository {
      * @param matchingResources the resources to update
      * @return true if the resources have changed
      */
-    private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) {
+    private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) throws CoreSqlException {
         List<Resource> resources = new ArrayList<>();
         for (Path file : matchingResources) {
             RevCommit fileCommit = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -277,7 +280,7 @@ public class FileRepository {
         }
     }
 
-    private void deleteOldResources(List<Path> deletedResources) {
+    private void deleteOldResources(List<Path> deletedResources) throws CoreSqlException {
         for (Path file : deletedResources) {
             log.error("Deleting resource '{}'", file);
             gitRepo.remove(file);

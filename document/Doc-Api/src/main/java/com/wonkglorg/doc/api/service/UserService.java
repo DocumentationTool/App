@@ -1,7 +1,9 @@
 package com.wonkglorg.doc.api.service;
 
 import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
+import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
@@ -48,7 +50,7 @@ public class UserService{
 		return userId;
 	}
 	
-	public void validateUserId(RepoId repoId, UserId userId) throws InvalidUserException {
+	public void validateUserId(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
 		if(!repoService.getRepo(repoId).getDatabase().userExists(userId)){
 			throw new InvalidUserException("User '%s' does not exist in '%s'".formatted(userId, repoId));
 		}
@@ -61,7 +63,7 @@ public class UserService{
 	 * @param user the user id to validate
 	 * @return the user id
 	 */
-	public UserId validateUserId(RepoId repoId, String user) {
+	public UserId validateUserId(RepoId repoId, String user) throws ClientException {
 		return validateUserId(repoId, user, false);
 	}
 	
@@ -71,11 +73,11 @@ public class UserService{
 	 * @param groupId the group to look for
 	 * @return the users in the group
 	 */
-	public List<UserId> getUsersFromGroup(RepoId repoId, GroupId groupId) {
+	public List<UserId> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
 	}
 	
-	public List<GroupId> getGroupsFromUser(RepoId repoId, UserId userId) {
+	public List<GroupId> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().getGroupsFromUser(userId);
 	}
 	
@@ -89,7 +91,7 @@ public class UserService{
 	 * @param password the password of the user
 	 * @return the response
 	 */
-	public boolean createUser(RepoId repoId, UserId userId, String password) throws ClientException {
+	public boolean createUser(RepoId repoId, UserId userId, String password) throws ClientException, CoreException {
 		repoService.validateRepoId(repoId);
 		if(userExists(repoId, userId)){
 			throw new CoreException("User with id '%s' already exists".formatted(userId));
@@ -104,7 +106,7 @@ public class UserService{
 	 * @param userId the id of the user
 	 * @return the user
 	 */
-	public List<UserProfile> getUsers(RepoId repoId, UserId userId) {
+	public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
 		validateUser(repoId, userId);
 		return repoService.getRepo(repoId).getDatabase().getUsers(userId);
 	}
@@ -116,7 +118,7 @@ public class UserService{
 	 * @param userId the id of the user
 	 * @return the user
 	 */
-	public List<UserProfile> getUsers(String repoId, String userId) {
+	public List<UserProfile> getUsers(String repoId, String userId) throws ClientException {
 		RepoId repo = repoService.validateRepoId(repoId);
 		UserId user = validateUserId(repo, userId);
 		return getUsers(repo, user);
@@ -129,13 +131,13 @@ public class UserService{
 	 * @param userId the userId of the user to delete
 	 * @return the response
 	 */
-	public boolean deleteUser(RepoId repoId, UserId userId) {
+	public boolean deleteUser(RepoId repoId, UserId userId) throws InvalidRepoException, CoreSqlException, InvalidUserException {
 		repoService.validateRepoId(repoId);
 		validateUser(repoId, userId);
 		return repoService.getRepo(repoId).getDatabase().deleteUser(userId);
 	}
 	
-	public boolean userExists(RepoId repoId, UserId userId) {
+	public boolean userExists(RepoId repoId, UserId userId) throws InvalidRepoException {
 		List<UserProfile> users = repoService.getRepo(repoId).getDatabase().getUsers(userId);
 		return users != null && !users.isEmpty();
 	}
@@ -147,7 +149,7 @@ public class UserService{
 	 * @param userId the user id
 	 * @return the user id
 	 */
-	public UserId validateUser(RepoId repoId, String userId) {
+	public UserId validateUser(RepoId repoId, String userId) throws InvalidUserException, InvalidRepoException {
 		UserId id = new UserId(userId);
 		validateUser(repoId, id);
 		return id;
@@ -159,13 +161,13 @@ public class UserService{
 	 * @param repoId the repo id
 	 * @param userId the user id
 	 */
-	public void validateUser(RepoId repoId, UserId userId) {
+	public void validateUser(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
 		if(!repoService.getRepo(repoId).getDatabase().userExists(userId)){
 			throw new InvalidUserException("User '%s' does not exist".formatted(userId));
 		}
 	}
 	
-	public void createGroup(RepoId repoId, GroupId groupId) {
+	public void createGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException, CoreException {
 		repoService.validateRepoId(repoId);
 		if(groupExists(repoId, groupId)){
 			throw new CoreException("Group with id '%s' already exists".formatted(groupId));
@@ -173,12 +175,12 @@ public class UserService{
 		repoService.getRepo(repoId).getDatabase().createGroup(groupId);
 	}
 	
-	public boolean groupExists(RepoId repoId, GroupId groupId) {
+	public boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException {
 		repoService.validateRepoId(repoId);
 		return repoService.getRepo(repoId).getDatabase().groupExists(groupId);
 	}
 	
-	public void deleteGroup(RepoId repoId, GroupId groupId) {
+	public void deleteGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException, CoreException {
 		repoService.validateRepoId(repoId);
 		if(!groupExists(repoId, groupId)){
 			throw new CoreException("Group with id '%s' does not exist".formatted(groupId));

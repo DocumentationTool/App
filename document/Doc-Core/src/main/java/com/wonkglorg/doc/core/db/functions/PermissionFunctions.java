@@ -33,7 +33,7 @@ public class PermissionFunctions{
 	 * @param userId the user to get permissions for
 	 * @return a list of permissions for the user
 	 */
-	public static Set<Permission<UserId>> getPermissionsForUser(RepositoryDatabase database, UserId userId) {
+	public static Set<Permission<UserId>> getPermissionsForUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(PreparedStatement statement = connection.prepareStatement("SELECT * FROM UserPermissions WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
@@ -57,7 +57,7 @@ public class PermissionFunctions{
 		
 	}
 	
-	public static List<Permission<GroupId>> getPermissionsForGroup(RepositoryDatabase database, GroupId groupId) {
+	public static List<Permission<GroupId>> getPermissionsForGroup(RepositoryDatabase database, GroupId groupId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT * FROM GroupPermissions WHERE group_id = ?")){
 			statement.setString(1, groupId.toString());
@@ -81,7 +81,7 @@ public class PermissionFunctions{
 		}
 	}
 	
-	public static Set<Role> getRolesForUser(RepositoryDatabase database, UserId userId) {
+	public static Set<Role> getRolesForUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("SELECT * FROM UserRoles WHERE user_id = ?")){
 			statement.setString(1, userId.toString());

@@ -38,6 +38,100 @@ public class ResourceRequest{
 	 */
 	public int returnLimit = 999999999;
 	
+	public ResourceRequest(String searchTerm,
+						   String path,
+						   String repoId,
+						   String userId,
+						   List<String> whiteListTags,
+						   List<String> blacklistTags,
+						   boolean withData,
+						   int returnLimit) {
+		this.searchTerm = searchTerm;
+		this.path = path;
+		this.repoId = repoId;
+		this.userId = userId;
+		this.whiteListTags = whiteListTags;
+		this.blacklistTags = blacklistTags;
+		this.withData = withData;
+		this.returnLimit = returnLimit;
+	}
+	
+	public ResourceRequest() {
+	}
+	
+	public ResourceRequest(String searchTerm, String path, String repoId, String userId, boolean withData, int returnLimit) {
+		this.searchTerm = searchTerm;
+		this.path = path;
+		this.repoId = repoId;
+		this.userId = userId;
+		this.withData = withData;
+		this.returnLimit = returnLimit;
+	}
+	
+	public String getSearchTerm() {
+		return searchTerm;
+	}
+	
+	public void setSearchTerm(String searchTerm) {
+		this.searchTerm = searchTerm;
+	}
+	
+	public String getPath() {
+		return path;
+	}
+	
+	public void setPath(String path) {
+		this.path = path;
+	}
+	
+	public String getRepoId() {
+		return repoId;
+	}
+	
+	public void setRepoId(String repoId) {
+		this.repoId = repoId;
+	}
+	
+	public String getUserId() {
+		return userId;
+	}
+	
+	public void setUserId(String userId) {
+		this.userId = userId;
+	}
+	
+	public List<String> getWhiteListTags() {
+		return whiteListTags;
+	}
+	
+	public void setWhiteListTags(List<String> whiteListTags) {
+		this.whiteListTags = whiteListTags;
+	}
+	
+	public List<String> getBlacklistTags() {
+		return blacklistTags;
+	}
+	
+	public void setBlacklistTags(List<String> blacklistTags) {
+		this.blacklistTags = blacklistTags;
+	}
+	
+	public boolean isWithData() {
+		return withData;
+	}
+	
+	public void setWithData(boolean withData) {
+		this.withData = withData;
+	}
+	
+	public int getReturnLimit() {
+		return returnLimit;
+	}
+	
+	public void setReturnLimit(int returnLimit) {
+		this.returnLimit = returnLimit;
+	}
+	
 	@Override
 	public boolean equals(Object o) {
 		if(!(o instanceof ResourceRequest that)){

@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.exception.client;
 
-public class InvalidPathException extends RuntimeException{
+public class InvalidPathException extends ClientException{
 	public InvalidPathException() {
 	}
 	

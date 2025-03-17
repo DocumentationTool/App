@@ -1,6 +1,6 @@
 package com.wonkglorg.doc.core.exception;
 
-public class CoreException extends RuntimeException {
+public class CoreException extends Exception {
     public CoreException() {
     }
 

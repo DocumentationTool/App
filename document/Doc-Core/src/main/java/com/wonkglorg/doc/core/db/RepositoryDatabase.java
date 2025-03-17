@@ -6,6 +6,7 @@ import com.wonkglorg.doc.core.db.functions.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
 import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
@@ -104,7 +105,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	/**
 	 * Initializes the database for the current repo (creating tables, triggers, etc.)
 	 */
-	public void initialize() {
+	public void initialize() throws CoreSqlException {
 		log.info("Initialising Database for repo '{}'", repoProperties.getId());
 		try{
 			DatabaseFunctions.initializeDatabase(this);
@@ -123,7 +124,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	/**
 	 * Initializes the caches for the database
 	 */
-	private void initializeCaches() {
+	private void initializeCaches() throws CoreSqlException {
 		List<Resource> resources = ResourceFunctions.getAllResources(this);
 		for(Resource resource : resources){
 			resourceCache.put(resource.resourcePath(), resource);
@@ -145,7 +146,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	/**
 	 * Rebuilds the entire FTS table to remove any unused records
 	 */
-	public void rebuildFts() {
+	public void rebuildFts() throws CoreSqlException {
 		DatabaseFunctions.rebuildFts(this);
 	}
 	
@@ -155,7 +156,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param resourcePath the path to the resource (should it also delete it from the repo itself?)
 	 * @return the row count affected, -1 if an error occurred
 	 */
-	public void removeResource(Path resourcePath) {
+	public void removeResource(Path resourcePath) throws CoreSqlException {
 		log.info("Deleting resource {} for repo {}", resourcePath, repoProperties.getId());
 		ResourceFunctions.deleteResource(this, resourcePath);
 		resourceCache.remove(resourcePath);
@@ -163,9 +164,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	/**
 	 * Gets all resources from this database without its data filled in
-	 *n
+	 * n
 	 */
-	public List<Resource> getResources(ResourceRequest request) throws CoreException {
+	public List<Resource> getResources(ResourceRequest request) throws CoreException, InvalidUserException {
 		Map<Path, Resource> resources = new HashMap<>(resourceCache);
 		
 		if(request.searchTerm != null || request.withData){
@@ -190,9 +191,13 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		resources = resources.entrySet()
 							 .stream()
 							 .filter(entry -> request.whiteListTags.isEmpty() ||
-											  entry.getValue().hasAnyTag(request.whiteListTags.stream().map(TagId::new).collect(Collectors.toList())))
+											  entry.getValue()
+												   .hasAnyTag(request.whiteListTags.stream()
+																				   .map(TagId::new)
+																				   .collect(Collectors.toList())))
 							 .filter(entry -> request.blacklistTags.isEmpty() ||
-											  !entry.getValue().hasAnyTag(request.blacklistTags.stream().map(TagId::new).collect(Collectors.toList())))
+											  !entry.getValue()
+													.hasAnyTag(request.blacklistTags.stream().map(TagId::new).collect(Collectors.toList())))
 							 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		
 		// Handle user-specific filtering
@@ -281,7 +286,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param resource the resource to insert
 	 * @return the row count affected, -1 if an error occurred
 	 */
-	public void insertResource(Resource resource) throws ClientException {
+	public void insertResource(Resource resource) throws ClientException, CoreException {
 		log.info("Inserting resource {} for repo {}", resource, repoProperties.getId());
 		if(resourceExists(resource.resourcePath())){
 			throw new ClientException("Resource '%s' in '%s' already exists".formatted(resource.resourcePath(), resource.repoId()));
@@ -295,7 +300,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 *
 	 * @param tag the tag to add
 	 */
-	public void createTag(Tag tag) {
+	public void createTag(Tag tag) throws TagExistsException, CoreSqlException {
 		log.info("Adding tag {} for repo {}", tag, repoProperties.getId());
 		if(tagExists(tag.tagId())){
 			throw new TagExistsException("Tag '%s' already exists".formatted(tag.tagId()));
@@ -309,7 +314,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 *
 	 * @param id the id of the tag to remove
 	 */
-	public void removeTag(TagId id) {
+	public void removeTag(TagId id) throws CoreSqlException {
 		log.info("Removing tag {} for repo {}", id, repoProperties.getId());
 		ResourceFunctions.removeTag(this, id);
 		tagCache.remove(id);
@@ -323,7 +328,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param tagId the tag to get
 	 * @return the tags
 	 */
-	public List<Tag> getTags(TagId tagId) {
+	public List<Tag> getTags(TagId tagId) throws InvalidTagException {
 		log.info("Getting tag {} for repo {}", tagId, repoProperties.getId());
 		if(!tagExists(tagId)){
 			throw new InvalidTagException("Tag '%s' does not exist".formatted(tagId));
@@ -346,7 +351,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param oldPath the old path
 	 * @param newPath the new path
 	 */
-	public void updatePath(Path oldPath, Path newPath) {
+	public void updatePath(Path oldPath, Path newPath) throws CoreSqlException {
 		log.info("Moving resource '{}' to '{}' in repo '{}'", oldPath, newPath, repoProperties.getId());
 		ResourceFunctions.updatePath(this, oldPath, newPath);
 		Resource resource = resourceCache.remove(oldPath);
@@ -360,7 +365,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param request the request to update the resource
 	 * @return the updated resource
 	 */
-	public Resource updateResourceData(ResourceUpdateRequest request) throws ClientException {
+	public Resource updateResourceData(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
 		log.info("Updating resource '{}' in repo '{}'", request.path, repoProperties.getId());
 		return ResourceFunctions.updateResource(this, request);
 	}
@@ -371,7 +376,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param resources the resources to insert
 	 * @return the row count affected, -1 if an error occurred
 	 */
-	public void batchInsert(List<Resource> resources) {
+	public void batchInsert(List<Resource> resources) throws CoreSqlException {
 		log.info("Batch inserting resources for repo '{}'", repoProperties.getId());
 		ResourceFunctions.batchInsertResources(this, resources);
 		resources.forEach(resource -> resourceCache.put(resource.resourcePath(), resource));
@@ -383,7 +388,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param resources the resources to update
 	 * @return the row count affected, -1 if an error occurred
 	 */
-	public void batchUpdate(List<Resource> resources) {
+	public void batchUpdate(List<Resource> resources) throws CoreSqlException {
 		log.info("Batch updating resources for repo '{}'", repoProperties.getId());
 		ResourceFunctions.batchUpdateResources(this, resources);
 		resources.forEach(resource -> resourceCache.put(resource.resourcePath(), resource));
@@ -395,7 +400,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param resources the resources to delete
 	 * @return the row count affected, -1 if an error occurred
 	 */
-	public void batchDelete(List<Path> resources) {
+	public void batchDelete(List<Path> resources) throws CoreSqlException {
 		log.info("Batch deleting resources for repo '{}'", repoProperties.getId());
 		ResourceFunctions.batchDeleteResources(this, resources);
 		resources.forEach(resourceCache::remove);
@@ -408,7 +413,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param password the password of the user
 	 * @return true if the user was created, false otherwise
 	 */
-	public boolean createUser(UserId userId, String password) {
+	public boolean createUser(UserId userId, String password) throws CoreSqlException {
 		log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
 		
 		boolean isAdded = UserFunctions.addUser(this, userId, password, null);
@@ -451,7 +456,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 * @param userId the user to delete
 	 * @return true if the user was deleted, false otherwise
 	 */
-	public boolean deleteUser(UserId userId) {
+	public boolean deleteUser(UserId userId) throws CoreSqlException {
 		log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
 		var wasDeleted = UserFunctions.deleteUser(this, userId);
 		if(wasDeleted){
