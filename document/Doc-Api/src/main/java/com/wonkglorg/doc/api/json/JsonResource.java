@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.api.json;
 
 import com.wonkglorg.doc.core.objects.Resource;
+import com.wonkglorg.doc.core.permissions.PermissionType;
 
 import java.util.HashSet;
 import java.util.List;
@@ -19,7 +20,7 @@ public class JsonResource{
 	public Set<String> tags = new HashSet<>();
 	public String lastModifiedBy;
 	public String lastModifiedAt;
-	public boolean isEditable;
+	public PermissionType permissionType;
 	public String data;
 	
 	private JsonResource(Resource resource) {
@@ -31,7 +32,7 @@ public class JsonResource{
 		lastModifiedBy = resource.modifiedBy();
 		lastModifiedAt = resource.getModifiedAt();
 		data = resource.data();
-		isEditable = resource.isEditable();
+		permissionType = resource.getPermissionType();
 		for(var tag : resource.getResourceTags()){
 			tags.add(tag.id());
 		}
