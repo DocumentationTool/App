@@ -5,12 +5,7 @@ import com.wonkglorg.doc.core.db.DbHelper;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.ResourceException;
-import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidPathException;
-import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
-import com.wonkglorg.doc.core.exception.client.InvalidResourceException;
-import com.wonkglorg.doc.core.exception.client.InvalidTagException;
-import com.wonkglorg.doc.core.exception.client.InvalidUserException;
+import com.wonkglorg.doc.core.exception.client.*;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -44,8 +39,11 @@ public class ResourceService {
      * @return the repository
      * @throws Exception if the repository does not exist or null is passed
      */
-    public List<Resource> getResources(ResourceRequest request) throws CoreException, ClientException{
+    public List<Resource> getResources(ResourceRequest request) throws CoreException, ClientException {
         RepoId id = repoService.validateRepoId(request.repoId, true);
+        if (request.path != null) {
+            request.path = cleanPath(request.path);
+        }
 
         if (id.isAllRepos()) { //gets resources from all repos
             List<Resource> allResources = new ArrayList<>();
@@ -56,6 +54,21 @@ public class ResourceService {
         }
 
         return repoService.getRepo(id).getDatabase().getResources(request);
+    }
+
+
+    public String cleanPath(String path) {
+        if (path == null) {
+            return null;
+        }
+        return path.toString().replace("\\\\", "\\").replace("//", "\\").replace("/", "\\");
+    }
+
+    public Path cleanPath(Path path) {
+        if (path == null) {
+            return null;
+        }
+        return Path.of(cleanPath(path.toString()));
     }
 
     /**
@@ -144,6 +157,7 @@ public class ResourceService {
      */
     public void insertResource(Resource resource) throws ClientException, CoreException {
         RepoId id = repoService.validateRepoId(resource.repoId().id());
+        resource.setResourcePath(cleanPath(resource.resourcePath()));
         Path path = resource.resourcePath();
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
@@ -164,12 +178,15 @@ public class ResourceService {
      * @return the response
      */
     public boolean removeResource(RepoId repoId, Path path) throws InvalidResourceException, CoreException, InvalidRepoException,
-																   InvalidPathException {
+            InvalidPathException {
         if (!repoService.isValidRepo(repoId)) {
             throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
         }
+        path = cleanPath(path);
+
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
+
 
         if (!resourceExists(repoId, path)) {
             throw new ResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
@@ -210,6 +227,9 @@ public class ResourceService {
         userService.validateUserId(repoFrom, userId);
         userService.validateUserId(repoTo, userId);
 
+        pathFrom = cleanPath(pathFrom);
+        pathTo = cleanPath(pathTo);
+
         if (!resourceExists(repoFrom, pathFrom)) {
             throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
         }
@@ -247,6 +267,7 @@ public class ResourceService {
      */
     public Resource updateResource(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
         RepoId id = repoService.validateRepoId(request.repoId);
+        request.path = cleanPath(request.path);
         Path path = Path.of(request.path);
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
@@ -272,6 +293,7 @@ public class ResourceService {
      * @return the user editing the file or null if not being edited
      */
     public UserId getEditingUser(RepoId repoId, Path path) throws InvalidResourceException, InvalidRepoException {
+        path = cleanPath(path);
         repoService.validateRepoId(repoId);
         validateResource(repoId, path);
         return repoService.getRepo(repoId).getDatabase().isBeingEdited(path);
@@ -285,7 +307,7 @@ public class ResourceService {
      * @return true if it is being edited, false otherwise
      */
     public boolean isBeingEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
-        return getEditingUser(id, path) != null;
+        return getEditingUser(id, cleanPath(path)) != null;
     }
 
     /**
@@ -305,7 +327,8 @@ public class ResourceService {
      * @param path   the path to the file
      */
     public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path)
-			throws InvalidResourceException, CoreException, InvalidRepoException, InvalidUserException {
+            throws InvalidResourceException, CoreException, InvalidRepoException, InvalidUserException {
+        path = cleanPath(path);
         repoService.validateRepoId(repoId);
         validateResource(repoId, path);
         userService.validateUserId(repoId, userId);
@@ -325,6 +348,7 @@ public class ResourceService {
      */
     private void validateResource(RepoId repoId, Path path) throws InvalidRepoException, InvalidResourceException {
         repoService.validateRepoId(repoId);
+        path = cleanPath(path);
         if (!resourceExists(repoId, path)) {
             throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
         }
@@ -348,6 +372,7 @@ public class ResourceService {
      */
     public void removeCurrentlyEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
         repoService.validateRepoId(id);
+        path = cleanPath(path);
         validateResource(id, path);
         repoService.getRepo(id).getDatabase().removeCurrentlyEdited(path);
     }

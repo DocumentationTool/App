@@ -50,9 +50,6 @@ public class DbHelper{
 						i++;
 					}
 					break;
-				case '\\': // Normalize backslashes to forward slashes
-					sqlPattern.append("/");
-					break;
 				case '%', '_':
 					// Escape SQL wildcards (_ and %) to prevent accidental misuse
 					sqlPattern.append("\\").append(c);

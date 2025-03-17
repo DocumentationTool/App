@@ -228,6 +228,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		}
 		return userProfiles.containsKey(userId);
 	}
+
+	//todo:jmd fix path issues each path is treated seperatly. not good
 	
 	/**
 	 * Checks if a group exists in the database
