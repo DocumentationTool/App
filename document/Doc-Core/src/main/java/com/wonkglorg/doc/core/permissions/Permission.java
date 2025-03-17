@@ -53,6 +53,11 @@ public class Permission<T extends Identifyable> {
         this.permission = permission;
     }
 
+
+    public PermissionType getPermission() {
+        return permission;
+    }
+
     public void setPath(ResourcePath path) {
         this.path = path;
     }

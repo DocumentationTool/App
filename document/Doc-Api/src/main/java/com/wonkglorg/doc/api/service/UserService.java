@@ -10,12 +10,17 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
+import com.wonkglorg.doc.core.permissions.PermissionType;
+import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Component
@@ -23,6 +28,7 @@ import java.util.Set;
 public class UserService {
 
     private final RepoService repoService;
+    private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     public UserService(@Lazy RepoService repoService) {
         this.repoService = repoService;
@@ -76,11 +82,11 @@ public class UserService {
      * @param groupId the group to look for
      * @return the users in the group
      */
-    public List<UserId> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
+    public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
         return repoService.getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
     }
 
-    public List<GroupId> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
+    public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
         return repoService.getRepo(repoId).getDatabase().getGroupsFromUser(userId);
     }
 
@@ -225,7 +231,7 @@ public class UserService {
         for (Resource resource : resources) {
             for (Permission<UserId> permission : permissions) {
                 if (permission.getPermissionType().equals(resource.getPermissionType())) {
-                //something something set new path based on closest matching permission from this one,
+                    //something something set new path based on closest matching permission from this one,
 
                     //example: ** gets overwriten by test/** if the file is located in test, sort by length? does that help
 
@@ -259,7 +265,57 @@ public class UserService {
      * @return the filtered resources
      */
     public List<Resource> filterUsingPermissions(RepoId repoId, UserId userId, List<Resource> resources) {
+        Map<String, PermissionType> antPaths = new HashMap<>();
+        Map<String, PermissionType> fullPaths = new HashMap<>();
 
-        return resources;
+        UserProfile user = getUser(repoId, userId);
+        if (user == null) {
+            return resources;
+        }
+
+
+        List<Group> userGroups = getGroupsFromUser(repoId, userId);
+
+        //first add permissions from groups as the ones specific to the user take priority so they overwrite these ones if the same ones apply
+
+        for (Group group : userGroups) {
+            Set<Permission<GroupId>> groupPermissions = group.getPermissions();
+            for (Permission<GroupId> permission : groupPermissions) {
+                if(antPathMatcher.isPattern(permission.getPath().path())){
+                    antPaths.put(permission.getPath().path(), permission.getPermission());
+                }else{
+                    fullPaths.put(permission.getPath().path(), permission.getPermission());
+                }
+            }
+        }
+
+        Set<Permission<UserId>> permissions = user.getPermissions();
+        for (Permission<UserId> permission : permissions) {
+            if(antPathMatcher.isPattern(permission.getPath().path())){
+                antPaths.put(permission.getPath().path(), permission.getPermission());
+            }else{
+                fullPaths.put(permission.getPath().path(), permission.getPermission());
+            }
+        }
+
+
+
+
+        //todo:jmd first evaluate all specific ones those don't need to be iterated since those have a higher priority
+        for (Resource resource : resources) {
+            for (Map.Entry<String, PermissionType> entry : paths.entrySet()) {
+                if (resource.resourcePath().startsWith(entry.getKey())) {
+                    resource.setPermissionType(entry.getValue());
+                }
+            }
+        }
+
+
+        for ()
+
+
+            //user specific permission takes priority over group permissions if both are present for the same resource,
+            //in that case make Map with all paths and the permission type, then sort by length and iterate over them?
+            return resources;
     }
 }

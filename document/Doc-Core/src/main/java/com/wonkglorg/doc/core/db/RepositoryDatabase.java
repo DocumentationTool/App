@@ -417,12 +417,16 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         return isAdded;
     }
 
-    public List<UserId> getUsersFromGroup(GroupId groupId) {
-        return groupUsers.get(groupId);
+    public List<UserProfile> getUsersFromGroup(GroupId groupId) {
+        List<UserProfile> profiles = new ArrayList<>();
+        groupUsers.get(groupId).forEach(userId -> profiles.add(userProfiles.get(userId)));
+        return profiles;
     }
 
-    public List<GroupId> getGroupsFromUser(UserId userId) {
-        return userGroups.get(userId);
+    public List<Group> getGroupsFromUser(UserId userId) {
+        List<Group> groups = new ArrayList<>();
+        userGroups.get(userId).forEach(groupId -> groups.add(groupCache.get(groupId)));
+        return groups;
     }
 
     public List<UserProfile> getUsers(UserId userId) {
