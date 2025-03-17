@@ -1,31 +1,22 @@
 package com.wonkglorg.doc.core.exception;
 
-import com.wonkglorg.doc.core.objects.RepoId;
-
-public class CoreException extends RuntimeException {
-    private final RepoId repoId;
-
-    public CoreException(RepoId repoId) {
-        this.repoId = repoId;
+public class CoreException extends Exception {
+    public CoreException() {
     }
 
-    public CoreException(RepoId repoId, String message) {
+    public CoreException(String message) {
         super(message);
-        this.repoId = repoId;
     }
 
-    public CoreException(RepoId repoId, String message, Throwable cause) {
+    public CoreException(String message, Throwable cause) {
         super(message, cause);
-        this.repoId = repoId;
     }
 
-    public CoreException(RepoId repoId, Throwable cause) {
+    public CoreException(Throwable cause) {
         super(cause);
-        this.repoId = repoId;
     }
 
-    public CoreException(RepoId repoId, String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+    public CoreException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
-        this.repoId = repoId;
     }
 }

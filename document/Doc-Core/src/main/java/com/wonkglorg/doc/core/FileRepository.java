@@ -1,14 +1,16 @@
 package com.wonkglorg.doc.core;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
-import com.wonkglorg.doc.core.exception.InvalidTagException;
+import com.wonkglorg.doc.core.exception.CoreException;
+import com.wonkglorg.doc.core.exception.CoreSqlException;
+import com.wonkglorg.doc.core.exception.client.InvalidTagException;
+import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.git.GitRepo;
 import com.wonkglorg.doc.core.git.UserBranch;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.request.ResourceRequest;
-import com.wonkglorg.doc.core.response.QueryDatabaseResponse;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
@@ -62,7 +64,7 @@ public class FileRepository {
      *
      * @throws GitAPIException if there is an error with the git repo
      */
-    public void initialize() throws GitAPIException {
+    public void initialize() throws GitAPIException, CoreException, InvalidUserException {
         log.info("Looking for repo in: '{}'", repoProperties.getPath());
         gitRepo = new GitRepo(repoProperties);
         Optional<Path> file = gitRepo.getSingleFile(s -> s.equalsIgnoreCase(repoProperties.getDbName()), UNTRACKED, MODIFIED, ADDED);
@@ -83,14 +85,14 @@ public class FileRepository {
             try {
                 log.info("Update task for repo '{}'", repoProperties.getId());
                 checkFileChanges(gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED));
-            } catch (GitAPIException e) {
+            } catch (GitAPIException | CoreException | InvalidUserException e) {
                 log.error("Error while checking for changes", e);
             }
-        }, 10, 10, TimeUnit.MINUTES);
+		}, 10, 10, TimeUnit.MINUTES);
 
     }
 
-    private void checkFileChanges(Set<Path> foundFiles) {
+    private void checkFileChanges(Set<Path> foundFiles) throws CoreException, InvalidUserException {
         log.info("Checking for changes in {} files", foundFiles.size());
 
         ResourceRequest request = new ResourceRequest();
@@ -98,19 +100,17 @@ public class FileRepository {
         request.repoId = repoProperties.getId().id();
         request.userId = null;
 
-        QueryDatabaseResponse<Collection<Resource>> resourceRequest = dataDB.getResources(request);
-        if (resourceRequest.isError()) {
-            log.error("Error while checking for changes: {}", resourceRequest.getErrorMessage());
-            return;
-        }
+        List<Resource> resources = dataDB.getResources(request);
 
-        Collection<Resource> resources = resourceRequest.get();
         Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
+
         List<Path> newResources = foundFiles.stream().filter(f -> resources.stream().noneMatch(r -> r.resourcePath().equals(f))).toList();
+
         List<Path> deletedResources = resources.stream()
                 .map(Resource::resourcePath)
                 .filter(path -> foundFiles.stream().noneMatch(path::equals))
                 .toList();
+
         List<Path> matchingResources = resources.stream().map(Resource::resourcePath).filter(foundFiles::contains).toList();
 
         //pull any changes from the remote
@@ -144,17 +144,17 @@ public class FileRepository {
      * @param tags the tags to check
      * @throws InvalidTagException if the tag does not exist
      */
-    public void checkTags(List<String> tags) throws InvalidTagException {
+    public void checkTags(Set<TagId> tags) throws InvalidTagException {
         if (tags == null) {
             return;
         }
-        for (String tag : tags) {
-            if (!getDatabase().tagExists(new TagId(tag))) {
-                throw new InvalidTagException(repoProperties.getId(), "Tag '%s' does not exist".formatted(tag));
-
+        for (var tag : tags) {
+            if (!getDatabase().tagExists(tag)) {
+                throw new InvalidTagException("Tag '%s' does not exist in '%s'".formatted(tag, repoProperties.getId()));
             }
         }
     }
+
 
     /**
      * Adds a file to the database
@@ -202,7 +202,7 @@ public class FileRepository {
      *
      * @param newFiles the files to add
      */
-    private void addNewFiles(List<Path> newFiles) {
+    private void addNewFiles(List<Path> newFiles) throws CoreSqlException {
         List<Resource> resources = new ArrayList<>();
         for (Path file : newFiles) {
             RevCommit lastCommitDetailsForFile = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -210,13 +210,13 @@ public class FileRepository {
             String content = readData(gitRepo, file);
             if (lastCommitDetailsForFile == null) {
                 log.error("File '{}' was not added by git", file);
-                newResource = new Resource(file, "system", repoProperties.getId(), null, new HashMap<>(), content);
+                newResource = new Resource(file, "system", repoProperties.getId(), null, new HashSet<>(), content);
             } else {
                 newResource = new Resource(file,
                         lastCommitDetailsForFile.getAuthorIdent().getName(),
                         repoProperties.getId(),
                         null,
-                        new HashMap<>(),
+                        new HashSet<>(),
                         content);
             }
             resources.add(newResource);
@@ -232,7 +232,7 @@ public class FileRepository {
      * @param matchingResources the resources to update
      * @return true if the resources have changed
      */
-    private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) {
+    private int updateMatchingResources(List<Path> matchingResources, Map<Path, Resource> existingResources) throws CoreSqlException {
         List<Resource> resources = new ArrayList<>();
         for (Path file : matchingResources) {
             RevCommit fileCommit = gitRepo.getLastCommitDetailsForFile(file.toString());
@@ -280,7 +280,7 @@ public class FileRepository {
         }
     }
 
-    private void deleteOldResources(List<Path> deletedResources) {
+    private void deleteOldResources(List<Path> deletedResources) throws CoreSqlException {
         for (Path file : deletedResources) {
             log.error("Deleting resource '{}'", file);
             gitRepo.remove(file);
