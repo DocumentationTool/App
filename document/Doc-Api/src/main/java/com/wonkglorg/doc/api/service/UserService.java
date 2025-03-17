@@ -219,8 +219,19 @@ public class UserService {
         }
 
 
-        //todo:jmd this is where the filtering should happen
+        //todo:jmd this is where the filtering should happen, checks wether the user has the permission to view the resource or not
         Set<Permission<UserId>> permissions = user.getPermissions();
+
+        for (Resource resource : resources) {
+            for (Permission<UserId> permission : permissions) {
+                if (permission.getPermissionType().equals(resource.getPermissionType())) {
+                //something something set new path based on closest matching permission from this one,
+
+                    //example: ** gets overwriten by test/** if the file is located in test, sort by length? does that help
+
+                }
+            }
+        }
 
 
         return resources;
