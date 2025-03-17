@@ -7,22 +7,31 @@ import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.permissions.PermissionType;
+import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.util.AntPathMatcher;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 @Service
 public class UserService{
 	
 	private final RepoService repoService;
+	private final PermissionService permissionService;
 	
-	public UserService(@Lazy RepoService repoService) {
+	public UserService(@Lazy RepoService repoService, @Lazy PermissionService permissionService) {
 		this.repoService = repoService;
+		this.permissionService = permissionService;
 	}
 	
 	/**
@@ -73,11 +82,11 @@ public class UserService{
 	 * @param groupId the group to look for
 	 * @return the users in the group
 	 */
-	public List<UserId> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
+	public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
 	}
 	
-	public List<GroupId> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
+	public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().getGroupsFromUser(userId);
 	}
 	
@@ -109,6 +118,18 @@ public class UserService{
 	public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
 		validateUser(repoId, userId);
 		return repoService.getRepo(repoId).getDatabase().getUsers(userId);
+	}
+	
+	/**
+	 * Gets a user by their id
+	 *
+	 * @param repoId the id of the repository
+	 * @param userId the id of the user
+	 * @return the user
+	 */
+	public UserProfile getUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
+		validateUser(repoId, userId);
+		return repoService.getRepo(repoId).getDatabase().getUsers(userId).get(0);
 	}
 	
 	/**

@@ -1,12 +1,11 @@
 package com.wonkglorg.doc.core.objects;
 
+import com.wonkglorg.doc.core.permissions.PermissionType;
+
 import java.nio.file.Path;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -21,8 +20,11 @@ public final class Resource{
 	private final String modifiedBy;
 	private final RepoId repoId;
 	private final Set<TagId> resourceTags = new HashSet<>();
-	private final boolean isEditable;
 	private final String category;
+	/**
+	 * The permissions for this resource based on the user it was returned for, if the request is not returned for a user treats the resource as editable by default
+	 */
+	private PermissionType permissionType = PermissionType.EDIT;
 	private String data;
 	
 	public Resource(Path resourcePath,
@@ -32,7 +34,7 @@ public final class Resource{
 					String modifiedBy,
 					RepoId repoId,
 					Set<TagId> resourceTags,
-					boolean isEditable,
+					PermissionType permissionType,
 					String category,
 					String data) {
 		Objects.requireNonNull(resourcePath, "A Resources, path cannot be null");
@@ -43,13 +45,25 @@ public final class Resource{
 		this.modifiedBy = modifiedBy;
 		this.repoId = repoId;
 		this.resourceTags.addAll(resourceTags);
-		this.isEditable = isEditable;
+		this.permissionType = permissionType;
 		this.category = category;
 		this.data = data;
 	}
 	
+	public Resource(Path resourcePath,
+					LocalDateTime createdAt,
+					String createdBy,
+					LocalDateTime modifiedAt,
+					String modifiedBy,
+					RepoId repoId,
+					Set<TagId> resourceTags,
+					String category,
+					String data) {
+		this(resourcePath, createdAt, createdBy, modifiedAt, modifiedBy, repoId, resourceTags, PermissionType.EDIT, category, data);
+	}
+	
 	public Resource(Path resourcePath, String creator, RepoId repoId, String category, Set<TagId> tags, String data) {
-		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, false, category, data);
+		this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, PermissionType.EDIT, category, data);
 	}
 	
 	public String getModifiedAt() {
@@ -88,16 +102,20 @@ public final class Resource{
 		return resourceTags;
 	}
 	
-	public boolean isEditable() {
-		return isEditable;
-	}
-	
 	public String category() {
 		return category;
 	}
 	
 	public String data() {
 		return data;
+	}
+	
+	public PermissionType getPermissionType() {
+		return permissionType;
+	}
+	
+	public void setPermissionType(PermissionType permissionType) {
+		this.permissionType = permissionType;
 	}
 	
 	public Resource copy() {
@@ -108,7 +126,7 @@ public final class Resource{
 				modifiedBy,
 				repoId,
 				new HashSet<>(resourceTags),
-				isEditable,
+				permissionType,
 				category,
 				data);
 	}
@@ -129,7 +147,7 @@ public final class Resource{
 			   Objects.equals(this.modifiedBy, that.modifiedBy) &&
 			   Objects.equals(this.repoId, that.repoId) &&
 			   Objects.equals(this.resourceTags, that.resourceTags) &&
-			   this.isEditable == that.isEditable &&
+			   this.permissionType == that.permissionType &&
 			   Objects.equals(this.category, that.category) &&
 			   Objects.equals(this.data, that.data);
 	}
@@ -176,7 +194,7 @@ public final class Resource{
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(resourcePath, createdAt, createdBy, modifiedAt, modifiedBy, repoId, resourceTags, isEditable, category, data);
+		return Objects.hash(resourcePath, createdAt, createdBy, modifiedAt, modifiedBy, repoId, resourceTags, permissionType, category, data);
 	}
 	
 	@Override
@@ -203,8 +221,8 @@ public final class Resource{
 			   "resourceTags=" +
 			   resourceTags +
 			   ", " +
-			   "isEditable=" +
-			   isEditable +
+			   "permissionType=" +
+			   permissionType +
 			   ", " +
 			   "category=" +
 			   category +

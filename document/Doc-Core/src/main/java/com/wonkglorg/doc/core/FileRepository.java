@@ -260,7 +260,6 @@ public class FileRepository {
                     authorName,
                     repoProperties.getId(),
                     existingResource.getResourceTags(),
-                    repoProperties.isReadOnly(),
                     existingResource.category(),
                     readData(gitRepo, file));
             resources.add(newResource);
