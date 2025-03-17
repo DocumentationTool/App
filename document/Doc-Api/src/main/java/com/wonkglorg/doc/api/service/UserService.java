@@ -13,11 +13,13 @@ import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.PermissionType;
 import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.util.AntPathMatcher;
 
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -230,11 +232,10 @@ public class UserService {
 
         for (Resource resource : resources) {
             for (Permission<UserId> permission : permissions) {
-                if (permission.getPermissionType().equals(resource.getPermissionType())) {
+                if (permission.getPermission().equals(resource.getPermissionType())) {
                     //something something set new path based on closest matching permission from this one,
 
                     //example: ** gets overwriten by test/** if the file is located in test, sort by length? does that help
-
                 }
             }
         }
@@ -280,9 +281,9 @@ public class UserService {
         for (Group group : userGroups) {
             Set<Permission<GroupId>> groupPermissions = group.getPermissions();
             for (Permission<GroupId> permission : groupPermissions) {
-                if(antPathMatcher.isPattern(permission.getPath().path())){
+                if (antPathMatcher.isPattern(permission.getPath().path())) {
                     antPaths.put(permission.getPath().path(), permission.getPermission());
-                }else{
+                } else {
                     fullPaths.put(permission.getPath().path(), permission.getPermission());
                 }
             }
@@ -290,14 +291,15 @@ public class UserService {
 
         Set<Permission<UserId>> permissions = user.getPermissions();
         for (Permission<UserId> permission : permissions) {
-            if(antPathMatcher.isPattern(permission.getPath().path())){
+            if (antPathMatcher.isPattern(permission.getPath().path())) {
                 antPaths.put(permission.getPath().path(), permission.getPermission());
-            }else{
+            } else {
                 fullPaths.put(permission.getPath().path(), permission.getPermission());
             }
         }
 
 
+        //todo:jmd seperate to method that only evaluated the paths not entire resources, then I can cache those without much memory overhead for storing them
 
 
         //todo:jmd first evaluate all specific ones those don't need to be iterated since those have a higher priority
@@ -316,5 +318,61 @@ public class UserService {
             //user specific permission takes priority over group permissions if both are present for the same resource,
             //in that case make Map with all paths and the permission type, then sort by length and iterate over them?
             return resources;
+    }
+
+
+    @Cacheable(cacheNames = "userPermissions", key = "{#userId,#repoId,#resourcePaths}")
+    public List<Path> filterUsingPermissions(RepoId repoId, UserId userId, List<Path> resourcePaths) {
+        Map<String, PermissionType> antPaths = new HashMap<>();
+        Map<String, PermissionType> fullPaths = new HashMap<>();
+
+        UserProfile user = getUser(repoId, userId);
+        if (user == null) {
+            return resources;
+        }
+
+
+        List<Group> userGroups = getGroupsFromUser(repoId, userId);
+
+        //first add permissions from groups as the ones specific to the user take priority so they overwrite these ones if the same ones apply
+
+        for (Group group : userGroups) {
+            Set<Permission<GroupId>> groupPermissions = group.getPermissions();
+            for (Permission<GroupId> permission : groupPermissions) {
+                if (antPathMatcher.isPattern(permission.getPath().path())) {
+                    antPaths.put(permission.getPath().path(), permission.getPermission());
+                } else {
+                    fullPaths.put(permission.getPath().path(), permission.getPermission());
+                }
+            }
+        }
+
+        Set<Permission<UserId>> permissions = user.getPermissions();
+        for (Permission<UserId> permission : permissions) {
+            if (antPathMatcher.isPattern(permission.getPath().path())) {
+                antPaths.put(permission.getPath().path(), permission.getPermission());
+            } else {
+                fullPaths.put(permission.getPath().path(), permission.getPermission());
+            }
+        }
+
+
+        //todo:jmd seperate to method that only evaluated the paths not entire resources, then I can cache those without much memory overhead for storing them
+
+
+        //todo:jmd first evaluate all specific ones those don't need to be iterated since those have a higher priority
+        for (Resource resource : resources) {
+            for (Map.Entry<String, PermissionType> entry : paths.entrySet()) {
+                if (resource.resourcePath().startsWith(entry.getKey())) {
+                    resource.setPermissionType(entry.getValue());
+                }
+            }
+        }
+
+
+        for ()
+
+
+            return resourcePaths;
     }
 }
