@@ -2,8 +2,6 @@ lacy load -> in router
 
 API Response Models!
 
-FileTree wie schicke ich childResourcen mit bei getResource
-
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 suchergebnisse mit tab und pfeiltasten
 tooltip bei prefix

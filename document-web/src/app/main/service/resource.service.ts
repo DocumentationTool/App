@@ -17,7 +17,7 @@ export class ResourceService {
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
   selectedFile = signal<Resources | null>(null); //Das derzeit ausgewählte File
   editingFile = signal<Resources | null>(null)
-  searchResults = signal<ApiResponseResource | null> (null);
+  searchResults = signal<ApiResponseResource | null>(null);
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
 
@@ -33,7 +33,7 @@ export class ResourceService {
   }
 
   selectResource(file: any) { //Bei file Auswahl, den Inhalt holen
-    this.apiResource.getResource(null, this.splitResourcePath(file.path), file.repoId, null, [], [], true, 1).subscribe(
+    this.apiResource.getResource(null, file.path, file.repoId, null, [], [], true, 1).subscribe(
       data => {
         // Greife auf die Ressourcen des entsprechenden Repos zu
         const resources: Resources[] | undefined = data.content[file.repoId];
@@ -77,22 +77,11 @@ export class ResourceService {
   }
 
   updateResource() {
-    this.apiResource.updateResource(this.editingFile()?.repoId, this.editingFile()?.path, null, [], [], [], null, this.fileContent(), false).subscribe(
+    this.apiResource.updateResource(this.editingFile()?.repoId, this.editingFile()?.path, null, null, null, null, null, this.fileContent(), false).subscribe(
       data => {
         console.log(data)
         this.loadFileTree();
         this.fileContentBeforeChanges = this._fileContent();
-      },
-      error => {
-        console.error(error);
-      }
-    )
-  }
-
-  addTag() {
-    this.apiResource.addTag("repo1", "1", "school").subscribe(
-      data => {
-        this.loadFileTree();
       },
       error => {
         console.error(error);
@@ -112,8 +101,21 @@ export class ResourceService {
     )
   }
 
-  removeTag() {
+  editResourceTags(repoId: string, path: string, tagsToAdd: string[], tagsToRemove: string[]) {
 
+    this.apiResource.updateResource(repoId, path, null, tagsToAdd, tagsToRemove, null, null, null, false).subscribe(
+      data => {
+        this.loadFileTree();
+      },
+      error => {
+        console.error(error);
+      }
+    )
+  }
+
+  editRepoTags(repoId: string, tagsToAdd: string[], tagsToRemove: string[]) {
+    console.log("Add Repo Tag")
+    //ToDo: Add Tag RepoID + RepoName, remove tag
   }
 
   getTag(repoId: string | null) {
@@ -161,7 +163,7 @@ export class ResourceService {
     );
   }
 
-  get content(){
+  get content() {
     return this.fileTree();
   }
 

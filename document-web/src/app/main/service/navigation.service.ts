@@ -7,6 +7,10 @@ import {ApiResponseModelResourceBeingEdited} from '../../Model/apiResponseModelR
 import {ResourceCreateNewComponent} from '../popUp/resource-createNew/resource-createNew.component';
 import {MatDialog} from '@angular/material/dialog';
 import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
+import {ResourceEditTagsComponent} from '../popUp/resource-edit-tags/resource-edit-tags.component';
+import {ResourceMoveComponent} from '../popUp/resource-move/resource-move.component';
+import {Resources} from '../../Model/apiResponseFileTree';
+import {RepoEditTagsComponent} from '../popUp/repo-edit-tags/repo-edit-tags.component';
 
 @Injectable({
   providedIn: 'root'
@@ -23,8 +27,6 @@ export class NavigationService {
   toggle = signal<boolean>(true);
   isAdmin = signal<boolean>(false);
   mode = signal<string>("editor");
-  editTags = signal<boolean>(false);
-  moveResource = signal<boolean>(false);
 
   logAdminIn() {
     this.isAdmin.set(true);
@@ -97,6 +99,27 @@ export class NavigationService {
     this.dialog.open(ResourceUploadComponent,
       {
         data: {data,path}
+      });
+  }
+
+  editResourceTags(repoId:string, path: string) {
+    this.dialog.open(ResourceEditTagsComponent,
+      {
+        data: {repoId, path}
+      });
+  }
+
+  editRepoTags(repoId: string){
+    this.dialog.open(RepoEditTagsComponent,
+      {
+        data: {repoId}
+      });
+  }
+
+  moveResource(repo: string, path: string) {
+    this.dialog.open(ResourceMoveComponent,
+      {
+        data: {repo,path}
       });
   }
 

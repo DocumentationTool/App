@@ -13,8 +13,8 @@ export class ApiResource {
 
   private baseUrl = 'http://localhost:8080/api/resource';
 
-  updateResource(repoId: string | undefined, path: string | undefined, userId: string | null, tagsToAdd: string[], tagsToRemove: string[],
-                 tagsToSet: string[], category: string | null, data: string, treatNullsAsValues: boolean) {
+  updateResource(repoId: string | undefined, path: string | undefined, userId: string | null, tagsToAdd: string[] | null, tagsToRemove: string[] | null,
+                 tagsToSet: string[] | null, category: string | null, data: string | null, treatNullsAsValues: boolean) {
     const payload = {
       "repoId": repoId,
       "path": path,
@@ -31,7 +31,7 @@ export class ApiResource {
       "category": category,
       "data": data
     }
-    return this.http.put(this.baseUrl + "/update", payload)
+    return this.http.post(this.baseUrl + "/update", payload)
   }
 
   addTag(repoId: string, tagId: string, tagName: string) {
@@ -39,7 +39,7 @@ export class ApiResource {
       .set('repoId', repoId)
       .set('tagId', tagId)
       .set('tagName', tagName)
-    return this.http.put(this.baseUrl + "/tag/add", params)
+    return this.http.post(this.baseUrl + "/tag/add", params)
   }
 
   setResourceBeingEdited(repoId: string | undefined, path: string | undefined, userId: string) {
@@ -47,7 +47,7 @@ export class ApiResource {
     if (repoId) params = params.set('repoId', repoId);
     if (path) params = params.set('path', path);
     if (path) params = params.set('userId', userId);
-    return this.http.put(this.baseUrl + "/editing/set", params)
+    return this.http.post(this.baseUrl + "/editing/set", params)
   }
 
   addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
@@ -62,7 +62,7 @@ export class ApiResource {
         params = params.append('tagIds', tag); // Fügt jedes Tag als separaten Parameter hinzu
       });
     }
-    return this.http.put(this.baseUrl + "/add", data, {params});
+    return this.http.post(this.baseUrl + "/add", data, {params});
   }
 
   removeTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {

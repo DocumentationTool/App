@@ -20,32 +20,10 @@ import {TreeChildComponent} from './tree-child/tree-child.component';
 })
 export class SidebarComponent {
   openRepos: Set<string> = new Set();
-  menuPosition = {x: 0, y: 0};
-  selectedResource: Resources | null = null;
+
 
   constructor(public navigationService: NavigationService,
               public resourceService: ResourceService) {
-  }
-
-  toggleRepo(repoKey: string) {
-    if (this.openRepos.has(repoKey)) {
-      this.openRepos.delete(repoKey); // Repository schließen
-    } else {
-      this.openRepos.add(repoKey); // Repository öffnen
-    }
-  }
-
-  // Methode, um zu prüfen, ob ein Repository geöffnet ist
-  isRepoOpen(repoKey: string): boolean {
-    return this.openRepos.has(repoKey);
-  }
-
-  getAssetUrl(file: string): string {
-    return file;
-  }
-
-  get contentMap(): Map<string, ContentGroup> {
-    return new Map(Object.entries(this.resourceService.fileTree()?.content ?? {}));
   }
 
   repoId: string = ""
@@ -54,7 +32,6 @@ export class SidebarComponent {
   category: string | null = ""
   tagIds: string[] | null = [];
   data: string = "";
-  hoveredResource: any;
 
   onUpload(event: any) {
     if (this.resourceService.checkForFileChanges()) {
@@ -111,55 +88,4 @@ export class SidebarComponent {
     };
     this.resourceService.selectResource(newResource)
   }
-
-  openMenu(event: MouseEvent, resource: Resources) {
-    event.stopPropagation();
-    this.selectedResource = resource;
-    this.menuPosition = {x: event.clientX, y: event.clientY};
-
-  }
-
-  // Schließt das Menü, wenn irgendwo anders geklickt wird
-  @ HostListener('document:click', ['$event'])
-  closeMenu(event: Event) {
-    this.selectedResource = null;
-  }
-
-// Beispielaktionen für Menüoptionen
-  editTags(resource: Resources) {
-    console.log("Bearbeiten:", resource);
-  }
-
-  deleteResource(resource: Resources) {
-    if (window.confirm("Do you really want to delete '" + resource.path + "' in Repo: '" + resource.repoId + "'?")) {
-      this.resourceService.removeResource(resource.repoId, resource.path);
-      this.resourceService.loadFileTree();
-    }
-  }
-
-  moveResource(resource: Resources) {
-
-  }
-
-
-  onDrop(event: CdkDragDrop<any>, targetRepoKey: string, sourceRepo: string) {
-    const draggedItem = event; // Das gezogene File
-    const previousRepo = event.previousContainer.data; // Das vorherige Repo
-    const newRepo = targetRepoKey; // Das Ziel-Repo
-
-    console.log("📦 Dragged File:", draggedItem);
-    console.log("⬅️ From:", previousRepo);
-    console.log("➡️ To:", newRepo);
-
-    // Wenn das Ziel ein anderes Repo ist, verschiebe die Datei
-    if (event.previousContainer !== event.container) {
-      // this.resourceService.moveResource(draggedItem, previousRepo, newRepo);
-      console.log("Auf repo")
-    } else {
-      // Falls innerhalb des gleichen Repos bewegt, neu anordnen
-      // moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-      console.log("auf resource")
-    }
-  }
-
 }
