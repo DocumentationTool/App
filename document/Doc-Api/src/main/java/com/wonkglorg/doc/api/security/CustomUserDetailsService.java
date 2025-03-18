@@ -29,7 +29,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 	@Override
 	public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
-		UserId userId = new UserId(id);
+		UserId userId = UserId.of(id);
 		if (DEV_MODE) {
 			return new User(userId.id(), "password_hash",
 					List.of(new SimpleGrantedAuthority("ROLE_USER"),

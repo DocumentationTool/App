@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core.permissions;
 
 import com.wonkglorg.doc.core.objects.*;
+import com.wonkglorg.doc.core.path.TargetPath;
 import org.springframework.util.AntPathMatcher;
 
 import java.nio.file.Path;
@@ -33,14 +34,14 @@ public class Permission<T extends Identifyable> {
     /**
      * The path this resource permission is for
      */
-    private ResourcePath path;
+    private TargetPath path;
 
     /**
      * The repo this permission belongs to
      */
     private RepoId repoId;
 
-    public Permission(T id, PermissionType permission, ResourcePath path, RepoId repoId) {
+    public Permission(T id, PermissionType permission, TargetPath path, RepoId repoId) {
         this.id = id;
         this.permission = permission;
         this.path = path;
@@ -69,7 +70,7 @@ public class Permission<T extends Identifyable> {
         return permission;
     }
 
-    public void setPath(ResourcePath path) {
+    public void setPath(TargetPath path) {
         this.path = path;
     }
 
@@ -81,7 +82,7 @@ public class Permission<T extends Identifyable> {
         return repoId;
     }
 
-    public ResourcePath getPath() {
+    public TargetPath getPath() {
         return path;
     }
 
@@ -107,7 +108,7 @@ public class Permission<T extends Identifyable> {
      * @param path the path
      * @return the permission type
      */
-    private static PermissionType permissionForPath(String path, Map<String, PermissionType> fullPathsUser, TreeMap<String, PermissionType> antPathsUser, Map<String, PermissionType> fullPathsGroup, TreeMap<String, PermissionType> antPathsGroup) {
+    public static PermissionType permissionForPath(String path, Map<String, PermissionType> fullPathsUser, TreeMap<String, PermissionType> antPathsUser, Map<String, PermissionType> fullPathsGroup, TreeMap<String, PermissionType> antPathsGroup) {
         if (fullPathsUser.containsKey(path)) {
             return fullPathsUser.get(path);
         } else if (fullPathsGroup.containsKey(path)) {
@@ -214,7 +215,7 @@ public class Permission<T extends Identifyable> {
 
 
     private static void storePermission(Permission<?> permission, TreeMap<String, PermissionType> antPaths, Map<String, PermissionType> fullPaths) {
-        String path = permission.getPath().path();
+        String path = permission.getPath().toString();
         if (antPathMatcher.isPattern(path)) {
             antPaths.put(path, permission.getPermission());
         } else {

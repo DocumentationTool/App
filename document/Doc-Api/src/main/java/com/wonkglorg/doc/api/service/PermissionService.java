@@ -38,7 +38,6 @@ public class PermissionService {
      * @param path   the path
      * @return the permission type
      */
-    /*
     public PermissionType accessType(RepoId repoId, UserId userId, String path) throws InvalidRepoException, InvalidUserException {
         UserProfile user = userService.getUser(repoId, userId);
         List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
@@ -51,9 +50,8 @@ public class PermissionService {
             }
         }
 
-
-
-        Permission.filterPathsWithPermissions(userPermissions, groupPermissions, path);
+//todo;jmd fix
+        //Permission.filterPathsWithPermissions(userPermissions, groupPermissions, path);
 
         Map<String, PermissionType> fullPathsGroup = new HashMap<>();
         TreeMap<String, PermissionType> antPathsGroup = new TreeMap<>((a, b) -> Integer.compare(b.length(), a.length()));
@@ -66,6 +64,7 @@ public class PermissionService {
         }
 
         //collect paths
+        /*
         if (!groupPermissions.isEmpty()) {
             for (var permission : groupPermissions) {
                 storePermission(permission, antPathsGroup, fullPathsGroup);
@@ -77,10 +76,11 @@ public class PermissionService {
                 storePermission(permission, antPathsUser, fullPathsUser);
             }
         }
+
+         */
+        //todo:jmd fix
         return Permission.permissionForPath(path, fullPathsUser, antPathsUser, fullPathsGroup, antPathsGroup);
     }
-
-     */
 
 
     /**
@@ -91,12 +91,10 @@ public class PermissionService {
      * @param path   the path
      * @return the permission type
      */
-    /*
     public PermissionType accessType(RepoId repoId, UserId userId, Path path) throws InvalidRepoException, InvalidUserException {
         return accessType(repoId, userId, path.toString());
     }
 
-     */
 
     /**
      * Filters a list of resources based on the permissions of a user if non is given return all resources with permission access Edit
@@ -106,14 +104,13 @@ public class PermissionService {
      * @param resources        the resources to filter
      * @return the filtered resources
      */
-    /*
     public List<Resource> filterResources(Set<Permission<UserId>> userPermissions,
                                           Set<Permission<GroupId>> groupPermissions,
                                           List<Resource> resources) {
 
         List<Path> resourcePaths = resources.stream().map(Resource::resourcePath).collect(Collectors.toList());
 
-        Map<Path, PermissionType> filteredResources = filterWithPermissions(userPermissions, groupPermissions, resourcePaths);
+        Map<Path, PermissionType> filteredResources = new HashMap<>();//filterWithPermissions(userPermissions, groupPermissions, resourcePaths);
 
         //noinspection SimplifyStreamApiCallChains not a good idea as peak can be skipped by the compiler
         return resources.stream().filter(resource -> filteredResources.containsKey(resource.resourcePath())).map(resource -> {
@@ -123,8 +120,7 @@ public class PermissionService {
         }).collect(Collectors.toList());
     }
 
-     */
-
+    
 
     /**
      * Filters a list of resources based on the permissions of a user if non is given return all resources with permission access Edit
@@ -136,7 +132,6 @@ public class PermissionService {
      * @throws InvalidRepoException if the repo is invalid
      * @throws InvalidUserException if the user is invalid
      */
-    /*
     public List<Resource> filterResources(RepoId repoId, UserId userId, List<Resource> resources) throws InvalidRepoException, InvalidUserException {
         UserProfile user = userService.getUser(repoId, userId);
         List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
@@ -148,8 +143,6 @@ public class PermissionService {
         }
         return filterResources(permissions, groupPermissions, resources);
     }
-
-     */
 
     //todo:jmd move to core, as thats not service specific
 

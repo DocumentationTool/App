@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.DateHelper;
+import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
@@ -175,7 +176,7 @@ public class ResourceFunctions{
 	public static Map<Path, String> findByContent(RepositoryDatabase database, ResourceRequest request) throws CoreException {
 		String sqlScript;
 		
-		if(request.searchTerm == null){
+		if(request.getSearchTerm() == null){
 			sqlScript = """
 					SELECT FileData.resource_path,
 					       CASE
@@ -187,7 +188,7 @@ public class ResourceFunctions{
 					 LIMIT ?;
 					""";
 		} else {
-			if(request.searchTerm.length() > 3){
+			if(request.getSearchTerm().length() > 3){
 				sqlScript = """
 						SELECT FileData.resource_path,
 						       CASE
@@ -215,10 +216,10 @@ public class ResourceFunctions{
 		Connection connection = database.getConnection();
 		try(PreparedStatement statement = connection.prepareStatement(sqlScript)){
 			Map<Path, String> resources = new HashMap<>();
-			statement.setString(1, request.withData ? "anything" : null);
-			statement.setString(2, request.searchTerm);
-			statement.setString(3, DbHelper.convertAntPathToSQLLike(request.path));
-			statement.setInt(4, request.returnLimit);
+			statement.setString(1, request.isWithData() ? "anything" : null);
+			statement.setString(2, request.getSearchTerm());
+			statement.setString(3, DbHelper.convertAntPathToSQLLike(request.getPath()));
+			statement.setInt(4, request.getReturnLimit());
 			ResultSet resultSet = statement.executeQuery();
 			
 			while(resultSet.next()){
@@ -334,30 +335,30 @@ public class ResourceFunctions{
 		Connection connection = database.getConnection();
 		try{
 			connection.setAutoCommit(false);
-			if(request.data != null){
-				updateResourceData(connection, database, Path.of(request.path), request.data);
+			if(request.getData() != null){
+				updateResourceData(connection, database, request.path(), request.getData());
 			}
 			
-			if(request.tagsToSet != null){
-				updateResourceTagsSet(connection, database, Path.of(request.path), request.tagsToSet);
+			if(request.tagsToSet() != null){
+				updateResourceTagsSet(connection, database, request.path(), request.tagsToSet());
 			}
 			
-			if(request.tagsToRemove != null && !request.tagsToRemove.isEmpty()){
-				updateResourceTagsRemove(connection, database, Path.of(request.path), request.tagsToRemove);
+			if(request.tagsToRemove() != null && !request.tagsToRemove().isEmpty()){
+				updateResourceTagsRemove(connection, database,request.path(), request.tagsToRemove());
 			}
 			
-			if(request.tagsToAdd != null && !request.tagsToAdd.isEmpty()){
-				updateResourceTagsAdd(connection, database, Path.of(request.path), request.tagsToAdd);
+			if(request.tagsToAdd() != null && !request.tagsToAdd().isEmpty()){
+				updateResourceTagsAdd(connection, database, request.path(), request.tagsToAdd());
 			}
 			
-			if(request.category == null && request.treatNullsAsValues){
+			if(request.getCategory() == null && request.isTreatNullsAsValues()){
 				try(PreparedStatement statement = connection.prepareStatement("UPDATE Resources SET category = ? WHERE resource_path = ?")){
-					statement.setString(1, request.category);
-					statement.setString(2, request.path);
+					statement.setString(1, request.getCategory());
+					statement.setString(2, request.path().toString());
 				} catch(Exception e){
-					String errorResponse = "Failed to update resource '%s'".formatted(request.path);
+					String errorResponse = "Failed to update resource '%s'".formatted(request.path());
 					log.error(errorResponse, e);
-					throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path), e);
+					throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path()), e);
 				}
 			}
 			
@@ -365,17 +366,17 @@ public class ResourceFunctions{
 															"SET last_modified_at = ?, last_modified_by = ?" +
 															"WHERE resource_path = ?")){
 				statement.setString(1, DateHelper.fromDateTime(LocalDateTime.now()));
-				statement.setString(2, request.userId);
-				statement.setString(3, request.path);
+				statement.setString(2, request.userId().id());
+				statement.setString(3, request.path().toString());
 				
 				statement.executeUpdate();
 				
 				connection.commit();
 				
 				//gets the updated resource
-				Resource resource = getResource(connection, database, Path.of(request.path));
+				Resource resource = getResource(connection, database,request.path());
 				if(resource == null){
-					throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path));
+					throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path()));
 				}
 				return resource;
 			}
@@ -385,8 +386,8 @@ public class ResourceFunctions{
 			} catch(SQLException ex){
 				log.error("Failed to rollback transaction", ex);
 			}
-			log.error("Failed to update resource '{}'", request.path, e);
-			throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path), e);
+			log.error("Failed to update resource '{}'", request.path(), e);
+			throw new CoreSqlException("Failed to update resource '%s'".formatted(request.path()), e);
 		} finally{
 			try{
 				connection.setAutoCommit(true);
@@ -442,7 +443,7 @@ public class ResourceFunctions{
 	 * @param tags
 	 * @return
 	 */
-	private static void updateResourceTagsSet(Connection connection, RepositoryDatabase database, Path resourcePath, List<String> tags)
+	private static void updateResourceTagsSet(Connection connection, RepositoryDatabase database, Path resourcePath, Set<TagId> tags)
 			throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")){
 			statement.setString(1, resourcePath.toString());
@@ -456,7 +457,7 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(var tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag);
+				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
 		} catch(Exception e){
@@ -496,12 +497,12 @@ public class ResourceFunctions{
 	 * @param tags
 	 * @return
 	 */
-	private static void updateResourceTagsRemove(Connection connection, RepositoryDatabase database, Path resourcePath, List<String> tags)
+	private static void updateResourceTagsRemove(Connection connection, RepositoryDatabase database, Path resourcePath, Set<TagId> tags)
 			throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")){
 			for(var tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag);
+				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
 			statement.executeBatch();
@@ -521,12 +522,12 @@ public class ResourceFunctions{
 	 * @param tags
 	 * @return
 	 */
-	private static void updateResourceTagsAdd(Connection connection, RepositoryDatabase database, Path resourcePath, List<String> tags)
+	private static void updateResourceTagsAdd(Connection connection, RepositoryDatabase database, Path resourcePath, Set<TagId> tags)
 			throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(var tag : tags){
 				statement.setString(1, resourcePath.toString());
-				statement.setString(2, tag);
+				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
 			statement.executeBatch();

@@ -19,7 +19,7 @@ public class DocApiApplication{
 	 * Bypasses permissions and allows full access to all endpoints
 	 */
 	public static final boolean DEV_MODE = true;
-	public static final UserProfile DEV_USER = new UserProfile(new UserId("dev_p10209"),
+	public static final UserProfile DEV_USER = new UserProfile(UserId.of("dev_p10209"),
 			"dev_hash",
 			Set.of(),
 			Set.of(new Role(new RoleId("ADMIN"), "Admin")));
