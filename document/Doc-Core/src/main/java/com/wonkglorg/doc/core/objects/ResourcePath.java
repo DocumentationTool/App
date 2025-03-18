@@ -10,6 +10,28 @@ import java.util.Optional;
  */
 public record ResourcePath(String path) {
 
+    public static ResourcePath of(String path) {
+        return new ResourcePath(normalizePath(path));
+    }
+
+    public static ResourcePath of(Path path) {
+
+        return new ResourcePath(normalizePath(path));
+    }
+
+    /**
+     * Normalizes the path to the correct one to be specified in the database
+     * @param path the path to normalize
+     * @return the normalized path
+     */
+    public static Path normalizePath(Path path) {
+        return Path.of(normalizePath(path.toString()));
+    }
+
+    public static String normalizePath(String path) {
+        return path.replace("\\", "/").replace("//", "/");
+    }
+
     public ResourcePath(Path path) {
         this(path.toString());
     }

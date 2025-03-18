@@ -15,6 +15,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.AntPathMatcher;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,8 @@ import static com.wonkglorg.doc.core.git.GitRepo.GitStage.*;
  */
 public class FileRepository {
     private static final Logger log = LoggerFactory.getLogger(FileRepository.class);
+
+
     /**
      * THe properties of the repository
      */
@@ -88,7 +91,7 @@ public class FileRepository {
             } catch (GitAPIException | CoreException | InvalidUserException e) {
                 log.error("Error while checking for changes", e);
             }
-		}, 10, 10, TimeUnit.MINUTES);
+        }, 10, 10, TimeUnit.MINUTES);
 
     }
 
