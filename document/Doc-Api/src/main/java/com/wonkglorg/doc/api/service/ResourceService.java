@@ -145,6 +145,7 @@ public class ResourceService {
             for (var repo : repoService.getRepositories().values()) {
                 tags.addAll(repo.getDatabase().getTags());
             }
+            return tags;
         }
         return repoService.getRepo(repoId).getDatabase().getTags();
     }
