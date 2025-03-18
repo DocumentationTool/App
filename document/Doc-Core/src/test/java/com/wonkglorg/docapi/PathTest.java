@@ -1,9 +1,13 @@
 package com.wonkglorg.docapi;
 
-import com.wonkglorg.doc.core.objects.AntPath;
+import com.wonkglorg.doc.core.path.AntPath;
+import com.wonkglorg.doc.core.path.TargetPath;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+/**
+ * Tests related to the {@link AntPath} and {@link com.wonkglorg.doc.core.path.TargetPath}
+ */
 class PathTest {
     @Test
     void canCorrectlyEvaluateAntPathObject() {
@@ -31,8 +35,16 @@ class PathTest {
         Assertions.assertThrows(IllegalArgumentException.class, () -> new AntPath("path/text.txt"));
     }
 
-    @Test
-    void resourcePath() {
 
+    @Test
+    void targetPathDefinition() {
+        Assertions.assertFalse(TargetPath.of("path/file.md").isAntPath());
+        Assertions.assertTrue(TargetPath.of("path/**").isAntPath());
+    }
+
+    @Test
+    void targetPathToString() {
+        Assertions.assertEquals("path\\file.md", TargetPath.of("path/file.md").toString());
+        Assertions.assertEquals("path\\**", TargetPath.of("path/**").toString());
     }
 }

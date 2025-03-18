@@ -3,7 +3,7 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.objects.ResourcePath;
+import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.objects.RoleId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
@@ -42,7 +42,7 @@ public class PermissionFunctions{
 				while(rs.next()){
 					permissions.add(new Permission<>(new UserId(rs.getString("user_id")),
 							PermissionType.valueOf(rs.getString("permission")),
-							new ResourcePath(rs.getString("path")),
+							new TargetPath(rs.getString("path")),
 							database.getRepoId()));
 				}
 				return permissions;
@@ -66,7 +66,7 @@ public class PermissionFunctions{
 				while(rs.next()){
 					permissions.add(new Permission<>(new GroupId(rs.getString("group_id")),
 							PermissionType.valueOf(rs.getString("permission")),
-							new ResourcePath(rs.getString("path")),
+							new TargetPath(rs.getString("path")),
 							database.getRepoId()));
 				}
 				return permissions;

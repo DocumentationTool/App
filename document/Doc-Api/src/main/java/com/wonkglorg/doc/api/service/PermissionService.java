@@ -38,7 +38,6 @@ public class PermissionService {
      * @param path   the path
      * @return the permission type
      */
-    /*
     public PermissionType accessType(RepoId repoId, UserId userId, String path) throws InvalidRepoException, InvalidUserException {
         UserProfile user = userService.getUser(repoId, userId);
         List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
@@ -50,7 +49,6 @@ public class PermissionService {
                 groupPermissions.addAll(group.getPermissions());
             }
         }
-
 
 
         Permission.filterPathsWithPermissions(userPermissions, groupPermissions, path);
@@ -80,8 +78,6 @@ public class PermissionService {
         return Permission.permissionForPath(path, fullPathsUser, antPathsUser, fullPathsGroup, antPathsGroup);
     }
 
-     */
-
 
     /**
      * Checks the access type of a user to a path
@@ -91,12 +87,10 @@ public class PermissionService {
      * @param path   the path
      * @return the permission type
      */
-    /*
     public PermissionType accessType(RepoId repoId, UserId userId, Path path) throws InvalidRepoException, InvalidUserException {
         return accessType(repoId, userId, path.toString());
     }
 
-     */
 
     /**
      * Filters a list of resources based on the permissions of a user if non is given return all resources with permission access Edit
@@ -106,7 +100,6 @@ public class PermissionService {
      * @param resources        the resources to filter
      * @return the filtered resources
      */
-    /*
     public List<Resource> filterResources(Set<Permission<UserId>> userPermissions,
                                           Set<Permission<GroupId>> groupPermissions,
                                           List<Resource> resources) {
@@ -123,8 +116,6 @@ public class PermissionService {
         }).collect(Collectors.toList());
     }
 
-     */
-
 
     /**
      * Filters a list of resources based on the permissions of a user if non is given return all resources with permission access Edit
@@ -136,7 +127,7 @@ public class PermissionService {
      * @throws InvalidRepoException if the repo is invalid
      * @throws InvalidUserException if the user is invalid
      */
-    /*
+
     public List<Resource> filterResources(RepoId repoId, UserId userId, List<Resource> resources) throws InvalidRepoException, InvalidUserException {
         UserProfile user = userService.getUser(repoId, userId);
         List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
@@ -148,8 +139,6 @@ public class PermissionService {
         }
         return filterResources(permissions, groupPermissions, resources);
     }
-
-     */
 
     //todo:jmd move to core, as thats not service specific
 

@@ -298,8 +298,8 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         if (tagExists(tag.tagId())) {
             throw new TagExistsException("Tag '%s' already exists".formatted(tag.tagId()));
         }
-        tagCache.put(tag.tagId(), tag);
         ResourceFunctions.addTag(this, tag);
+        tagCache.put(tag.tagId(), tag);
     }
 
     /**
