@@ -100,7 +100,7 @@ public class FileRepository {
 
         ResourceRequest request = new ResourceRequest();
         request.path = null;
-        request.repoId = repoProperties.getId().id();
+        request.repoId = repoProperties.getId();
         request.userId = null;
 
         List<Resource> resources = dataDB.getResources(request);
@@ -166,7 +166,7 @@ public class FileRepository {
      */
     public void addResourceAndCommit(Resource resource) {
         try {
-            UserBranch branch = gitRepo.createBranch(new UserId(resource.createdBy()));
+            UserBranch branch = gitRepo.createBranch(UserId.of(resource.createdBy()));
             Path file = gitRepo.getRepoPath().resolve(resource.resourcePath());
             if (!Files.exists(file)) {
                 Files.createDirectories(file.getParent());

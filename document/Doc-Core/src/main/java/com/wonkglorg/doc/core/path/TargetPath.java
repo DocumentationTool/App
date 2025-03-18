@@ -6,8 +6,8 @@ import java.nio.file.Path;
  * Represents a path to a target, can be either a normal path or an ant path (a path with wildcards)
  */
 public class TargetPath {
-    private Path path;
-    private AntPath antPath;
+    private final Path path;
+    private final AntPath antPath;
 
 
     public TargetPath(String path) {
@@ -49,7 +49,7 @@ public class TargetPath {
     }
 
     public static String normalizePath(String path) {
-        return path.replace("/", "\\").replace("\\\\", "\\");
+        return path.replace("/", "\\").replace("\\\\", "\\").replace("//", "\\");
     }
 
 

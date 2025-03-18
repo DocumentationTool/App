@@ -1,8 +1,14 @@
 package com.wonkglorg.doc.core.request;
 
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.TagId;
+import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.path.TargetPath;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ResourceRequest{
 	/**
@@ -12,23 +18,23 @@ public class ResourceRequest{
 	/**
 	 * The path to search by may be an ant path
 	 */
-	public String path;
+	public TargetPath path;
 	/**
 	 * The repo to search in
 	 */
-	public String repoId;
+	public RepoId repoId;
 	/**
 	 * The user to search limit the search to
 	 */
-	public String userId;
+	public UserId userId;
 	/**
 	 * The tags to search by
 	 */
-	public List<String> whiteListTags = new ArrayList<>();
+	public List<TagId> whiteListTags = new ArrayList<>();
 	/**
 	 * The tags to exclude from the search
 	 */
-	public List<String> blacklistTags = new ArrayList<>();
+	public List<TagId> blacklistTags = new ArrayList<>();
 	/**
 	 * If the data of the resource should be returned
 	 */
@@ -47,11 +53,11 @@ public class ResourceRequest{
 						   boolean withData,
 						   int returnLimit) {
 		this.searchTerm = searchTerm;
-		this.path = path;
-		this.repoId = repoId;
-		this.userId = userId;
-		this.whiteListTags = whiteListTags;
-		this.blacklistTags = blacklistTags;
+		this.path = new TargetPath(path);
+		this.repoId = RepoId.of(repoId);
+		this.userId = UserId.of(userId);
+		this.whiteListTags = whiteListTags.stream().map(TagId::new).collect(Collectors.toList());
+		this.blacklistTags = blacklistTags.stream().map(TagId::new).collect(Collectors.toList());
 		this.withData = withData;
 		this.returnLimit = returnLimit;
 	}
@@ -61,9 +67,9 @@ public class ResourceRequest{
 	
 	public ResourceRequest(String searchTerm, String path, String repoId, String userId, boolean withData, int returnLimit) {
 		this.searchTerm = searchTerm;
-		this.path = path;
-		this.repoId = repoId;
-		this.userId = userId;
+		this.path = new TargetPath(path);
+		this.repoId = RepoId.of(repoId);
+		this.userId = UserId.of(userId);
 		this.withData = withData;
 		this.returnLimit = returnLimit;
 	}
@@ -77,59 +83,27 @@ public class ResourceRequest{
 	}
 	
 	public String getPath() {
-		return path;
+		return path.toString();
 	}
 	
 	public void setPath(String path) {
-		this.path = path;
+		this.path = new TargetPath(path);
 	}
 	
 	public String getRepoId() {
-		return repoId;
+		return repoId.id();
 	}
 	
 	public void setRepoId(String repoId) {
-		this.repoId = repoId;
+		this.repoId = RepoId.of(repoId);
 	}
 	
 	public String getUserId() {
-		return userId;
+		return userId.id();
 	}
 	
 	public void setUserId(String userId) {
-		this.userId = userId;
-	}
-	
-	public List<String> getWhiteListTags() {
-		return whiteListTags;
-	}
-	
-	public void setWhiteListTags(List<String> whiteListTags) {
-		this.whiteListTags = whiteListTags;
-	}
-	
-	public List<String> getBlacklistTags() {
-		return blacklistTags;
-	}
-	
-	public void setBlacklistTags(List<String> blacklistTags) {
-		this.blacklistTags = blacklistTags;
-	}
-	
-	public boolean isWithData() {
-		return withData;
-	}
-	
-	public void setWithData(boolean withData) {
-		this.withData = withData;
-	}
-	
-	public int getReturnLimit() {
-		return returnLimit;
-	}
-	
-	public void setReturnLimit(int returnLimit) {
-		this.returnLimit = returnLimit;
+		this.userId = UserId.of(userId);
 	}
 	
 	@Override

@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
+
 @Component
 @Service
 public class ResourceService {
@@ -37,14 +39,9 @@ public class ResourceService {
      *
      * @param request the request
      * @return the repository
-     * @throws Exception if the repository does not exist or null is passed
      */
     public List<Resource> getResources(ResourceRequest request) throws CoreException, ClientException {
-        RepoId id = repoService.validateRepoId(request.repoId, true);
-        if (request.path != null) {
-            request.path = cleanPath(request.path);
-        }
-
+        RepoId id = repoService.validateRepoId(request.repoId.id(), true);
         if (id.isAllRepos()) { //gets resources from all repos
             List<Resource> allResources = new ArrayList<>();
             for (var repo : repoService.getRepositories().values()) {
@@ -54,21 +51,6 @@ public class ResourceService {
         }
 
         return repoService.getRepo(id).getDatabase().getResources(request);
-    }
-
-
-    public String cleanPath(String path) {
-        if (path == null) {
-            return null;
-        }
-        return path.toString().replace("\\\\", "\\").replace("//", "\\").replace("/", "\\");
-    }
-
-    public Path cleanPath(Path path) {
-        if (path == null) {
-            return null;
-        }
-        return Path.of(cleanPath(path.toString()));
     }
 
     /**
@@ -158,7 +140,7 @@ public class ResourceService {
      */
     public void insertResource(Resource resource) throws ClientException, CoreException {
         RepoId id = repoService.validateRepoId(resource.repoId().id());
-        resource.setResourcePath(cleanPath(resource.resourcePath()));
+        resource.setResourcePath(normalizePath(resource.resourcePath()));
         Path path = resource.resourcePath();
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
@@ -183,7 +165,7 @@ public class ResourceService {
         if (!repoService.isValidRepo(repoId)) {
             throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
         }
-        path = cleanPath(path);
+        path = normalizePath(path);
 
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
@@ -228,8 +210,8 @@ public class ResourceService {
         userService.validateUserId(repoFrom, userId);
         userService.validateUserId(repoTo, userId);
 
-        pathFrom = cleanPath(pathFrom);
-        pathTo = cleanPath(pathTo);
+        pathFrom = normalizePath(pathFrom);
+        pathTo = normalizePath(pathTo);
 
         if (!resourceExists(repoFrom, pathFrom)) {
             throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
@@ -240,9 +222,9 @@ public class ResourceService {
         }
 
         ResourceRequest request = new ResourceRequest();
-        request.path = pathFrom.toString();
+        request.setPath(pathFrom.toString());
         request.withData = true;
-        request.repoId = repoFrom.toString();
+        request.repoId = repoFrom;
 
         FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
         FileRepository fileRepoTo = repoService.getRepo(repoTo);
@@ -254,9 +236,9 @@ public class ResourceService {
         fileRepoFrom.removeResourceAndCommit(userId, pathFrom);
 
         ResourceRequest returnRequest = new ResourceRequest();
-        returnRequest.path = pathTo.toString();
+        returnRequest.setPath(pathTo.toString());
         returnRequest.withData = true;
-        returnRequest.repoId = repoTo.toString();
+        returnRequest.repoId = repoTo;
         return fileRepoTo.getDatabase().getResources(returnRequest).stream().findFirst().orElseThrow();
     }
 
@@ -268,7 +250,7 @@ public class ResourceService {
      */
     public Resource updateResource(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
         RepoId id = repoService.validateRepoId(request.repoId);
-        request.path = cleanPath(request.path);
+        request.path = normalizePath(request.path);
         Path path = Path.of(request.path);
         DbHelper.validatePath(path);
         DbHelper.validateFileType(path);
@@ -294,7 +276,7 @@ public class ResourceService {
      * @return the user editing the file or null if not being edited
      */
     public UserId getEditingUser(RepoId repoId, Path path) throws InvalidResourceException, InvalidRepoException {
-        path = cleanPath(path);
+        path = normalizePath(path);
         repoService.validateRepoId(repoId);
         validateResource(repoId, path);
         return repoService.getRepo(repoId).getDatabase().isBeingEdited(path);
@@ -308,7 +290,7 @@ public class ResourceService {
      * @return true if it is being edited, false otherwise
      */
     public boolean isBeingEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
-        return getEditingUser(id, cleanPath(path)) != null;
+        return getEditingUser(id, normalizePath(path)) != null;
     }
 
     /**
@@ -329,7 +311,7 @@ public class ResourceService {
      */
     public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path)
             throws InvalidResourceException, CoreException, InvalidRepoException, InvalidUserException {
-        path = cleanPath(path);
+        path = normalizePath(path);
         repoService.validateRepoId(repoId);
         validateResource(repoId, path);
         userService.validateUserId(repoId, userId);
@@ -349,7 +331,7 @@ public class ResourceService {
      */
     private void validateResource(RepoId repoId, Path path) throws InvalidRepoException, InvalidResourceException {
         repoService.validateRepoId(repoId);
-        path = cleanPath(path);
+        path = normalizePath(path);
         if (!resourceExists(repoId, path)) {
             throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
         }
@@ -373,7 +355,7 @@ public class ResourceService {
      */
     public void removeCurrentlyEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
         repoService.validateRepoId(id);
-        path = cleanPath(path);
+        path = normalizePath(path);
         validateResource(id, path);
         repoService.getRepo(id).getDatabase().removeCurrentlyEdited(path);
     }

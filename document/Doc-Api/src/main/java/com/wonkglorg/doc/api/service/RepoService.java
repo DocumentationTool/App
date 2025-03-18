@@ -105,7 +105,7 @@ public class RepoService{
 			throw new InvalidRepoException("Repo id is not allowed to be null!");
 		}
 		
-		RepoId id = new RepoId(repoId);
+		RepoId id = RepoId.of(repoId);
 		if(!repositories.containsKey(id)){
 			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
 		}

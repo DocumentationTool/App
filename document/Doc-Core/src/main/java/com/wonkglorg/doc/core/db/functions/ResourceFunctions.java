@@ -217,7 +217,7 @@ public class ResourceFunctions{
 			Map<Path, String> resources = new HashMap<>();
 			statement.setString(1, request.withData ? "anything" : null);
 			statement.setString(2, request.searchTerm);
-			statement.setString(3, DbHelper.convertAntPathToSQLLike(request.path));
+			statement.setString(3, DbHelper.convertAntPathToSQLLike(request.getPath()));
 			statement.setInt(4, request.returnLimit);
 			ResultSet resultSet = statement.executeQuery();
 			

@@ -40,7 +40,7 @@ public class PermissionFunctions{
 			try(var rs = statement.executeQuery()){
 				Set<Permission<UserId>> permissions = new HashSet<>();
 				while(rs.next()){
-					permissions.add(new Permission<>(new UserId(rs.getString("user_id")),
+					permissions.add(new Permission<>(UserId.of(rs.getString("user_id")),
 							PermissionType.valueOf(rs.getString("permission")),
 							new TargetPath(rs.getString("path")),
 							database.getRepoId()));

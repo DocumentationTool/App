@@ -175,7 +175,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
         if (request.path != null) {
             resources = resources.entrySet()
                     .stream()
-                    .filter(entry -> pathMatcher.match(request.path, entry.getKey().toString()))
+                    .filter(entry -> pathMatcher.match(request.getPath(), entry.getKey().toString()))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
@@ -184,20 +184,18 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> {
                 .filter(entry -> request.whiteListTags == null || request.whiteListTags.isEmpty() ||
                         entry.getValue()
                                 .hasAnyTag(request.whiteListTags.stream()
-                                        .map(TagId::new)
                                         .collect(Collectors.toList())))
                 .filter(entry -> request.blacklistTags == null || request.blacklistTags.isEmpty() ||
                         !entry.getValue()
-                                .hasAnyTag(request.blacklistTags.stream().map(TagId::new).collect(Collectors.toList())))
+                                .hasAnyTag(request.blacklistTags.stream().collect(Collectors.toList())))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 
         // Handle user-specific filtering
         List<Resource> resourcesToReturn = new ArrayList<>(resources.values());
-        if (request.userId == null) {
+        UserId userId = request.userId;
+        if (userId == null) {
             return resourcesToReturn;
         }
-
-        UserId userId = new UserId(request.userId);
 
         if (!userExists(userId)) {
             throw new InvalidUserException("User '%s' does not exist".formatted(userId));

@@ -66,7 +66,7 @@ public class ApiUserController{
 													  @Parameter(description = "The user's id.") @RequestParam("userId") String userId,
 													  @Parameter(description = "The user's password.") @RequestParam("password") String password) {
 		try{
-			userService.createUser(new RepoId(repoId), new UserId(userId), password);
+			userService.createUser(RepoId.of(repoId), UserId.of(userId), password);
 			return RestResponse.<Void>success("Added user '%s' to repo '%s".formatted(userId, repoId), null).toResponse();
 		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();

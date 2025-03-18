@@ -10,9 +10,7 @@ import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 /**
  * Represents an antpath
  */
-public class AntPath {
-    private final String path;
-
+public record AntPath(String path) {
     private static final AntPathMatcher matcher = new AntPathMatcher();
 
     public AntPath(String path) {
@@ -28,6 +26,7 @@ public class AntPath {
 
     /**
      * Checks if the path is an ant path
+     *
      * @param path the path to check
      * @return true if the path is an ant path
      */
@@ -56,11 +55,6 @@ public class AntPath {
         return matches(path.toString());
     }
 
-
-    public String getPath() {
-        return path;
-    }
-
     @Override
     public String toString() {
         return path;
@@ -73,8 +67,4 @@ public class AntPath {
         return Objects.equals(path, antPath.path);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(path);
-    }
 }

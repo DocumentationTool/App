@@ -13,7 +13,7 @@ public class JsonPermission {
         id = permission.getId();
         isGroup = permission.isGroup();
         isUser = permission.isUser();
-        path = permission.getPath().path();
+        path = permission.getPath().toString();
     }
 }
 

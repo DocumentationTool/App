@@ -165,7 +165,7 @@ public class ApiResourceController{
 			}
 			
 			//todo:jmd if paths start with / they never count as "already existing"
-			Resource resource = new Resource(Path.of(path), createdBy, new RepoId(repoId), category, tags, content);
+			Resource resource = new Resource(Path.of(path), createdBy, RepoId.of(repoId), category, tags, content);
 			resourceService.insertResource(resource);
 			return RestResponse.<Void>success("Successfully inserted '%s' Resource!".formatted(path), null).toResponse();
 		} catch(ClientException e){
@@ -216,7 +216,7 @@ public class ApiResourceController{
 														   @RequestParam("repoTo") String repoTo,
 														   @RequestParam("pathTo") String to) {
 		try{
-			resourceService.move(new UserId(userId), new RepoId(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
+			resourceService.move(UserId.of(userId), RepoId.of(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
 			return RestResponse.<Void>success("Successfully moved '%s' to '%s'".formatted(from, to), null).toResponse();
 		} catch(CoreException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -232,7 +232,7 @@ public class ApiResourceController{
 													 @Parameter(description = "the id of the tag to be added.") @RequestParam("tagId") String tagId,
 													 @Parameter(description = "the name to display for the tag id.") @RequestParam("tagName") String tagName) {
 		try{
-			resourceService.createTag(new RepoId(repoId), new Tag(new TagId(tagId), tagName));
+			resourceService.createTag(RepoId.of(repoId), new Tag(new TagId(tagId), tagName));
 			return RestResponse.<Void>success("Created tag '%s' in repo '%s'".formatted(tagId, repoId), null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -247,7 +247,7 @@ public class ApiResourceController{
 	public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String repoId,
 														@Parameter(description = "The tagId to remove") @RequestParam("tagId") String tagId) {
 		try{
-			resourceService.removeTag(new RepoId(repoId), new TagId(tagId));
+			resourceService.removeTag(RepoId.of(repoId), new TagId(tagId));
 			return RestResponse.<Void>success("Removed tag '%s' from repo '%s'".formatted(tagId, repoId), null).toResponse();
 		} catch(CoreException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -261,7 +261,7 @@ public class ApiResourceController{
 	@PostMapping("/tag/get")
 	public ResponseEntity<RestResponse<List<Tag>>> getTags(@Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam(value = "repoId", required = false) String repoId) {
 		try{
-			List<Tag> tags = resourceService.getTags(repoId == null ? RepoId.ALL_REPOS : new RepoId(repoId));
+			List<Tag> tags = resourceService.getTags(repoId == null ? RepoId.ALL_REPOS : RepoId.of(repoId));
 			return RestResponse.success(tags).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<List<Tag>>error(e.getMessage()).toResponse();
@@ -277,7 +277,7 @@ public class ApiResourceController{
 														 @RequestParam("path") String path,
 														 @RequestParam("userId") String userId) {
 		try{
-			resourceService.setCurrentlyEdited(new RepoId(repoId), new UserId(userId), Path.of(path));
+			resourceService.setCurrentlyEdited(RepoId.of(repoId), UserId.of(userId), Path.of(path));
 			return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(path, repoId), null).toResponse();
 		} catch(CoreException e){ //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -291,7 +291,7 @@ public class ApiResourceController{
 	@GetMapping("/editing/get")
 	public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String repoId, @RequestParam("path") String path) {
 		try{
-			UserId editingUser = resourceService.getEditingUser(new RepoId(repoId), Path.of(path));
+			UserId editingUser = resourceService.getEditingUser(RepoId.of(repoId), Path.of(path));
 			JsonResourceEdit response = new JsonResourceEdit();
 			response.editingUser = editingUser != null ? editingUser.id() : null;
 			response.isBeingEdited = editingUser != null;

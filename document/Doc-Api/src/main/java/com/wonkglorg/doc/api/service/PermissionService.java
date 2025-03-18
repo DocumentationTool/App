@@ -50,8 +50,8 @@ public class PermissionService {
             }
         }
 
-
-        Permission.filterPathsWithPermissions(userPermissions, groupPermissions, path);
+//todo;jmd fix
+        //Permission.filterPathsWithPermissions(userPermissions, groupPermissions, path);
 
         Map<String, PermissionType> fullPathsGroup = new HashMap<>();
         TreeMap<String, PermissionType> antPathsGroup = new TreeMap<>((a, b) -> Integer.compare(b.length(), a.length()));
@@ -64,6 +64,7 @@ public class PermissionService {
         }
 
         //collect paths
+        /*
         if (!groupPermissions.isEmpty()) {
             for (var permission : groupPermissions) {
                 storePermission(permission, antPathsGroup, fullPathsGroup);
@@ -75,6 +76,9 @@ public class PermissionService {
                 storePermission(permission, antPathsUser, fullPathsUser);
             }
         }
+
+         */
+        //todo:jmd fix
         return Permission.permissionForPath(path, fullPathsUser, antPathsUser, fullPathsGroup, antPathsGroup);
     }
 
@@ -106,7 +110,7 @@ public class PermissionService {
 
         List<Path> resourcePaths = resources.stream().map(Resource::resourcePath).collect(Collectors.toList());
 
-        Map<Path, PermissionType> filteredResources = filterWithPermissions(userPermissions, groupPermissions, resourcePaths);
+        Map<Path, PermissionType> filteredResources = new HashMap<>();//filterWithPermissions(userPermissions, groupPermissions, resourcePaths);
 
         //noinspection SimplifyStreamApiCallChains not a good idea as peak can be skipped by the compiler
         return resources.stream().filter(resource -> filteredResources.containsKey(resource.resourcePath())).map(resource -> {
