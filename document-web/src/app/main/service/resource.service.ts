@@ -20,6 +20,8 @@ export class ResourceService {
   searchResults = signal<ApiResponseResource | null>(null);
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
+  allTags: string[] | undefined;
+
 
   onSelectResource(file: any) {
     if (this.checkForFileChanges()) {
@@ -92,7 +94,6 @@ export class ResourceService {
   addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
     this.apiResource.addResource(repoId, path, createdBy, category, tagIds, data).subscribe(
       data => {
-        console.log("data", data)
         this.loadFileTree();
       },
       error => {
@@ -113,13 +114,55 @@ export class ResourceService {
     )
   }
 
-  editRepoTags(repoId: string, tagsToAdd: string[], tagsToRemove: string[]) {
-    console.log("Add Repo Tag")
-    //ToDo: Add Tag RepoID + RepoName, remove tag
+  editRepoTags(repoId: string, tagIdsToAdd: string[], tagNamesToAdd: string[], tagIdsToRemove: string[]) {
+    if (tagIdsToAdd && tagNamesToAdd && tagIdsToAdd.length === tagNamesToAdd.length) {
+      for (let i = 0; i < tagIdsToAdd.length; i++) {
+        this.apiResource.addTag(repoId, tagIdsToAdd[i], tagNamesToAdd[i]).subscribe(
+          data => {
+            console.log(data)
+          },
+          error => {
+            console.error(error)
+          }
+        );
+      }
+    }
+
+    if (tagIdsToRemove) {
+      for (let i = 0; i < tagIdsToRemove.length; i++) {
+        this.apiResource.removeTag(repoId, tagIdsToRemove[i]).subscribe(
+          data => {
+            console.log(data)
+          },
+          error => {
+            console.error(error)
+          }
+        );
+      }
+    }
   }
 
-  getTag(repoId: string | null) {
-    this.apiResource.getTag(repoId)
+  getTag(repoId: string) {
+    this.apiResource.getTag(repoId).subscribe(
+      data => {
+        console.log(data)
+      },
+      error => {
+        console.error(error)
+      }
+    )
+  }
+
+  getAllTags(){
+    this.apiResource.getTag(null).subscribe(
+      data => {
+        this.allTags = data.content.map(tag => tag.tagId.id);
+      },
+      error => {
+        console.error(error)
+      }
+    )
+    return this.allTags;
   }
 
   removeResource(repoId: string, path: string) {
@@ -134,8 +177,15 @@ export class ResourceService {
     )
   }
 
-  moveResource() {
+  moveResource(userId: string, repoFrom: string, pathFrom: string, repoTo: string, pathTo: string) {
+    this.apiResource.moveResource(userId, repoFrom, pathFrom, repoTo, pathTo).subscribe(
+      data => {
 
+      },
+      error => {
+        console.error(error)
+      }
+    )
   }
 
   getResource(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,

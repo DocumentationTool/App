@@ -116,10 +116,11 @@ export class NavigationService {
       });
   }
 
-  moveResource(repo: string, path: string) {
+  moveResource(repoId: string, path: string) {
+    console.log("repo", repoId)
     this.dialog.open(ResourceMoveComponent,
       {
-        data: {repo,path}
+        data: {repoId,path}
       });
   }
 

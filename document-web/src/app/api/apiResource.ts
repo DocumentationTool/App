@@ -3,6 +3,7 @@ import {Injectable} from '@angular/core';
 import {ApiResponseFileTree, Resources} from '../Model/apiResponseFileTree';
 import {ApiResponseResource} from '../Model/apiResponseResource';
 import {ApiResponseModelResourceBeingEdited} from '../Model/apiResponseModelResourceBeingEdited';
+import {ApiResponseTags} from '../Model/apiResponseTags';
 
 @Injectable({
   providedIn: 'root'
@@ -65,20 +66,18 @@ export class ApiResource {
     return this.http.post(this.baseUrl + "/add", data, {params});
   }
 
-  removeTag(userId: string, repoFrom: string, from: string, repoTo: string, to: string) {
+  removeTag(repoId: string, tagId: string) {
     const params = new HttpParams()
-      .set('repoFrom', repoFrom)
-      .set('from', from)
-      .set('repoTo', repoTo)
-      .set('to', to);
-    return this.http.post(this.baseUrl + "/tag/remove", {params: params})
+      .set('repoId', repoId)
+      .set('tagId', tagId)
+    return this.http.post(this.baseUrl + "/tag/remove", params)
   }
 
   getTag(repoId: string | null) {
     let params = new HttpParams()
     if (repoId) params = params.set('repoId', repoId);
-    return this.http.post(this.baseUrl + "/tag/get", {params})
-
+    if (repoId)console.log("REPO", repoId);
+    return this.http.post<ApiResponseTags>(this.baseUrl + "/tag/get", params)
   }
 
   removeResource(repo: string, path: string) {
@@ -88,15 +87,14 @@ export class ApiResource {
     return this.http.post(this.baseUrl + "/remove", params)
   }
 
-  moveResource(userId: string, repoFrom: string, pathFrom:string, repoTo: string, pathTo:string) {
-    const params = new HttpParams()
-      .set('userId', userId)
-      .set('repoFrom', repoFrom)
-      .set('pathFrom', pathFrom)
-      .set('repoTo', repoTo)
-      .set('pathTo', pathTo)
+  moveResource(userId: string, repoFrom: string, pathFrom: string, repoTo: string, pathTo: string) {
+    let params = new HttpParams()
+    if (userId) params = params.set('userId', userId);
+    if (repoFrom) params = params.set('repoFrom', repoFrom);
+    if (pathFrom) params = params.set('pathFrom', pathFrom);
+    if (repoTo) params = params.set('repoTo', repoTo);
+    if (pathTo) params = params.set('pathTo', pathTo);
     return this.http.post(this.baseUrl + "/move", params)
-
   }
 
   getResource(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,

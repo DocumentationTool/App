@@ -5,13 +5,12 @@ API Response Models!
 bei suchleiste weiter Informationen bei ergenis -> pfad, datei
 suchergebnisse mit tab und pfeiltasten
 tooltip bei prefix
-ausrichtung ergebnisse suche
 https://stackoverflow.com/questions/2952196/ant-path-style-patterns
 
 nicht immer gesamten FileTreeladen sondern nur repo wo file hinzugefügt?
 
-Files verschieben
-Add resource/edit tag/move resource - PopUp mit repo ...
+Files verschieben -> user anlegen
+Add Tags -> Tag Vorschlag
 
 MatToolTip
 
@@ -54,3 +53,31 @@ Zusammengehörende Tabellen im Projekthandbuch zusammenführen
 AWL mindestens:
 1. Kostenplan
 2. Zeiterfassung 1 Woche wirklich mitschreiben || in der schule und private
+
+Woche 6
+Montag:   07:55 - 09:35 Baumstruktur Design
+          13:10 - 14:00 Move File und Edit Tags
+          10:45 - 11:30 Baumstruktur Design - pop up ausrichtung
+
+Dienstag: 12:20 - 15:50
+
+Mittwoch: 09:50 - 12:20
+
+Donnerstag:
+
+Freitag:  12:20 - 15:50
+
+-----------------------Tests--------------------------
+Testfälle -> 5
+  wichtigsten Componenten Testen
+  Integration teset - schnittstelle
+  Akzeptanz tests!
+
+-----------------------Technische Doku--------------------------
+Graphisch
+
+
+
+----------------------Source Code Doku--------------------------
+Compo Doc
+npx compodoc -p tsconfig.doc.json

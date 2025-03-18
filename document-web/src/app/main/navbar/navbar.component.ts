@@ -4,6 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {ResourceService} from '../service/resource.service';
 import {Resources} from '../../Model/apiResponseFileTree';
 import {KeyValuePipe, NgClass, NgForOf} from '@angular/common';
+import {Tag} from '../../Model/apiResponseTags';
 
 @Component({
   selector: 'app-navbar',
@@ -31,7 +32,7 @@ export class NavbarComponent {
   filteredFiles: Resources[] = [];
   isSearchActive: boolean = false;
   isTagFilterActive: boolean = false;
-  allTags: string[] = ["Tag1", "Tag2", "Tag3", "Tag4", "langer tag1", "langer Tag2"]
+  allTags: string[] | undefined = []
   whiteListTags: string[] = []
   blackListTags: string[] = []
   @ViewChild('searchInput') searchInput!: ElementRef;
@@ -59,14 +60,17 @@ export class NavbarComponent {
 
   onTagFilter() {
     this.isTagFilterActive = !this.isTagFilterActive;
-    this.resourceService.getTag(null);
+    this.allTags = this.resourceService.getAllTags();
   }
 
-  splitTagsIntoRows(tags: string[], itemsPerRow: number): string[][] {
+  splitTagsIntoRows(tags: string[] | undefined, itemsPerRow: number): string[][] {
     let result: string[][] = [];
-    for (let i = 0; i < tags.length; i += itemsPerRow) {
-      result.push(tags.slice(i, i + itemsPerRow));
+    if (tags){
+      for (let i = 0; i < tags.length; i += itemsPerRow) {
+        result.push(tags.slice(i, i + itemsPerRow));
+      }
     }
+
     return result;
   }
 
