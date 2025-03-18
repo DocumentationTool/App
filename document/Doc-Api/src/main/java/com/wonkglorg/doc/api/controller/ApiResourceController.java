@@ -37,7 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Handles all api document specific requests
+ * Rest Controller endpoint for API resource requests
  */
 @RestController
 @RequestMapping(API_RESOURCE)
@@ -181,7 +181,7 @@ public class ApiResourceController{
 	public ResponseEntity<RestResponse<Void>> updateResource(@RequestBody ResourceUpdateRequest request) {
 		try{
 			resourceService.updateResource(request);
-			return RestResponse.<Void>success("Successfully updated Resource '%s' for repo '%s'!".formatted(request.path, request.repoId), null)
+			return RestResponse.<Void>success("Successfully updated Resource '%s' for repo '%s'!".formatted(request.path(), request.repoId()), null)
 							   .toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();

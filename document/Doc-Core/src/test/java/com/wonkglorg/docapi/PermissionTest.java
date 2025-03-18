@@ -40,6 +40,21 @@ class PermissionTest {
 
         Assertions.assertEquals(PermissionType.ADMIN, map.get(Path.of("path/file.md")));
     }
+    
+    
+    
+    @Test
+    void canHandleMultiplePaths() {
+        Set<Permission<UserId>> userPermissions = Set.of(createUserPerm("path/**", PermissionType.ADMIN));
+        Set<Permission<GroupId>> groupPermissions = Set.of(createGroupPerm("path/**", PermissionType.VIEW));
+        
+        List<Path> paths = List.of(Path.of("path/file.md"));
+        
+        
+        var map = Permission.filterPathsWithPermissions(userPermissions, groupPermissions, paths);
+        
+        Assertions.assertEquals(PermissionType.ADMIN, map.get(Path.of("path/file.md")));
+    }
 
 
     @Test
@@ -56,10 +71,10 @@ class PermissionTest {
     }
 
     private Permission<UserId> createUserPerm(String path, PermissionType type) {
-        return new Permission<>(new UserId("test"), type, new TargetPath(path), new RepoId("test"));
+        return new Permission<>(UserId.of("test"), type, new TargetPath(path), RepoId.of("test"));
     }
 
     private Permission<GroupId> createGroupPerm(String path, PermissionType type) {
-        return new Permission<>(new GroupId("test"), type, new TargetPath(path), new RepoId("test"));
+        return new Permission<>(GroupId.of("test"), type, new TargetPath(path), RepoId.of("test"));
     }
 }

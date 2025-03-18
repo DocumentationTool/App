@@ -13,6 +13,9 @@ import java.util.List;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_REPO;
 
+/**
+ * Rest Controller endpoint for API repository requests
+ */
 @RestController
 @RequestMapping(API_REPO)
 public class ApiRepoController {
@@ -27,7 +30,7 @@ public class ApiRepoController {
             summary = "Gets all existing repos",
             description = "Returns a list of repos and their properties"
     )
-    @GetMapping("repository/get")
+    @GetMapping("get")
     public ResponseEntity<RestResponse<List<JsonRepo>>> getRepos() {
         return RestResponse.success(JsonRepo.from(repoService.getProperties())).toResponse();
     }

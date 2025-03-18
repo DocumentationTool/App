@@ -120,6 +120,7 @@ public class PermissionService {
         }).collect(Collectors.toList());
     }
 
+    
 
     /**
      * Filters a list of resources based on the permissions of a user if non is given return all resources with permission access Edit
@@ -131,7 +132,6 @@ public class PermissionService {
      * @throws InvalidRepoException if the repo is invalid
      * @throws InvalidUserException if the user is invalid
      */
-
     public List<Resource> filterResources(RepoId repoId, UserId userId, List<Resource> resources) throws InvalidRepoException, InvalidUserException {
         UserProfile user = userService.getUser(repoId, userId);
         List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
