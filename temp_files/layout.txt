@@ -1,0 +1,1 @@
+export diagram as image, and organize it in frontend / backend
