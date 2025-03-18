@@ -105,6 +105,11 @@ public class ResourceRequest{
 	public void setUserId(String userId) {
 		this.userId = UserId.of(userId);
 	}
+
+	//todo:jmd implement real requests as RepoId repoId() void repoId(RepoId id);
+
+	//todo:jmd implement setter and getter for basic types, String getRepoId() void setRepoId(String id);
+
 	
 	@Override
 	public boolean equals(Object o) {
