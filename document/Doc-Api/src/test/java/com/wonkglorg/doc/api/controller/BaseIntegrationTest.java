@@ -8,7 +8,12 @@ import jakarta.annotation.PostConstruct;
 import org.junit.jupiter.api.AfterAll;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
@@ -29,13 +34,21 @@ public class BaseIntegrationTest {
     private static Map<RepoId, FileRepository> repositories = new HashMap<>();
 
     @Autowired
-    private TestRestTemplate requestTemplate;
+    protected TestRestTemplate request;
 
     @Autowired
-    private RepoService repoService;
+    protected RepoService repoService;
 
     public BaseIntegrationTest(boolean deleteOnExit) {
         BaseIntegrationTest.deleteOnExit = deleteOnExit;
+    }
+
+    @TestConfiguration
+    public class TestSecurityConfig {
+        @Bean
+        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+            return http.csrf(AbstractHttpConfigurer::disable).authorizeHttpRequests(auth -> auth.anyRequest().permitAll()).build();
+        }
     }
 
     @PostConstruct
@@ -46,15 +59,21 @@ public class BaseIntegrationTest {
         }
     }
 
+    //todo:jmd can't properly delete the db its still locked idk why
     @AfterAll
-    static void cleanUp() throws IOException {
+    static void cleanUp() throws Exception {
         for (var property : repositories.entrySet()) {
-            RepoProperty repoProperties = property.getValue().getRepoProperties();
+            FileRepository repository = property.getValue();
+            //closes the repo to free resources
+            repository.close();
+            //needs small delay to properly unlock the file
+            sleep(500);
+            RepoProperty repoProperties = repository.getRepoProperties();
             Path pathToRemove = repoProperties.getPath();
             if (repoProperties.isReadOnly()) {
                 pathToRemove = repoProperties.getDbStorage();
             }
-            deleteDirectoryRecursively(pathToRemove);
+            //deleteDirectoryRecursively(pathToRemove);
         }
     }
 

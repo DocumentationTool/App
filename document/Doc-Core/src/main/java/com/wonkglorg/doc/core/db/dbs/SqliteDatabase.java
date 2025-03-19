@@ -45,7 +45,6 @@ public class SqliteDatabase<T extends DataSource> extends Database<T>{
 	
 	@Override
 	public void close() {
-
 	}
 	
 	public Connection getConnection() {
