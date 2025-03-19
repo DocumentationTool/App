@@ -18,6 +18,11 @@ li {
   border-bottom: 1px solid #ccc;
 }
 
+.button-group {
+  display: flex;
+  gap: 5px;
+}
+
 .delete {
   padding: 5px 10px;
   border: none;
@@ -29,13 +34,13 @@ li {
   color: white;
 }
 
-.add {
+.add, .edit {
   padding: 5px 10px;
   border: none;
   cursor: pointer;
 }
 
-.add:hover {
+.add:hover, .edit:hover {
   background-color: var(--greenColor);
   color: white;
 }

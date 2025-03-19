@@ -11,6 +11,7 @@ import {ResourceEditTagsComponent} from '../popUp/resource-edit-tags/resource-ed
 import {ResourceMoveComponent} from '../popUp/resource-move/resource-move.component';
 import {Resources} from '../../Model/apiResponseFileTree';
 import {RepoEditTagsComponent} from '../popUp/repo-edit-tags/repo-edit-tags.component';
+import {UserAddComponent} from '../popUp/user-add/user-add.component';
 
 @Injectable({
   providedIn: 'root'
@@ -93,6 +94,10 @@ export class NavigationService {
 
   createNewResource() {
     this.dialog.open(ResourceCreateNewComponent);
+  }
+
+  createNewUser() {
+    this.dialog.open(UserAddComponent);
   }
 
   uploadNewResource(data: string, path: string){

@@ -33,6 +33,7 @@ export class ResourceEditTagsComponent implements OnInit{
 
   onEditTags() {
     this.resourceService.editResourceTags(this.dialogData.repoId, this.dialogData.path, this.splitTags(this.tagsToAdd), this.splitTags(this.tagIdsToRemove))
+    this.closeDialog();
   }
 
   selectAddTag(tagId: string) {

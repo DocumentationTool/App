@@ -6,11 +6,14 @@
     @for (user of users; track users) {
       <li>
         {{ user.name }}
-        <button (click)="editUser(user)"><i class="ri-edit-box-line"></i></button>
-        <button class="delete" (click)="deleteUser(user)"><i class="ri-delete-bin-line"></i></button>
+        <div>Group1</div>
+        <div class="button-group">
+          <button class="edit" (click)="editUser(user)"><i class="ri-edit-box-line"></i></button>
+          <button class="delete" (click)="deleteUser(user)"><i class="ri-delete-bin-line"></i></button>
+        </div>
       </li>
     }
   </ul>
 
-  <button class="add" (click)="addUser()"><i class="ri-user-add-line"></i> Add User</button>
+  <button class="add" (click)="navigationService.createNewUser()"><i class="ri-user-add-line"></i> Add User</button>
 </div>
