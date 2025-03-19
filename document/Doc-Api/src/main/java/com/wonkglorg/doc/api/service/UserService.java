@@ -108,7 +108,6 @@ public class UserService {
      * @return the user
      */
     public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
-        validateUser(repoId, userId);
         return repoService.getRepo(repoId).getDatabase().getUsers(userId);
     }
 
@@ -133,8 +132,7 @@ public class UserService {
      */
     public List<UserProfile> getUsers(String repoId, String userId) throws ClientException {
         RepoId repo = repoService.validateRepoId(repoId);
-        UserId user = validateUserId(repo, userId);
-        return getUsers(repo, user);
+        return getUsers(repo, UserId.of(userId));
     }
 
     /**

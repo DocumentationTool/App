@@ -425,12 +425,15 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	public List<UserProfile> getUsers(UserId userId) {
 		log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
-		if(userId == null){
+		if(userId.isAllUsers()){
 			return new ArrayList<>(userProfiles.values());
 		}
 		
 		List<UserProfile> profiles = new ArrayList<>();
-		profiles.add(userProfiles.get(userId));
+		UserProfile profile = userProfiles.get(userId);
+		if(profile != null){
+			profiles.add(profile);
+		}
 		return profiles;
 	}
 	

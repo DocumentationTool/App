@@ -82,7 +82,7 @@ public class ApiUserController{
 														 @Parameter(description = "The users id to remove.") @RequestParam("userId") String userId) {
 		try{
 			userService.deleteUser(RepoId.of(repoId), UserId.of(userId));
-			return RestResponse.<Void>success("Deleted user '%s' from repo '%s", null).toResponse();
+			return RestResponse.<Void>success("Deleted user '%s' from repo '%s".formatted(userId,repoId), null).toResponse();
 		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
