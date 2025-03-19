@@ -43,6 +43,7 @@ public class ApiUserController{
 		this.userService = userService;
 	}
 	
+	//todo:jmd checked
 	@Operation(summary = "Get a user", description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository.")
 	@GetMapping("/get")
 	public ResponseEntity<RestResponse<List<JsonUser>>> getUsers(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
@@ -60,6 +61,7 @@ public class ApiUserController{
 		}
 	}
 	
+	//todo:jmd checked
 	@Operation(summary = "Adds a new user", description = "Adds a new user to the system. If a repository is given, only adds the user to that repository. If none is given, adds the user to all repositories.")
 	@PutMapping("/add")
 	public ResponseEntity<RestResponse<Void>> addUser(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
@@ -76,13 +78,14 @@ public class ApiUserController{
 		}
 	}
 	
+	//todo:jmd checked
 	@Operation(summary = "Removes a User", description = "Removes a user from the system.")
 	@PutMapping("/remove")
 	public ResponseEntity<RestResponse<Void>> deleteUser(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
 														 @Parameter(description = "The users id to remove.") @RequestParam("userId") String userId) {
 		try{
 			userService.deleteUser(RepoId.of(repoId), UserId.of(userId));
-			return RestResponse.<Void>success("Deleted user '%s' from repo '%s".formatted(userId,repoId), null).toResponse();
+			return RestResponse.<Void>success("Deleted user '%s' from repo '%s".formatted(userId, repoId), null).toResponse();
 		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
