@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -520,14 +521,27 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		currentlyEdited.entrySet().removeIf(entry -> entry.getValue().equals(path));
 	}
 	
-	public void createGroup(GroupId groupId) {
+	public void createGroup(GroupId groupId,String groupName) throws CoreSqlException {
 		log.info("Creating group '{}' in repo '{}'", groupId, repoProperties.getId());
-		//todo:jmd implement properly
-		//groupCache.put(groupId, new Group(groupId, "",));
-		UserFunctions.createGroup(this, groupId);
+		Group group = new Group(groupId, groupName, "system", LocalDateTime.now());
+		UserFunctions.createGroup(this, group);
+		groupCache.put(groupId, group);
 	}
 	
 	public void deleteGroup(GroupId groupId) {
 		UserFunctions.deleteGroup(this, groupId);
+	}
+	
+	public List<Group> getGroups(GroupId groupId) {
+		if(groupId.isAllGroups()){
+			return new ArrayList<>(groupCache.values());
+		}
+		
+		List<Group> groups = new ArrayList<>();
+		Group group = groupCache.get(groupId);
+		if(group != null){
+			groups.add(group);
+		}
+		return groups;
 	}
 }

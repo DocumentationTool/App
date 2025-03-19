@@ -1,15 +1,18 @@
 package com.wonkglorg.doc.api.controller;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
+import com.wonkglorg.doc.api.json.JsonGroup;
 import com.wonkglorg.doc.api.json.JsonUser;
 import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
+import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +33,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping(API_USER)
-public class ApiUserController{
+public class ApiUserController implements GroupCalls{
 	/**
 	 * Logger for this class
 	 */
@@ -94,23 +97,21 @@ public class ApiUserController{
 		}
 	}
 	
-	@Operation(summary = "Get a user", description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository.")
+	@Operation(summary = "Get groups", description = "Returns a group or groups if no groupId is given.")
 	@GetMapping("group/get")
-	public ResponseEntity<RestResponse<List<JsonUser>>> getGroups(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
-																  @Parameter(description = "The userId to search for, if none is given, returns all users in the repository.") @RequestParam(value = "userId", required = false) String userId) {
+	public ResponseEntity<RestResponse<List<JsonGroup>>> getGroups(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
+																   @Parameter(description = "The groupid to search for, if none is given, returns all groups in the repository.") @RequestParam(value = "groupId", required = false) String groupId) {
 		try{
-			RepoId repo = repoService.validateRepoId(repoId);
-			UserId user = userService.validateUserId(repo, userId);
 			
-			List<UserProfile> users = userService.getUsers(repo, user);
-			List<JsonUser> jsonUsers = users.stream().map(JsonUser::new).toList();
+			List<Group> users = userService.getGroups(RepoId.of(repoId), GroupId.of(groupId));
+			List<JsonGroup> jsonGroups = users.stream().map(JsonGroup::new).toList();
 			
-			return RestResponse.success("", jsonUsers).toResponse();
+			return RestResponse.success(jsonGroups).toResponse();
 		} catch(ClientException e){
-			return RestResponse.<List<JsonUser>>error(e.getMessage()).toResponse();
+			return RestResponse.<List<JsonGroup>>error(e.getMessage()).toResponse();
 		} catch(Exception e){
 			log.error("Error while getting users ", e);
-			return RestResponse.<List<JsonUser>>error(e.getMessage()).toResponse();
+			return RestResponse.<List<JsonGroup>>error(e.getMessage()).toResponse();
 		}
 	}
 	
@@ -132,9 +133,10 @@ public class ApiUserController{
 	@Operation(summary = "Adds a new Group", description = "Adds a new Group to the repo.")
 	@PutMapping("group/add")
 	public ResponseEntity<RestResponse<Void>> addGroup(@Parameter(description = "The repoId to add the group to.") @RequestParam(value = "repoId") String repoId,
-													   @Parameter(description = "The groupId.") @RequestParam("groupId") String groupId) {
+													   @Parameter(description = "The groupId.") @RequestParam("groupId") String groupId,
+													   @Parameter(description = "The groupname.") @RequestParam("groupName") String groupName) {
 		try{
-			userService.createGroup(RepoId.of(repoId), GroupId.of(groupId));
+			userService.createGroup(RepoId.of(repoId), GroupId.of(groupId), groupName);
 			return RestResponse.<Void>success("Added group '%s' to repo '%s".formatted(groupId, repoId), null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
@@ -142,5 +144,20 @@ public class ApiUserController{
 			log.error("Error while checking edited state ", e);
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		}
+	}
+	
+	@Override
+	public boolean addGroup(RepoId repoId, Group group) {
+		return false;
+	}
+	
+	@Override
+	public boolean removeGroup(RepoId repoId, GroupId groupId) {
+		return false;
+	}
+	
+	@Override
+	public List<Group> getGroups(RepoId repoId, GroupId groupId) {
+		return List.of();
 	}
 }
