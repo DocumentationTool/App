@@ -11,6 +11,7 @@ import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.exception.client.TagExistsException;
+import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
@@ -40,7 +41,8 @@ import java.util.stream.Collectors;
  * Represents the database object for a defined repository
  */
 @SuppressWarnings("UnusedReturnValue")
-public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
+public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> implements GroupCalls{
+	
 	private static final Logger log = LoggerFactory.getLogger(RepositoryDatabase.class);
 	/**
 	 * The path matcher for this database
@@ -521,18 +523,21 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		currentlyEdited.entrySet().removeIf(entry -> entry.getValue().equals(path));
 	}
 	
-	public void createGroup(GroupId groupId,String groupName) throws CoreSqlException {
-		log.info("Creating group '{}' in repo '{}'", groupId, repoProperties.getId());
-		Group group = new Group(groupId, groupName, "system", LocalDateTime.now());
+	
+	@Override
+	public boolean addGroup(RepoId repoId, Group group) throws CoreSqlException {
+		log.info("Creating group '{}' in repo '{}'", group.getId(), repoProperties.getId());
 		UserFunctions.createGroup(this, group);
-		groupCache.put(groupId, group);
+		groupCache.put(group.getId(), group);
 	}
 	
-	public void deleteGroup(GroupId groupId) {
+	@Override
+	public boolean removeGroup(RepoId repoId, GroupId groupId) {
 		UserFunctions.deleteGroup(this, groupId);
 	}
 	
-	public List<Group> getGroups(GroupId groupId) {
+	@Override
+	public List<Group> getGroups(RepoId repoId, GroupId groupId) {
 		if(groupId.isAllGroups()){
 			return new ArrayList<>(groupCache.values());
 		}

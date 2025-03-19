@@ -3,7 +3,6 @@ package com.wonkglorg.doc.api.controller;
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
 import com.wonkglorg.doc.api.json.JsonGroup;
 import com.wonkglorg.doc.api.json.JsonUser;
-import com.wonkglorg.doc.api.service.RepoService;
 import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
@@ -38,11 +37,9 @@ public class ApiUserController implements GroupCalls{
 	 * Logger for this class
 	 */
 	private static final Logger log = LoggerFactory.getLogger(ApiUserController.class);
-	private final RepoService repoService;
 	private final UserService userService;
 	
-	public ApiUserController(@Lazy RepoService repoService, @Lazy UserService userService) {
-		this.repoService = repoService;
+	public ApiUserController(@Lazy UserService userService) {
 		this.userService = userService;
 	}
 	
