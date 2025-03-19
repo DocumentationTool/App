@@ -129,6 +129,7 @@ public class ResourceFunctions{
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO Tags(tag_id, tag_name) VALUES(?, ?)")){
 			statement.setString(1, tag.tagId().id());
 			statement.setString(2, tag.tagName());
+			statement.executeUpdate();
 		} catch(Exception e){
 			log.error("Failed to add tag", e);
 			throw new CoreSqlException("Failed to add tag '%s' to '%s'".formatted(tag.tagId(), database.getRepoId()), e);
