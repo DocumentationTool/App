@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.api.controller;
 
+import ch.qos.logback.core.net.server.Client;
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.json.JsonResourceEdit;
@@ -237,10 +238,10 @@ public class ApiResourceController {
         try {
             resourceService.removeTag(RepoId.of(repoId), new TagId(tagId));
             return RestResponse.<Void>success("Removed tag '%s' from repo '%s'".formatted(tagId, repoId), null).toResponse();
-        } catch (CoreException e) {
+        } catch (ClientException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
-            log.error("Error while adding resource", e);
+            log.error("Error while removing resource", e);
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
