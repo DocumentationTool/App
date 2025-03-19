@@ -51,15 +51,15 @@ public class ResourceService{
 	 * @return the repository
 	 */
 	public List<Resource> getResources(ResourceRequest request) throws CoreException, ClientException {
-		RepoId id = repoService.validateRepoId(request.getRepoId(), true);
-		if(id.isAllRepos()){ //gets resources from all repos
+		if(request.repoId().isAllRepos()){ //gets resources from all repos
 			List<Resource> allResources = new ArrayList<>();
 			for(var repo : repoService.getRepositories().values()){
+				request.repoId(repo.getRepoProperties().getId());
 				allResources.addAll(getResourcesFromRepo(repo.getRepoProperties().getId(), request));
 			}
 			return allResources;
 		}
-		return getResourcesFromRepo(id, request);
+		return getResourcesFromRepo(request.repoId(), request);
 	}
 	
 	/**
@@ -75,7 +75,7 @@ public class ResourceService{
 	private List<Resource> getResourcesFromRepo(RepoId repoId, ResourceRequest request)
 			throws InvalidRepoException, InvalidUserException, CoreException {
 		List<Resource> resources = repoService.getRepo(repoId).getDatabase().getResources(request);
-		if(request.getUserId() != null){
+		if(!request.userId().isAllUsers()){
 			resources = permissionService.filterResources(request.repoId(), request.userId(), resources);
 		}
 		return resources;
