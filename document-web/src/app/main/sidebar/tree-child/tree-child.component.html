@@ -1,0 +1,65 @@
+<ul>
+  @for (child of (children) | keyvalue; track child.key) {
+    <!-- repo anzeigen -->
+    <li (mouseover)="hoveredRepo =  child.key"
+        (mouseleave)="hoveredRepo = null">
+
+      <a (click)="toggleChildren(child.key); $event.preventDefault()">
+        {{ child.key }}
+        @if (hoveredRepo == child.key) {
+          <button class="menu-button"
+                  (click)="openRepoMenu($event, child.key)">
+            &#x22EE;
+          </button>
+        }
+      </a>
+      @if (selectedRepo === child.key) {
+        <div
+          class="popup-menu"
+          [style.top.px]="menuPosition.y"
+          [style.left.px]="menuPosition.x">
+          <ul>
+            <li (click)="navigationService.editRepoTags(child.key)">Edit tags</li>
+            <li (click)="deleteRepo(child.key)">Delete repo</li>
+          </ul>
+        </div>
+      }
+      <!-- Ressourcen anzeigen -->
+      @if (isOpen[child.key]) {
+        <ul>
+          <li *ngFor="let resource of child.value.resources" (click)="resourceService.onSelectResource(resource)"
+              (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
+              (mouseleave)="hoveredResource = null"
+              [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
+
+            {{ resourceService.splitResourcePath(resource.path) }}
+            @if (hoveredResource === resource.path + ' ' + resource.repoId || resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId) {
+              <button class="menu-button"
+                      (click)="openResourceMenu($event, resource)">
+                &#x22EE;
+              </button>
+            }
+            @if (selectedResource === resource) {
+              <div
+                class="popup-menu"
+                [style.top.px]="menuPosition.y"
+                [style.left.px]="menuPosition.x">
+                <ul>
+                  <li (click)="navigationService.editResourceTags(resource.repoId,resource.path)">Edit tags</li>
+                  <li (click)="navigationService.moveResource(resource.repoId, resource.path)">Move resource</li>
+                  <li (click)="deleteResource(resource)">Delete resource</li>
+                </ul>
+              </div>
+            }
+          </li>
+          <!-- Rekursion für weitere Unterordner -->
+          @if (child.value.children && Object.keys(child.value.children).length > 0) {
+            <app-tree-child
+              [children]="child.value.children">
+            </app-tree-child>
+          }
+        </ul>
+      }
+    </li>
+  }
+</ul>

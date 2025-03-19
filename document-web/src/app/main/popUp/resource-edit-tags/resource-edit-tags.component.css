@@ -1,0 +1,139 @@
+.upload-dialog {
+  width: 400px;
+  max-width: 90%;
+  padding: 20px;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.upload-dialog h2 {
+  text-align: center;
+  font-size: 22px;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.upload-dialog label {
+  font-weight: 500;
+  margin-bottom: 5px;
+  color: #444;
+}
+
+.upload-dialog input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.upload-dialog .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.upload-dialog button {
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  margin-top: 5px;
+
+}
+
+.upload-dialog .upload-btn {
+  background-color: var(--greenColor);
+  color: white;
+}
+
+.upload-dialog .upload-btn:hover {
+  background-color: var(--greenColor);
+}
+
+.upload-dialog .cancel-btn {
+  background-color: #ccc;
+  color: black;
+}
+
+.upload-dialog .cancel-btn:hover {
+  background-color: #bbb;
+}
+
+.search-results {
+  position: fixed;
+  left: 23%;
+  top: 51%;
+  margin-left: 15%;
+  border-radius: 10px;
+  width: 200px;
+  background: white;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.search-box {
+  padding: 5px;
+  font-size: 12pt;
+  justify-content: space-between; /* Elemente nach links & rechts verteilen */
+  display: flex;
+}
+
+.search-box:hover {
+  background: lightgray;
+  cursor: pointer;
+}
+
+span {
+  font-weight: lighter;
+  font-size: 10pt;
+  font-family: "Segoe UI", serif;
+  font-style: normal;
+}
+
+/*------------------------------Dropdown Tags to Remove-----------------------------*/
+.dropdown {
+  position: absolute;
+  left: 5%;
+  width: 50%;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dropdown li {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  font-size: 14px;
+  font-family: "Segoe UI", sans-serif;
+  color: #444;
+  transition: background 0.2s ease-in-out;
+}
+
+.dropdown li:hover {
+  background: lightgray;
+  cursor: pointer;
+}
+
+/* Optional: Wenn du das Design noch mehr an die .search-box anpassen willst */
+.dropdown li span {
+  font-size: 12pt;
+  font-weight: lighter;
+  font-family: "Segoe UI", serif;
+}
+

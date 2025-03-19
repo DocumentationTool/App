@@ -1,0 +1,30 @@
+<div class="upload-dialog">
+  <h2>Resource Upload</h2>
+  <form (submit)="uploadResource()">
+    <label>Path:</label>
+    <input name="path" type="text" [(ngModel)]="path" required/>
+
+    <label>RepoId:</label>
+    <div class="repo-container" (click)="$event.stopPropagation()">
+      <input name="repoId" type="text" [(ngModel)]="repoId" autocomplete="off" (focus)="onRepos()" required/>
+    </div>
+    <label>Category:</label>
+    <input name="category" type="text" [(ngModel)]="category" required/>
+
+    <label>TagIds:</label>
+    <input name="tagId" type="text" [(ngModel)]="tagIds" required/>
+
+    <button type="submit" class="upload-btn">Upload</button>
+    <button type="button" class="cancel-btn" (click)="closeDialog()">Cancel</button>
+  </form>
+</div>
+
+@if (isReposActive && allRepos.length > 0) {
+  <div class="search-results">
+    @for (repo of allRepos; track repo) {
+      <div class="search-box" (click)="onSelectRepo(repo)">
+        <span class="repo-id">{{ repo }}</span>
+      </div>
+    }
+  </div>
+}

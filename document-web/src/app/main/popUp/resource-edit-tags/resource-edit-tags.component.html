@@ -1,0 +1,34 @@
+<div class="upload-dialog">
+  <h2>Edit Tags {{this.dialogData.path}}</h2>
+  <form (submit)="onEditTags()">
+
+    <label>Tags to add:<span> exapmle: Tag1;Tag2</span></label>
+      <input class="add" name="addTagId" type="text" [(ngModel)]="tagsToAdd" (focus)="openAddDropdown()" autocomplete="off"/>
+
+    @if (tagIdsToAddWindow) {
+      <div class="dropdown">
+        <ul>
+          @for (id of resourceService.allRepoTagIds(); track id) {
+            <li (click)="selectAddTag(id)">{{ id }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <label>Tags to remove:</label>
+    <input name="removeTagId" type="text" [(ngModel)]="tagIdsToRemove" (focus)="openRemoveDropdown()"/>
+
+    @if (tagIdsToRemoveWindow) {
+      <div class="dropdown">
+        <ul>
+          @for (id of resourceService.allResourceTagIds(); track id) {
+            <li (click)="selectAddTag(id)">{{ id }}</li>
+          }
+        </ul>
+      </div>
+    }
+
+    <button type="submit" class="upload-btn">Update</button>
+    <button type="button" class="cancel-btn" (click)="closeDialog()">Cancel</button>
+  </form>
+</div>

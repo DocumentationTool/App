@@ -1,3 +1,16 @@
-<div [ngStyle]="{'margin-left': this.navigationService.toggle() ? '250px' : '0'}" class="container">
-  Admin Works
+<div class="container">
+  <h2>User Management</h2>
+
+  <!-- Users-Liste -->
+  <ul>
+    @for (user of users; track users) {
+      <li>
+        {{ user.name }}
+        <button (click)="editUser(user)"><i class="ri-edit-box-line"></i></button>
+        <button class="delete" (click)="deleteUser(user)"><i class="ri-delete-bin-line"></i></button>
+      </li>
+    }
+  </ul>
+
+  <button class="add" (click)="addUser()"><i class="ri-user-add-line"></i> Add User</button>
 </div>

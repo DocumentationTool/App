@@ -21,6 +21,8 @@ export class ResourceService {
   private _fileContent = signal<string>("");
   fileContentBeforeChanges = "";
   allTags: string[] | undefined;
+  allRepoTagIds = signal<string[]>([]);
+  allResourceTagIds = signal<string[]>([]);
 
 
   onSelectResource(file: any) {
@@ -145,7 +147,8 @@ export class ResourceService {
   getTag(repoId: string) {
     this.apiResource.getTag(repoId).subscribe(
       data => {
-        console.log(data)
+        this.allTags = [];
+        this.allRepoTagIds.set(data.content.map(tag => tag.tagId.id));
       },
       error => {
         console.error(error)
@@ -153,7 +156,7 @@ export class ResourceService {
     )
   }
 
-  getAllTags(){
+  getAllTags() {
     this.apiResource.getTag(null).subscribe(
       data => {
         this.allTags = data.content.map(tag => tag.tagId.id);
@@ -193,6 +196,29 @@ export class ResourceService {
     this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
       data => {
         this.searchResults.set(data);
+      },
+      error => {
+        console.error(error)
+      }
+    )
+  }
+
+  getResourceTags(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
+                  whiteListTags: string[], blacklistListTags: string[]) {
+    this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
+      data => { //alle Tags einer Resource in signal speichern
+        Object.values(data.content).forEach((resourcesArray) => {
+          resourcesArray.forEach((resource) => {
+            Object.keys(resource.tags).forEach((tagId) => {
+              this.allResourceTagIds.update((tags) => {
+                if (!tags.includes(tagId)) {
+                  return [...tags, tagId]; // Neues Array mit dem neuen Tag zurückgeben
+                }
+                return tags;
+              });
+            });
+          });
+        });
       },
       error => {
         console.error(error)

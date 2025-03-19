@@ -76,7 +76,6 @@ export class ApiResource {
   getTag(repoId: string | null) {
     let params = new HttpParams()
     if (repoId) params = params.set('repoId', repoId);
-    if (repoId)console.log("REPO", repoId);
     return this.http.post<ApiResponseTags>(this.baseUrl + "/tag/get", params)
   }
 

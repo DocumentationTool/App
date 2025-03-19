@@ -1,5 +1,42 @@
-.container{
+.container {
+  max-width: 400px;
+  margin: auto;
   padding: 20px;
-  width: 500px;
-  background: #566367;
+  text-align: center;
 }
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.delete {
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.delete:hover {
+  background-color: #ff6961;
+  color: white;
+}
+
+.add {
+  padding: 5px 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.add:hover {
+  background-color: var(--greenColor);
+  color: white;
+}
+

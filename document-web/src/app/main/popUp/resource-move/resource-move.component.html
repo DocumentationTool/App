@@ -1,0 +1,15 @@
+<div class="upload-dialog">
+  <h2>Move Resource {{this.dialogData.path}}</h2>
+  <form (submit)="moveResource()">
+    <label>Repo to:</label>
+    <input name="repoTo" type="text" [(ngModel)]="repoTo" required/>
+
+    <label>Path to:</label>
+    <div class="repo-container" (click)="$event.stopPropagation()">
+      <input name="pathTo" type="text" [(ngModel)]="pathTo" autocomplete="off" required/>
+    </div>
+
+    <button type="submit" class="upload-btn">Move</button>
+    <button type="button" class="cancel-btn" (click)="closeDialog()">Cancel</button>
+  </form>
+</div>
