@@ -95,7 +95,7 @@ public class UserFunctions{
 			try(var rs = statement.executeQuery()){
 				List<UserId> users = new ArrayList<>();
 				while(rs.next()){
-					users.add(new UserId(rs.getString("user_id")));
+					users.add(UserId.of(rs.getString("user_id")));
 				}
 				return users;
 			}
@@ -132,7 +132,7 @@ public class UserFunctions{
 		try(var statement = connection.prepareStatement("SELECT * FROM UserGroups")){
 			try(var rs = statement.executeQuery()){
 				while(rs.next()){
-					UserId userId = new UserId(rs.getString("user_id"));
+					UserId userId = UserId.of(rs.getString("user_id"));
 					GroupId groupId = new GroupId(rs.getString("group_id"));
 					userGroups.computeIfAbsent(userId, k -> new ArrayList<>()).add(groupId);
 					userIds.computeIfAbsent(groupId, k -> new ArrayList<>()).add(userId);
@@ -180,9 +180,9 @@ public class UserFunctions{
 				while(rs.next()){
 					String userId = rs.getString("user_id");
 					String passwordHash = rs.getString("password_hash");
-					var userPermissions = PermissionFunctions.getPermissionsForUser(database, new UserId(userId));
-					var userRoles = PermissionFunctions.getRolesForUser(database, new UserId(userId));
-					users.add(new UserProfile(new UserId(userId), passwordHash, userPermissions, userRoles));
+					var userPermissions = PermissionFunctions.getPermissionsForUser(database, UserId.of(userId));
+					var userRoles = PermissionFunctions.getRolesForUser(database, UserId.of(userId));
+					users.add(new UserProfile(UserId.of(userId), passwordHash, userPermissions, userRoles));
 				}
 				return users;
 			}

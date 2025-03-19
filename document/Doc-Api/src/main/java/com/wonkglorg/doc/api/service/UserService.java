@@ -43,7 +43,7 @@ public class UserService {
             throw new InvalidUserException("User id is not allowed to be null!");
         }
 
-        UserId userId = new UserId(user);
+        UserId userId = UserId.of(user);
         if (!repoService.getRepo(repoId).getDatabase().userExists(userId)) {
             throw new InvalidUserException("User '%s' does not exist".formatted(userId));
         }
@@ -163,7 +163,7 @@ public class UserService {
      * @return the user id
      */
     public UserId validateUser(RepoId repoId, String userId) throws InvalidUserException, InvalidRepoException {
-        UserId id = new UserId(userId);
+        UserId id = UserId.of(userId);
         validateUser(repoId, id);
         return id;
     }

@@ -5,4 +5,8 @@ Arbeit an PermissionService und Anfang an Tests
 
 19.03.2025
 12:20 - 15:50
+Path Tests fertigstellen
+Json Representation in REST requests updaten
+Wrapper Classes anstatt string in requests für klarheit
+Alle Wrapper Klassen haben ein ALL Feld um zu kennzeichnen anstatt null zu nutzen
 

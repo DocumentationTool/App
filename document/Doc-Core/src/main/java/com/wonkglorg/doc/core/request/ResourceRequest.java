@@ -1,73 +1,103 @@
 package com.wonkglorg.doc.core.request;
 
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.TagId;
+import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.path.TargetPath;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+/**
+ * A request received by a controller and used for file getting requests from the database
+ */
 public class ResourceRequest{
 	/**
 	 * The term to search text by
 	 */
-	public String searchTerm;
+	private String searchTerm = null;
 	/**
 	 * The path to search by may be an ant path
 	 */
-	public String path;
+	private TargetPath path = TargetPath.of((String) null);
 	/**
 	 * The repo to search in
 	 */
-	public String repoId;
+	private RepoId repoId = null;
 	/**
 	 * The user to search limit the search to
 	 */
-	public String userId;
+	private UserId userId = null;
 	/**
 	 * The tags to search by
 	 */
-	public List<String> whiteListTags = new ArrayList<>();
+	private Set<TagId> whiteListTags = new HashSet<>();
 	/**
 	 * The tags to exclude from the search
 	 */
-	public List<String> blacklistTags = new ArrayList<>();
+	private Set<TagId> blacklistTags = new HashSet<>();
 	/**
 	 * If the data of the resource should be returned
 	 */
-	public boolean withData = false;
+	private boolean withData = false;
 	/**
 	 * The limit of results to return
 	 */
-	public int returnLimit = 999999999;
+	private int returnLimit = 999999999;
 	
-	public ResourceRequest(String searchTerm,
-						   String path,
-						   String repoId,
-						   String userId,
-						   List<String> whiteListTags,
-						   List<String> blacklistTags,
-						   boolean withData,
-						   int returnLimit) {
-		this.searchTerm = searchTerm;
+	
+	public TargetPath targetPath() {
+		return path;
+	}
+	
+	public RepoId repoId() {
+		return repoId;
+	}
+	
+	public UserId userId() {
+		return userId;
+	}
+	
+	public Set<TagId> whiteListTags() {
+		return whiteListTags;
+	}
+	
+	public Set<TagId> blacklistTags() {
+		return blacklistTags;
+	}
+	
+	public void targetPath(TargetPath path) {
+		if(path == null){
+			this.path = TargetPath.of((String) null);
+			return;
+		}
 		this.path = path;
+	}
+	
+	public void repoId(RepoId repoId) {
 		this.repoId = repoId;
+	}
+	
+	public void userId(UserId userId) {
 		this.userId = userId;
+	}
+	
+	public void whiteListTags(Set<TagId> whiteListTags) {
 		this.whiteListTags = whiteListTags;
+	}
+	
+	public void blacklistTags(Set<TagId> blacklistTags) {
 		this.blacklistTags = blacklistTags;
-		this.withData = withData;
-		this.returnLimit = returnLimit;
 	}
 	
-	public ResourceRequest() {
-	}
 	
-	public ResourceRequest(String searchTerm, String path, String repoId, String userId, boolean withData, int returnLimit) {
-		this.searchTerm = searchTerm;
-		this.path = path;
-		this.repoId = repoId;
-		this.userId = userId;
-		this.withData = withData;
-		this.returnLimit = returnLimit;
-	}
 	
+	
+	//-----mappings for rest objects
 	public String getSearchTerm() {
 		return searchTerm;
 	}
@@ -77,43 +107,43 @@ public class ResourceRequest{
 	}
 	
 	public String getPath() {
-		return path;
+		return path.toString();
 	}
 	
 	public void setPath(String path) {
-		this.path = path;
+		this.path = TargetPath.of(path);
 	}
 	
 	public String getRepoId() {
-		return repoId;
+		return repoId.id();
 	}
 	
 	public void setRepoId(String repoId) {
-		this.repoId = repoId;
+		this.repoId = RepoId.of(repoId);
 	}
 	
 	public String getUserId() {
-		return userId;
+		return userId.id();
 	}
 	
 	public void setUserId(String userId) {
-		this.userId = userId;
+		this.userId = UserId.of(userId);
 	}
 	
-	public List<String> getWhiteListTags() {
-		return whiteListTags;
+	public Set<String> getWhiteListTags() {
+		return whiteListTags.stream().toList().stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
-	public void setWhiteListTags(List<String> whiteListTags) {
-		this.whiteListTags = whiteListTags;
+	public void setWhiteListTags(Set<String> whiteListTags) {
+		this.whiteListTags = whiteListTags.stream().map(TagId::of).collect(Collectors.toSet());
 	}
 	
-	public List<String> getBlacklistTags() {
-		return blacklistTags;
+	public Set<String> getBlacklistTags() {
+		return blacklistTags.stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
-	public void setBlacklistTags(List<String> blacklistTags) {
-		this.blacklistTags = blacklistTags;
+	public void setBlacklistTags(Set<String> blacklistTags) {
+		this.blacklistTags = blacklistTags.stream().map(TagId::of).collect(Collectors.toSet());
 	}
 	
 	public boolean isWithData() {

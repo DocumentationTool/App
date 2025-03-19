@@ -66,7 +66,7 @@ public class AuthController{
 			@RequestBody LoginRequest request) {
 		log.info("Login POST request received");
 		try{
-			authManager.authenticate(new UserId(request.userId()), request.password());
+			authManager.authenticate(UserId.of(request.userId()), request.password());
 			
 			String token = JwtUtil.generateToken(request.userId());
 			return ResponseEntity.ok(new AuthResponse(token, null));
