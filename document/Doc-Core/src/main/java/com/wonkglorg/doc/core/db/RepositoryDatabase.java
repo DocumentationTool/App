@@ -352,7 +352,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 */
 	public Resource updateResourceData(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
 		log.info("Updating resource '{}' in repo '{}'", request.path(), repoProperties.getId());
-		return ResourceFunctions.updateResource(this, request);
+		Resource resource = ResourceFunctions.updateResource(this, request);
+		resourceCache.put(resource.resourcePath(), resource);
+		return resource;
 	}
 	
 	/**
