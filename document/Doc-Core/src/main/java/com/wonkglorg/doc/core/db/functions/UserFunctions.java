@@ -29,10 +29,11 @@ public class UserFunctions{
 	public static boolean addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")){
-			statement.setString(1, userId.toString());
+			statement.setString(1, userId.id());
 			statement.setString(2, password);
 			statement.setString(3, createdBy);
 			statement.setString(4, createdBy);
+			statement.executeUpdate();
 			return true;
 		} catch(Exception e){
 			String errorResponse = "Failed to add user";

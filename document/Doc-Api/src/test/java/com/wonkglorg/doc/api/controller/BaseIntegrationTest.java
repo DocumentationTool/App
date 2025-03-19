@@ -29,7 +29,7 @@ public class BaseIntegrationTest {
     private static Map<RepoId, FileRepository> repositories = new HashMap<>();
 
     @Autowired
-    private TestRestTemplate requestTemplate;
+    protected TestRestTemplate requestTemplate;
 
     @Autowired
     private RepoService repoService;

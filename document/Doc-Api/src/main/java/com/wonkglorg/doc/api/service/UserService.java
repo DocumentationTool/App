@@ -155,7 +155,7 @@ public class UserService {
         return users != null && !users.isEmpty();
     }
 
-    /**
+     /**
      * Validates if a user exists
      *
      * @param repoId the repo id
