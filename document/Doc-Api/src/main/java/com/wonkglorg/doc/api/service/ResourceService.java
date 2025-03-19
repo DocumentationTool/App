@@ -362,7 +362,7 @@ public class ResourceService{
 		}
 	}
 	
-	/**
+    /**
 	 * Removes a user from editing a file
 	 *
 	 * @param userId the user to remove

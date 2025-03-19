@@ -128,26 +128,47 @@ public class ResourceUpdateRequest{
 	}
 	
 	public Set<String> getTagsToAdd() {
+		if(tagsToAdd == null){
+			return Set.of();
+		}
 		return tagsToAdd.stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
 	public void setTagsToAdd(Set<String> tagsToAdd) {
+		if(tagsToAdd == null){
+			this.tagsToAdd = Set.of();
+			return;
+		}
 		this.tagsToAdd = tagsToAdd.stream().map(TagId::new).collect(Collectors.toSet());
 	}
 	
 	public Set<String> getTagsToRemove() {
+		if(tagsToRemove == null){
+			return Set.of();
+		}
 		return tagsToRemove.stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
 	public void setTagsToRemove(Set<String> tagsToRemove) {
+		if(tagsToRemove == null){
+			this.tagsToRemove = Set.of();
+			return;
+		}
 		this.tagsToRemove = tagsToRemove.stream().map(TagId::new).collect(Collectors.toSet());
 	}
 	
 	public Set<String> getTagsToSet() {
+		if(tagsToSet == null){
+			return Set.of();
+		}
 		return tagsToSet.stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
 	public void setTagsToSet(Set<String> tagsToSet) {
+		if(tagsToSet == null){
+			this.tagsToSet = Set.of();
+			return;
+		}
 		this.tagsToSet = tagsToSet.stream().map(TagId::new).collect(Collectors.toSet());
 	}
 	
