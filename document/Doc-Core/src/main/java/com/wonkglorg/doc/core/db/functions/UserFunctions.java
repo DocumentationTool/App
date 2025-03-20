@@ -5,6 +5,7 @@ import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.slf4j.Logger;
@@ -311,6 +312,23 @@ public class UserFunctions {
         } finally {
             closeConnection(connection);
 
+        }
+    }
+
+    public static boolean addGroupPermission(RepositoryDatabase database, GroupId groupId, Permission<GroupId> permission) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("INSERT INTO GroupPermissions(group_id, path, permission_type) VALUES(?,?,?)")) {
+            statement.setString(1, groupId.id());
+            statement.setString(2, permission.getId());
+            statement.setString(3, permission.getPermission().name());
+            statement.setString(4, permission.getPath().toString());
+            statement.setString(5, permission.getRepoId().id());
+            statement.executeUpdate();
+            return true;
+        } catch (Exception e) {
+            log.error("Failed to add permission to group", e);
+        } finally {
+            closeConnection(connection);
         }
     }
 }

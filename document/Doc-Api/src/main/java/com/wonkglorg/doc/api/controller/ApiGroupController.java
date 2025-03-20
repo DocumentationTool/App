@@ -138,6 +138,7 @@ public class ApiGroupController {
     @PostMapping("permission/add")
     public ResponseEntity<RestResponse<Void>> addGroupPermission() {
         try {
+            groupService.add
             throw new ClientException("Not implemented yet");
         } catch (ClientException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();

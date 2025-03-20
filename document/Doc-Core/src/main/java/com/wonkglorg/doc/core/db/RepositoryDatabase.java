@@ -11,6 +11,7 @@ import com.wonkglorg.doc.core.exception.client.*;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.*;
+import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import com.wonkglorg.doc.core.user.Group;
@@ -534,6 +535,22 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     }
 
     @Override
+    public boolean addPermissionToGroup(RepoId repoId, GroupId groupId, Permission<GroupId> permission) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        boolean wasAdded = UserFunctions.addGroupPermission(this, groupId, permission);
+        if (wasAdded) {
+            if (groupCache.containsKey(groupId)) groupCache.get(groupId).getPermissions().add(permission);
+        }
+        return wasAdded;
+    }
+
+    @Override
+    public boolean removePermissionFromGroup(RepoId repoId, GroupId groupId, Permission<GroupId> permission) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        UserFunctions.removeGroupPermission(this, groupId, permission);
+
+        return true;
+    }
+
+    @Override
     public boolean addUser(RepoId repoId, UserProfile user) throws CoreSqlException {
         log.info("Adding user '{}' in repo '{}'", user.getId(), repoProperties.getId());
 
@@ -576,7 +593,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     }
 
     public boolean userInGroup(RepoId repoId, GroupId groupId, UserId userId) {
-        if(!groupUsers.containsKey(groupId)) {
+        if (!groupUsers.containsKey(groupId)) {
             return false;
         }
         return groupUsers.get(groupId).contains(userId);

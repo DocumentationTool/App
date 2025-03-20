@@ -8,6 +8,7 @@ import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -97,5 +98,23 @@ public class GroupService implements GroupCalls {
         }
 
         return repoService.getRepo(repoId).getDatabase().removeUserFromGroup(repoId, groupId, userId);
+    }
+
+    @Override
+    public boolean addPermissionToGroup(RepoId repoId, GroupId groupId, Permission<GroupId> permission) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        repoService.validateRepoId(repoId);
+        if (!groupExists(repoId, groupId)) {
+            throw new InvalidGroupException("Group with id '%s' does not exist".formatted(groupId));
+        }
+        return repoService.getRepo(repoId).getDatabase().addPermissionToGroup(repoId, groupId, permission);
+    }
+
+    @Override
+    public boolean removePermissionFromGroup(RepoId repoId, GroupId groupId, Permission<GroupId> permission) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        repoService.validateRepoId(repoId);
+        if (!groupExists(repoId, groupId)) {
+            throw new InvalidGroupException("Group with id '%s' does not exist".formatted(groupId));
+        }
+        return repoService.getRepo(repoId).getDatabase().removePermissionFromGroup(repoId, groupId, permission);
     }
 }
