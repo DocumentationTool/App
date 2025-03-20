@@ -4,7 +4,6 @@ import {MarkdownModule} from 'ngx-markdown';
 import {LMarkdownEditorModule, UploadResult} from 'ngx-markdown-editor';
 import {FormsModule} from '@angular/forms';
 import {NavigationService} from '../service/navigation.service';
-import {EmptyPageComponent} from '../empty-page/empty-page.component';
 
 @Component({
   selector: 'app-editor',
@@ -12,7 +11,6 @@ import {EmptyPageComponent} from '../empty-page/empty-page.component';
     MarkdownModule,
     LMarkdownEditorModule,
     FormsModule,
-    EmptyPageComponent,
   ],
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.css'

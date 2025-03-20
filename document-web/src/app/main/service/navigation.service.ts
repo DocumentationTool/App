@@ -12,6 +12,11 @@ import {ResourceMoveComponent} from '../popUp/resource-move/resource-move.compon
 import {Resources} from '../../Model/apiResponseFileTree';
 import {RepoEditTagsComponent} from '../popUp/repo-edit-tags/repo-edit-tags.component';
 import {UserAddComponent} from '../popUp/user-add/user-add.component';
+import {Repos} from '../../Model/apiResponseModelRepos';
+import {UserService} from './userService';
+import {User} from '../../Model/apiResponseUser';
+import {UserEditComponent} from '../popUp/user-edit/user-edit.component';
+import {GroupAddComponent} from '../popUp/group-add/group-add.component';
 
 @Injectable({
   providedIn: 'root'
@@ -22,6 +27,7 @@ export class NavigationService {
               private apiAuth: ApiAuth,
               private apiResource: ApiResource,
               private resourceService: ResourceService,
+              private userService: UserService,
               private dialog: MatDialog) {
   }
 
@@ -96,25 +102,44 @@ export class NavigationService {
     this.dialog.open(ResourceCreateNewComponent);
   }
 
+  userManagement(repo: Repos) {
+    this.userService.selectedRepo.set(repo)
+    this.router.navigate(['/main/userManagement'])
+  }
+
   createNewUser() {
     this.dialog.open(UserAddComponent);
   }
 
-  uploadNewResource(data: string, path: string){
-    this.dialog.open(ResourceUploadComponent,
+  createNerGroup(repoId: string | undefined) {
+    this.dialog.open(GroupAddComponent,
       {
-        data: {data,path}
+        data: {repoId}
       });
   }
 
-  editResourceTags(repoId:string, path: string) {
+  editUser(repoId: string | undefined, user: User) {
+    this.dialog.open(UserEditComponent,
+      {
+        data: {repoId, user}
+      });
+  }
+
+  uploadNewResource(data: string, path: string) {
+    this.dialog.open(ResourceUploadComponent,
+      {
+        data: {data, path}
+      });
+  }
+
+  editResourceTags(repoId: string, path: string) {
     this.dialog.open(ResourceEditTagsComponent,
       {
         data: {repoId, path}
       });
   }
 
-  editRepoTags(repoId: string){
+  editRepoTags(repoId: string) {
     this.dialog.open(RepoEditTagsComponent,
       {
         data: {repoId}
@@ -125,7 +150,7 @@ export class NavigationService {
     console.log("repo", repoId)
     this.dialog.open(ResourceMoveComponent,
       {
-        data: {repoId,path}
+        data: {repoId, path}
       });
   }
 

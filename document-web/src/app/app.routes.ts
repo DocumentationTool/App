@@ -4,12 +4,12 @@ import {MainComponent} from './main/main.component';
 import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
 import {ViewComponent} from './main/view/view.component';
-import {EmptyPageComponent} from './main/empty-page/empty-page.component';
-import {RepoComponent} from './main/admin/repo/repo.component';
+import {UserManagementComponent} from './main/admin/userManagement/userManagement.component';
+import {NotFoundComponent} from './not-found/not-found.component';
 
 export const routes: Routes = [
   {
-    path: '', redirectTo: 'main/empty',
+    path: '', redirectTo: 'main',
     pathMatch: "full"
   },
   {
@@ -25,8 +25,8 @@ export const routes: Routes = [
         component: AdminComponent,
       },
       {
-        path: 'repo',
-        component: RepoComponent,
+        path: 'userManagement',
+        component: UserManagementComponent,
       },
       {
         path: 'view',
@@ -36,10 +36,10 @@ export const routes: Routes = [
         path: 'editor',
         component: EditorComponent,
       },
-      {
-        path: 'empty',
-        component: EmptyPageComponent,
-      },
     ],
+  },
+  {
+    path: '**',
+    component: NotFoundComponent
   }
 ];

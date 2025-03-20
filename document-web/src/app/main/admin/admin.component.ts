@@ -1,9 +1,7 @@
 import {Component, OnInit} from '@angular/core';
-import {NavigationService} from '../service/navigation.service';
 import {ApiRepo} from '../../api/apiRepo';
 import {Repos} from '../../Model/apiResponseModelRepos';
-import {UserService} from '../service/userService';
-import {Router} from '@angular/router';
+import {NavigationService} from '../service/navigation.service';
 
 @Component({
   selector: 'app-admin',
@@ -15,8 +13,7 @@ import {Router} from '@angular/router';
 export class AdminComponent implements OnInit{
 
   constructor(private apiRepo: ApiRepo,
-              private userService: UserService,
-              private router: Router) {
+              private navigationService: NavigationService) {
   }
 
   allRepos: Repos[] = []
@@ -30,8 +27,7 @@ export class AdminComponent implements OnInit{
   }
 
   selectRepo(repo: Repos) {
-    this.userService.selectedRepo.set(repo)
-    this.router.navigate(['/main/repo'])
+    this.navigationService.userManagement(repo);
   }
 
 }

@@ -21,7 +21,7 @@ h2 {
 .repo-btn {
   padding: 10px 20px;
   font-size: 14px;
-  background-color: #4CAF50; /* Grüne Farbe */
+  background-color: var(--greenColor);
   color: white;
   border: none;
   border-radius: 5px;
@@ -30,13 +30,9 @@ h2 {
 }
 
 .repo-btn:hover {
-  background-color: #45a049; /* Dunkleres Grün beim Hover */
-}
+opacity: 80%}
 
-.repo-btn:active {
-  background-color: #3e8e41; /* Noch dunkleres Grün bei Aktivierung */
-}
 
 .repo-btn:focus {
-  outline: none; /* Entfernt den Standard-Fokusrahmen */
+  outline: none;
 }
