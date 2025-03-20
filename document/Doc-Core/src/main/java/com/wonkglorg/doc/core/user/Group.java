@@ -79,4 +79,9 @@ public class Group {
     public Set<UserId> getUserIds() {
         return userIds;
     }
+
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

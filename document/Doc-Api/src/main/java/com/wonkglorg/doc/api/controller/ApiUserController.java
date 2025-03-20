@@ -112,33 +112,27 @@ public class ApiUserController {
         }
     }
 
-
-    @PostMapping("group/add")
-    public ResponseEntity<RestResponse<Void>> addUserToGroup() {
-        try {
-
-        }
-    }
-
-    @PostMapping("group/remove")
-    public ResponseEntity<RestResponse<Void>> groupToAddUserTo() {
-        try {
-
-        }
-    }
-
-
     @PostMapping("permission/add")
     public ResponseEntity<RestResponse<Void>> addUserPermission() {
         try {
-
+            throw new ClientException("Not implemented yet");
+        } catch (ClientException e) {
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 
     @PostMapping("permission/remove")
     public ResponseEntity<RestResponse<Void>> removeUserPermission() {
         try {
-
+            throw new ClientException("Not implemented yet");
+        } catch (ClientException e) {
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
         }
     }
 }

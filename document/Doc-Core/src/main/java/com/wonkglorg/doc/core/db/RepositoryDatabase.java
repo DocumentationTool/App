@@ -7,10 +7,7 @@ import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
 import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
-import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidTagException;
-import com.wonkglorg.doc.core.exception.client.InvalidUserException;
-import com.wonkglorg.doc.core.exception.client.TagExistsException;
+import com.wonkglorg.doc.core.exception.client.*;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.*;
@@ -53,7 +50,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     /**
      * The cache of user profiles for this database
      */
-    private final Map<UserId, UserProfile> userProfiles = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<UserId, UserProfile> userCache = new java.util.concurrent.ConcurrentHashMap<>();
     /**
      * Helper map to quickly access connections between groups and users
      */
@@ -133,7 +130,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
         }
 
         var allUsers = UserFunctions.getAllUsers(this);
-        allUsers.forEach(user -> userProfiles.put(user.getId(), user));
+        allUsers.forEach(user -> userCache.put(user.getId(), user));
         UserFunctions.getAllUserGroups(this, userGroups, groupUsers);
 
         var allGroups = UserFunctions.getAllGroups(this);
@@ -206,7 +203,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
         if (userId == null) {
             return false;
         }
-        return userProfiles.containsKey(userId);
+        return userCache.containsKey(userId);
     }
 
     //todo:jmd fix path issues each path is treated seperatly. not good
@@ -392,7 +389,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
 
     public List<UserProfile> getUsersFromGroup(GroupId groupId) {
         List<UserProfile> profiles = new ArrayList<>();
-        groupUsers.get(groupId).forEach(userId -> profiles.add(userProfiles.get(userId)));
+        groupUsers.get(groupId).forEach(userId -> profiles.add(userCache.get(userId)));
         return profiles;
     }
 
@@ -405,7 +402,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     public List<UserProfile> getAllUsers() {
         log.info("Finding all users in repo '{}'.", repoProperties.getId());
         List<UserProfile> profiles = new ArrayList<>();
-        profiles.addAll(userProfiles.values());
+        profiles.addAll(userCache.values());
         return profiles;
     }
 
@@ -501,13 +498,49 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     }
 
     @Override
+    public Group renameGroup(RepoId repoId, GroupId groupId, String newName) throws CoreException, InvalidRepoException, InvalidGroupException {
+        UserFunctions.renameGroup(this, groupId, newName);
+        Group group = groupCache.get(groupId);
+        group.setName(newName);
+        return group;
+    }
+
+    @Override
+    public boolean addUserToGroup(RepoId repoId, GroupId groupId, UserId userId) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        log.info("Adding user '{}' to group '{}' in repo '{}'", userId, groupId, repoProperties.getId());
+        boolean isAdded = UserFunctions.addUserToGroup(this, userId, groupId);
+        if (isAdded) {
+            //update the caches
+            if (groupUsers.containsKey(groupId)) groupUsers.get(groupId).add(userId);
+            if (userGroups.containsKey(userId)) userGroups.get(userId).add(groupId);
+            if (groupCache.containsKey(groupId)) groupCache.get(groupId).getUserIds().add(userId);
+            if (userCache.containsKey(userId)) userCache.get(userId).getGroups().add(groupId);
+        }
+        return isAdded;
+    }
+
+    @Override
+    public boolean removeUserFromGroup(RepoId repoId, GroupId groupId, UserId userId) throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException {
+        log.info("Removing user '{}' from group '{}' in repo '{}'", userId, groupId, repoProperties.getId());
+        boolean isRemoved = UserFunctions.removeUserFromGroup(this, userId, groupId);
+        if (isRemoved) {
+            //update the caches
+            if (groupUsers.containsKey(groupId)) groupUsers.get(groupId).remove(userId);
+            if (userGroups.containsKey(userId)) userGroups.get(userId).remove(groupId);
+            if (groupCache.containsKey(groupId)) groupCache.get(groupId).getUserIds().remove(userId);
+            if (userCache.containsKey(userId)) userCache.get(userId).getGroups().remove(groupId);
+        }
+        return isRemoved;
+    }
+
+    @Override
     public boolean addUser(RepoId repoId, UserProfile user) throws CoreSqlException {
         log.info("Adding user '{}' in repo '{}'", user.getId(), repoProperties.getId());
 
         boolean isAdded = UserFunctions.addUser(this, user.getId(), user.getPasswordHash(), null);
 
         if (isAdded) {
-            userProfiles.put(user.getId(), user);
+            userCache.put(user.getId(), user);
         }
         return isAdded;
     }
@@ -517,7 +550,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
         log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
         var wasDeleted = UserFunctions.deleteUser(this, userId);
         if (wasDeleted) {
-            userProfiles.remove(userId);
+            userCache.remove(userId);
         }
         return wasDeleted;
     }
@@ -526,11 +559,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     public List<UserProfile> getUsers(RepoId repoId, UserId userId) {
         log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
         if (userId.isAllUsers()) {
-            return new ArrayList<>(userProfiles.values());
+            return new ArrayList<>(userCache.values());
         }
 
         List<UserProfile> profiles = new ArrayList<>();
-        UserProfile profile = userProfiles.get(userId);
+        UserProfile profile = userCache.get(userId);
         if (profile != null) {
             profiles.add(profile);
         }
@@ -540,5 +573,12 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
     @Override
     public boolean updateUser(RepoId repoId, UserId userId, UserProfile user) {
         return false;
+    }
+
+    public boolean userInGroup(RepoId repoId, GroupId groupId, UserId userId) {
+        if(!groupUsers.containsKey(groupId)) {
+            return false;
+        }
+        return groupUsers.get(groupId).contains(userId);
     }
 }

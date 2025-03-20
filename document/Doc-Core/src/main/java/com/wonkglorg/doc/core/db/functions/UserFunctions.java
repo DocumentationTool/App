@@ -50,12 +50,13 @@ public class UserFunctions {
      * @param userId   the user to add
      * @param groupId  the group to add them to
      */
-    public static void addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
+    public static boolean addUserToGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("INSERT INTO UserGroups(user_id, group_id) VALUES(?,?)")) {
             statement.setString(1, userId.id());
             statement.setString(2, groupId.id());
             statement.executeUpdate();
+            return true;
         } catch (Exception e) {
             String errorResponse = "Failed to add user '%s' to group '%s'".formatted(userId, groupId);
             log.error(errorResponse, e);
@@ -65,18 +66,19 @@ public class UserFunctions {
         }
     }
 
-    public static void removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
+    public static boolean removeUserFromGroup(RepositoryDatabase database, UserId userId, GroupId groupId) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("DELETE FROM UserGroups WHERE user_id = ? and group_id = ?")) {
             statement.setString(1, userId.id());
             statement.setString(2, groupId.id());
             statement.executeUpdate();
+            return true;
         } catch (Exception e) {
-            String errorReponse = "Error in repository '%s' while removing user '%s' from group '%s'".formatted(database.getRepoProperties().getId(),
+            String errorResponse = "Error in repository '%s' while removing user '%s' from group '%s'".formatted(database.getRepoProperties().getId(),
                     userId,
                     groupId);
-            log.error(errorReponse, e);
-            throw new CoreSqlException(errorReponse, e);
+            log.error(errorResponse, e);
+            throw new CoreSqlException(errorResponse, e);
         } finally {
             closeConnection(connection);
         }
@@ -289,5 +291,26 @@ public class UserFunctions {
 
 
         throw new RuntimeException("Group deletion not implemented yet");
+    }
+
+    /**
+     * Renames a group
+     *
+     * @param database
+     * @param groupId
+     * @param newName
+     */
+    public static void renameGroup(RepositoryDatabase database, GroupId groupId, String newName) {
+        Connection connection = database.getConnection();
+        try (var statement = connection.prepareStatement("UPDATE Groups SET group_name = ? WHERE group_id = ?")) {
+            statement.setString(1, newName);
+            statement.setString(2, groupId.id());
+            statement.executeUpdate();
+        } catch (Exception e) {
+            log.error("Failed to rename group", e);
+        } finally {
+            closeConnection(connection);
+
+        }
     }
 }
