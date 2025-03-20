@@ -1,5 +1,8 @@
 Jenkins:
 http://5.75.149.191:8081
 
+Tomcat:
+http://5.75.149.191:8082
+
 Swagger:
 http://5.75.149.191:8080/swagger-ui/index.html

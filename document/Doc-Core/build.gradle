@@ -1,5 +1,7 @@
 description = "Core Functionality of the Application"
 
+apply plugin: 'war'
+
 dependencies {
     //database
     implementation 'com.zaxxer:HikariCP:5.1.0'
