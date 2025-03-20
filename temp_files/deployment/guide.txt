@@ -28,6 +28,9 @@ openjdk version "17.0.13" 2024-10-15
 OpenJDK Runtime Environment (build 17.0.13+11-Debian-2)
 OpenJDK 64-Bit Server VM (build 17.0.13+11-Debian-2, mixed mode, sharing)
 
+install gradle:
+sudo apt update
+sudo apt install gradle -y
 
 
 
@@ -42,6 +45,12 @@ deploy to container
 pipeline
 git
 github
+
+
+
+link gradle to jenkins:
+sudo nano /etc/default/jenkins
+PATH=$PATH:/usr/local/bin:/opt/gradle/gradle-8.4/bin
 
 
 
@@ -88,3 +97,5 @@ sudo nano /opt/tomcat/webapps/manager/META-INF/context.xml
          allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
   <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.Csr>
 </Context>
+
+//todo jenkins causing issues with gradle, update version maybe?
