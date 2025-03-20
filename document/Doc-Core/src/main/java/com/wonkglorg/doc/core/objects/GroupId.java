@@ -1,5 +1,7 @@
 package com.wonkglorg.doc.core.objects;
 
+import java.util.Objects;
+
 /**
  * A groups unique identifier
  */
@@ -32,5 +34,18 @@ public class GroupId implements Identifyable{
 	@Override
 	public String id() {
 		return id;
+	}
+
+
+	@Override
+	public boolean equals(Object o) {
+		if (o == null || getClass() != o.getClass()) return false;
+		GroupId groupId = (GroupId) o;
+		return Objects.equals(id, groupId.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hashCode(id);
 	}
 }

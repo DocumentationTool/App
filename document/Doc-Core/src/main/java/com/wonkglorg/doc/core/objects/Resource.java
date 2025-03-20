@@ -65,7 +65,7 @@ public final class Resource {
     }
 
     public Resource(Path resourcePath, String creator, RepoId repoId, String category, Set<TagId> tags, String data) {
-        this(resourcePath, LocalDateTime.now(), creator, LocalDateTime.now(), creator, repoId, tags, PermissionType.EDIT, category, data);
+        this(resourcePath, LocalDateTime.now(), creator,  LocalDateTime.now(), creator, repoId, tags, PermissionType.EDIT, category, data);
     }
 
 
