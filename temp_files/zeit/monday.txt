@@ -20,3 +20,6 @@ Added Missing REST endpoints and adjusted rest endpoint parameters for further c
 
 18:00-22:00
 Finished REST endpoints and fixed some rest related bugs
+
+22:00-23:00
+Setting up jenkins deployment pipeline, setting up linux server
