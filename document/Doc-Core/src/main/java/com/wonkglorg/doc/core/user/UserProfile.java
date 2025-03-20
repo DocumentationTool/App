@@ -7,7 +7,6 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,16 +19,18 @@ public class UserProfile {
     private final UserId id;
     private final String passwordHash;
     private final Set<Permission<UserId>> permissionNodes;
-    private final Set<Role> roles;
+    private final Set<Role> roles = new HashSet<>();
     private final Set<GroupId> groups = new HashSet<>();
 
-    public UserProfile(UserId id, String passwordHash, Set<Permission<UserId>> permissionNodes, Set<Role> roles) {
+    public UserProfile(UserId id, String password, Set<Permission<UserId>> permissionNodes, Set<Role> roles, Set<GroupId> groups) {
         this.id = id;
         this.permissionNodes = permissionNodes;
-        this.roles = roles;
-        this.passwordHash = passwordHash;
+        this.roles.addAll(roles);
+        //todo:jmd hash it otherwise people gonna be mad
+        this.passwordHash = password;
+        this.groups.addAll(groups);
     }
-    
+
     public List<Resource> getAllowedResources(List<Resource> resources) {
         return resources;
     }

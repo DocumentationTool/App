@@ -12,6 +12,7 @@ import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.exception.client.TagExistsException;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
+import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -24,14 +25,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.AntPathMatcher;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
  * Represents the database object for a defined repository
  */
 @SuppressWarnings("UnusedReturnValue")
-public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> implements GroupCalls {
+public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> implements GroupCalls, UserCalls {
 
     private static final Logger log = LoggerFactory.getLogger(RepositoryDatabase.class);
     /**
@@ -386,24 +390,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
         resources.forEach(resourceCache::remove);
     }
 
-    /**
-     * Creates a new user in the database
-     *
-     * @param userId   the username of the user (does not validate if the user already exists that should be done beforehand)
-     * @param password the password of the user
-     * @return true if the user was created, false otherwise
-     */
-    public boolean createUser(UserId userId, String password) throws CoreSqlException {
-        log.info("Adding user '{}' in repo '{}'", userId, repoProperties.getId());
-
-        boolean isAdded = UserFunctions.addUser(this, userId, password, null);
-
-        if (isAdded) {
-            userProfiles.put(userId, new UserProfile(userId, password, new HashSet<>(), new HashSet<>()));
-        }
-        return isAdded;
-    }
-
     public List<UserProfile> getUsersFromGroup(GroupId groupId) {
         List<UserProfile> profiles = new ArrayList<>();
         groupUsers.get(groupId).forEach(userId -> profiles.add(userProfiles.get(userId)));
@@ -416,40 +402,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
         return groups;
     }
 
-    public List<UserProfile> getUsers(UserId userId) {
-        log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
-        if (userId.isAllUsers()) {
-            return new ArrayList<>(userProfiles.values());
-        }
-
-        List<UserProfile> profiles = new ArrayList<>();
-        UserProfile profile = userProfiles.get(userId);
-        if (profile != null) {
-            profiles.add(profile);
-        }
-        return profiles;
-    }
-
     public List<UserProfile> getAllUsers() {
         log.info("Finding all users in repo '{}'.", repoProperties.getId());
         List<UserProfile> profiles = new ArrayList<>();
         profiles.addAll(userProfiles.values());
         return profiles;
-    }
-
-    /**
-     * Deletes a user from the database
-     *
-     * @param userId the user to delete
-     * @return true if the user was deleted, false otherwise
-     */
-    public boolean deleteUser(UserId userId) throws CoreSqlException {
-        log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
-        var wasDeleted = UserFunctions.deleteUser(this, userId);
-        if (wasDeleted) {
-            userProfiles.remove(userId);
-        }
-        return wasDeleted;
     }
 
     public RepoId getRepoId() {
@@ -541,5 +498,47 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
             groups.add(group);
         }
         return groups;
+    }
+
+    @Override
+    public boolean addUser(RepoId repoId, UserProfile user) throws CoreSqlException {
+        log.info("Adding user '{}' in repo '{}'", user.getId(), repoProperties.getId());
+
+        boolean isAdded = UserFunctions.addUser(this, user.getId(), user.getPasswordHash(), null);
+
+        if (isAdded) {
+            userProfiles.put(user.getId(), user);
+        }
+        return isAdded;
+    }
+
+    @Override
+    public boolean removeUser(RepoId repoId, UserId userId) throws CoreSqlException {
+        log.info("Removing user '{}' in repo '{}'.", userId, repoProperties.getId());
+        var wasDeleted = UserFunctions.deleteUser(this, userId);
+        if (wasDeleted) {
+            userProfiles.remove(userId);
+        }
+        return wasDeleted;
+    }
+
+    @Override
+    public List<UserProfile> getUsers(RepoId repoId, UserId userId) {
+        log.info("Finding user '{}' in repo '{}'.", userId, repoProperties.getId());
+        if (userId.isAllUsers()) {
+            return new ArrayList<>(userProfiles.values());
+        }
+
+        List<UserProfile> profiles = new ArrayList<>();
+        UserProfile profile = userProfiles.get(userId);
+        if (profile != null) {
+            profiles.add(profile);
+        }
+        return profiles;
+    }
+
+    @Override
+    public boolean updateUser(RepoId repoId, UserId userId, UserProfile user) {
+        return false;
     }
 }

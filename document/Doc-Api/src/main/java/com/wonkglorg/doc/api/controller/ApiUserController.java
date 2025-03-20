@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
 
@@ -57,16 +59,39 @@ public class ApiUserController {
         }
     }
 
+
     @Operation(summary = "Adds a new user", description = "Adds a new user to the system. If a repository is given, only adds the user to that repository. If none is given, adds the user to all repositories.")
     @PostMapping("/add")
     public ResponseEntity<RestResponse<Void>> addUser(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
                                                       @Parameter(description = "The user's id.") @RequestParam("userId") String userId,
-                                                      @Parameter(description = "The user's password.") @RequestParam("password") String password) {
+                                                      @Parameter(description = "The user's password.") @RequestParam("password") String password,
+                                                      @Parameter(description = "The user's group.") @RequestParam(value = "groupIds", required = false) Set<String> groupIds) {
         try {
-            userService.createUser(RepoId.of(repoId), UserId.of(userId), password);
+            if (groupIds == null) {
+                groupIds = Set.of();
+            }
+            Set<GroupId> groupIdSet = groupIds.stream().map(GroupId::of).collect(Collectors.toSet());
+
+            userService.addUser(RepoId.of(repoId), new UserProfile(UserId.of(userId), password, Set.of(), Set.of(), groupIdSet));
             return RestResponse.<Void>success("Added user '%s' to repo '%s".formatted(userId, repoId), null).toResponse();
         } catch (
                 CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        } catch (Exception e) {
+            log.error("Error while checking edited state ", e);
+            return RestResponse.<Void>error(e.getMessage()).toResponse();
+        }
+    }
+
+    @Operation(summary = "Updates a User", description = "Not implemented yet")
+    @PostMapping("/edit")
+    public ResponseEntity<RestResponse<Void>> editUser() {
+        try {
+            //todo:jmd implement
+            //userService.updateUser(RepoId.of(null), UserId.of(null));
+            throw new ClientException("Not implemented yet");
+            //return RestResponse.<Void>success("Updated user '%s' from repo '%s", null).toResponse();//.formatted(userId, repoId), null).toResponse();
+        } catch (ClientException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while checking edited state ", e);
@@ -79,10 +104,9 @@ public class ApiUserController {
     public ResponseEntity<RestResponse<Void>> deleteUser(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
                                                          @Parameter(description = "The users id to remove.") @RequestParam("userId") String userId) {
         try {
-            userService.deleteUser(RepoId.of(repoId), UserId.of(userId));
+            userService.removeUser(RepoId.of(repoId), UserId.of(userId));
             return RestResponse.<Void>success("Deleted user '%s' from repo '%s".formatted(userId, repoId), null).toResponse();
-        } catch (
-                CoreException e) {//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+        } catch (ClientException e) {
             return RestResponse.<Void>error(e.getMessage()).toResponse();
         } catch (Exception e) {
             log.error("Error while checking edited state ", e);

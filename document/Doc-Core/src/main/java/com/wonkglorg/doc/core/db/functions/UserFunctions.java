@@ -12,9 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class UserFunctions {
     private static final Logger log = LoggerFactory.getLogger(UserFunctions.class);
@@ -109,12 +107,12 @@ public class UserFunctions {
         }
     }
 
-    public static List<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
+    public static Set<GroupId> getGroupsFromUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (var statement = connection.prepareStatement("SELECT group_id FROM UserGroups WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
-                List<GroupId> groups = new ArrayList<>();
+                Set<GroupId> groups = new HashSet<>();
                 while (rs.next()) {
                     groups.add(GroupId.of(rs.getString("group_id")));
                 }
@@ -184,7 +182,8 @@ public class UserFunctions {
                     String passwordHash = rs.getString("password_hash");
                     var userPermissions = PermissionFunctions.getPermissionsForUser(database, UserId.of(userId));
                     var userRoles = PermissionFunctions.getRolesForUser(database, UserId.of(userId));
-                    users.add(new UserProfile(UserId.of(userId), passwordHash, userPermissions, userRoles));
+                    var groups = getGroupsFromUser(database, UserId.of(userId));
+                    users.add(new UserProfile(UserId.of(userId), passwordHash, userPermissions, userRoles, groups));
                 }
                 return users;
             }
@@ -210,7 +209,8 @@ public class UserFunctions {
                     String passwordHash = rs.getString("password_hash");
                     var userPermissions = PermissionFunctions.getPermissionsForUser(database, userId);
                     var userRoles = PermissionFunctions.getRolesForUser(database, userId);
-                    return new UserProfile(userId, passwordHash, userPermissions, userRoles);
+                    var groups = getGroupsFromUser(database, userId);
+                    return new UserProfile(userId, passwordHash, userPermissions, userRoles, groups);
                 }
                 return null;
             }
