@@ -1,12 +1,9 @@
 package com.wonkglorg.doc.api.service;
 
-import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidGroupException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
-import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
@@ -21,12 +18,14 @@ import java.util.List;
 
 @Component
 @Service
-public class UserService implements GroupCalls, UserCalls {
+public class UserService implements UserCalls {
 
     private final RepoService repoService;
+    private final GroupService groupService;
 
-    public UserService(@Lazy RepoService repoService) {
+    public UserService(@Lazy RepoService repoService, @Lazy GroupService groupService) {
         this.repoService = repoService;
+        this.groupService = groupService;
     }
 
     /**
@@ -96,7 +95,7 @@ public class UserService implements GroupCalls, UserCalls {
         }
 
         for (GroupId groupId : user.getGroups()) {
-            if (!groupExists(repoId, groupId)) {
+            if (!groupService.groupExists(repoId, groupId)) {
                 throw new ClientException("Group with id '%s' does not exist".formatted(groupId));
             }
         }
@@ -183,31 +182,5 @@ public class UserService implements GroupCalls, UserCalls {
         }
     }
 
-    public boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException {
-        repoService.validateRepoId(repoId);
-        return repoService.getRepo(repoId).getDatabase().groupExists(groupId);
-    }
 
-    @Override
-    public boolean addGroup(RepoId repoId, Group group) throws InvalidRepoException, CoreException, InvalidGroupException {
-        repoService.validateRepoId(repoId);
-        if (groupExists(repoId, group.getId())) {
-            throw new InvalidGroupException("Group with id '%s' already exists in '%s'".formatted(group.getId(), repoId));
-        }
-        return repoService.getRepo(repoId).getDatabase().addGroup(repoId, group);
-    }
-
-    @Override
-    public boolean removeGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException, InvalidGroupException {
-        repoService.validateRepoId(repoId);
-        if (!groupExists(repoId, groupId)) {
-            throw new InvalidGroupException("Group with id '%s' does not exist".formatted(groupId));
-        }
-        return repoService.getRepo(repoId).getDatabase().removeGroup(repoId, groupId);
-    }
-
-    public List<Group> getGroups(RepoId repoId, GroupId groupId) throws InvalidRepoException {
-        repoService.validateRepoId(repoId);
-        return repoService.getRepo(repoId).getDatabase().getGroups(repoId, groupId);
-    }
 }
