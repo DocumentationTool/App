@@ -1,10 +1,5 @@
-export interface Tag {
-  tagId: { id: string };
-  tagName: string;
-}
-
 export interface ApiResponseTags {
-  message: string;
-  error: string;
-  content: Tag[];
+  message: string | null;
+  error: string | null;
+  content: Record<string, string>;
 }

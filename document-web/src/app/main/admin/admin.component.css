@@ -1,47 +1,42 @@
 .container {
-  max-width: 400px;
+  max-width: 600px;
   margin: auto;
   padding: 20px;
   text-align: center;
 }
 
-ul {
-  list-style: none;
-  padding: 0;
+h2 {
+  font-size: 24px;
+  margin-bottom: 20px;
+  color: #333;
 }
 
-li {
+.repo-buttons {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px;
-  border-bottom: 1px solid #ccc;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
 }
 
-.button-group {
-  display: flex;
-  gap: 5px;
-}
-
-.delete {
-  padding: 5px 10px;
-  border: none;
-  cursor: pointer;
-}
-
-.delete:hover {
-  background-color: #ff6961;
+.repo-btn {
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: #4CAF50; /* Grüne Farbe */
   color: white;
-}
-
-.add, .edit {
-  padding: 5px 10px;
   border: none;
+  border-radius: 5px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-.add:hover, .edit:hover {
-  background-color: var(--greenColor);
-  color: white;
+.repo-btn:hover {
+  background-color: #45a049; /* Dunkleres Grün beim Hover */
 }
 
+.repo-btn:active {
+  background-color: #3e8e41; /* Noch dunkleres Grün bei Aktivierung */
+}
+
+.repo-btn:focus {
+  outline: none; /* Entfernt den Standard-Fokusrahmen */
+}

@@ -1,5 +1,9 @@
-import {Component} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {NavigationService} from '../service/navigation.service';
+import {ApiRepo} from '../../api/apiRepo';
+import {Repos} from '../../Model/apiResponseModelRepos';
+import {UserService} from '../service/userService';
+import {Router} from '@angular/router';
 
 @Component({
   selector: 'app-admin',
@@ -8,26 +12,26 @@ import {NavigationService} from '../service/navigation.service';
   templateUrl: './admin.component.html',
   styleUrl: './admin.component.css'
 })
-export class AdminComponent {
+export class AdminComponent implements OnInit{
 
-  constructor(public navigationService: NavigationService) {
-
+  constructor(private apiRepo: ApiRepo,
+              private userService: UserService,
+              private router: Router) {
   }
 
-  users = [{name: 'Alice'}, {name: 'Bob'}, {name: 'Charlie'}];
+  allRepos: Repos[] = []
 
-  deleteUser(user: any) {
-    console.log("delete user: ", user.name)
-    // this.users.splice(index, 1);
+  ngOnInit() {
+    this.apiRepo.getRepos().subscribe(
+      data => {
+        this.allRepos = data.content;
+      }
+    )
   }
 
-
-  editUser(user: any) {
-    console.log("edit user", user.name)
-    // const updatedName = prompt('Edit user name:', this.users[index].name);
-    // if (updatedName !== null && updatedName.trim() !== '') {
-    //   this.users[index].name = updatedName;
-    // }
+  selectRepo(repo: Repos) {
+    this.userService.selectedRepo.set(repo)
+    this.router.navigate(['/main/repo'])
   }
 
 }

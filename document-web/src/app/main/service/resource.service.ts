@@ -148,18 +148,20 @@ export class ResourceService {
     this.apiResource.getTag(repoId).subscribe(
       data => {
         this.allTags = [];
-        this.allRepoTagIds.set(data.content.map(tag => tag.tagId.id));
+        if (data.content) {
+          this.allRepoTagIds.set(Object.entries(data.content).map(([id]) => id));
+        }
       },
       error => {
-        console.error(error)
+        console.error(error);
       }
-    )
+    );
   }
 
   getAllTags() {
     this.apiResource.getTag(null).subscribe(
       data => {
-        this.allTags = data.content.map(tag => tag.tagId.id);
+        this.allTags = Object.entries(data.content).map(([id]) => id);
       },
       error => {
         console.error(error)
@@ -195,6 +197,7 @@ export class ResourceService {
               whiteListTags: string[], blacklistListTags: string[]) {
     this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
       data => {
+        console.log(data)
         this.searchResults.set(data);
       },
       error => {
@@ -202,29 +205,40 @@ export class ResourceService {
       }
     )
   }
-
+  // holt alle Tags, von einer Resource
   getResourceTags(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
                   whiteListTags: string[], blacklistListTags: string[]) {
     this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
-      data => { //alle Tags einer Resource in signal speichern
+      data => { // Alle Tags einer Resource in signal speichern
+        let tagsFound = false; // Flag, um zu prüfen, ob Tags vorhanden sind
         Object.values(data.content).forEach((resourcesArray) => {
           resourcesArray.forEach((resource) => {
-            Object.keys(resource.tags).forEach((tagId) => {
-              this.allResourceTagIds.update((tags) => {
-                if (!tags.includes(tagId)) {
-                  return [...tags, tagId]; // Neues Array mit dem neuen Tag zurückgeben
-                }
-                return tags;
+            if (resource.tags && resource.tags.length > 0) { // Überprüfen, ob Tags vorhanden sind
+              tagsFound = true; // Tags gefunden
+              resource.tags.forEach((tagId) => { // Direkt durch das tags-Array iterieren
+                this.allResourceTagIds.update((tags) => {
+                  if (!tags.includes(tagId)) {
+                    return [...tags, tagId]; // Neues Array mit dem neuen Tag zurückgeben
+                  }
+                  return tags;
+                });
               });
-            });
+            }
           });
         });
+
+        // Wenn keine Tags gefunden wurden, allResourceTagIds auf [] setzen
+        if (!tagsFound) {
+          this.allResourceTagIds.set([]);
+        }
       },
       error => {
-        console.error(error)
+        console.error(error);
       }
-    )
+    );
   }
+
+
 
   loadFileTree() {
     this.apiResource.loadFileTree(null, null, null, null, [], [], false, 1073741824).subscribe(

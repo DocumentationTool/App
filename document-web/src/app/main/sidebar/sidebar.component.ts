@@ -80,7 +80,7 @@ export class SidebarComponent {
       createdBy: createdBy,
       createdAt: "",
       category: "documents",
-      tags: {},
+      tags: [],
       lastModifiedBy: "",
       lastModifiedAt: "",
       isEditable: true,

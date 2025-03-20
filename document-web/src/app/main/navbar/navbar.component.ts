@@ -4,7 +4,6 @@ import {FormsModule} from '@angular/forms';
 import {ResourceService} from '../service/resource.service';
 import {Resources} from '../../Model/apiResponseFileTree';
 import {KeyValuePipe, NgClass, NgForOf} from '@angular/common';
-import {Tag} from '../../Model/apiResponseTags';
 
 @Component({
   selector: 'app-navbar',
@@ -65,7 +64,7 @@ export class NavbarComponent {
 
   splitTagsIntoRows(tags: string[] | undefined, itemsPerRow: number): string[][] {
     let result: string[][] = [];
-    if (tags){
+    if (tags) {
       for (let i = 0; i < tags.length; i += itemsPerRow) {
         result.push(tags.slice(i, i + itemsPerRow));
       }
@@ -75,7 +74,6 @@ export class NavbarComponent {
   }
 
   dynamicCheckBox(tag: string) {
-
     if (this.checkTag(tag) == "whiteList") {
       return "ri-check-line"
     }
@@ -86,9 +84,7 @@ export class NavbarComponent {
   }
 
   onSearchFocus() {
-    if (this.searchTerm.trim() !== '') {
-      this.isSearchActive = true;
-    }
+    this.isSearchActive = true;
     this.isTagFilterActive = false;
     this.searchInput.nativeElement.focus();
   }
@@ -102,9 +98,7 @@ export class NavbarComponent {
     } else {
       this.resourceService.getResource(this.searchTerm, null, null, null, this.whiteListTags, this.blackListTags);
     }
-    if (this.searchTerm.trim() !== '') {
-      this.isSearchActive = true;
-    }
+    this.isSearchActive = true;
   }
 
   get searchResults() {
@@ -132,7 +126,7 @@ export class NavbarComponent {
 
   @HostListener('document:keydown.enter', ['$event'])
   onPressEnter(event: KeyboardEvent) {
-    if (document.activeElement === this.searchInput.nativeElement){
+    if (document.activeElement === this.searchInput.nativeElement) {
       this.onSearchResource();
     }
   }

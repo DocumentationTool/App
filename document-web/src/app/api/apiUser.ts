@@ -1,5 +1,6 @@
 import {Injectable} from '@angular/core';
 import {HttpClient, HttpParams} from '@angular/common/http';
+import {ApiResponseUser} from '../Model/apiResponseUser';
 
 @Injectable({
   providedIn: 'root'
@@ -10,11 +11,10 @@ export class ApiUser {
 
   private baseUrl = 'http://localhost:8080/api/user';
 
-
-  removeUser(repoId: string, userId: string) {
-    const params = new HttpParams()
-      .set('repoId', repoId)
-      .set('userId', userId)
+  removeUser(repoId: string | undefined, userId: string) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (userId) params = params.set('path', userId);
     return this.http.put(this.baseUrl + "/remove", params);
   }
 
@@ -26,11 +26,34 @@ export class ApiUser {
     return this.http.put(this.baseUrl + "/add", params);
   }
 
-  getUser(repoId: string, userId: string | null) {
+  getUser(repoId: string | undefined, userId: string | null) {
     let params = new HttpParams()
-      .set('repoId', repoId)
-    if (userId) params = params.set('path', userId);
+    if (repoId) params = params.set('repoId', repoId);
+    if (userId) params = params.set('userId', userId);
 
-    return this.http.get(this.baseUrl + "/get", {params})
+    return this.http.get<ApiResponseUser>(this.baseUrl + "/get", {params})
+  }
+
+  removeUserGroup(repoId: string | undefined, userId: string) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (userId) params = params.set('path', userId);
+    return this.http.put(this.baseUrl + "/group/remove", params);
+  }
+
+  addUserGroup(repoId: string, userId: string, password: string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+      .set('password', password)
+    return this.http.put(this.baseUrl + "/group/add", params);
+  }
+
+  getUserGroup(repoId: string | undefined, userId: string | null) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId);
+    if (userId) params = params.set('userId', userId);
+
+    return this.http.get<ApiResponseUser>(this.baseUrl + "/group/get", {params})
   }
 }

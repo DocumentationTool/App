@@ -41,6 +41,11 @@ export class ResourceEditTagsComponent implements OnInit{
     this.tagIdsToAddWindow = false;
   }
 
+  selectRemoveTag(tagId: string) {
+    this.tagIdsToRemove += (this.tagIdsToRemove ? ';' : '') + tagId;
+    this.tagIdsToRemoveWindow = false
+  }
+
   openAddDropdown() {
     this.tagIdsToRemoveWindow = false;
     this.tagIdsToAddWindow = true;

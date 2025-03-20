@@ -16,13 +16,13 @@
     }
 
     <label>Tags to remove:</label>
-    <input name="removeTagId" type="text" [(ngModel)]="tagIdsToRemove" (focus)="openRemoveDropdown()"/>
+    <input name="removeTagId" type="text" [(ngModel)]="tagIdsToRemove" (focus)="openRemoveDropdown()" autocomplete="off"/>
 
     @if (tagIdsToRemoveWindow) {
       <div class="dropdown">
         <ul>
           @for (id of resourceService.allResourceTagIds(); track id) {
-            <li (click)="selectAddTag(id)">{{ id }}</li>
+            <li (click)="selectRemoveTag(id)">{{ id }}</li>
           }
         </ul>
       </div>

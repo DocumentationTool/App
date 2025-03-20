@@ -5,6 +5,7 @@ import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
 import {ViewComponent} from './main/view/view.component';
 import {EmptyPageComponent} from './main/empty-page/empty-page.component';
+import {RepoComponent} from './main/admin/repo/repo.component';
 
 export const routes: Routes = [
   {
@@ -22,6 +23,10 @@ export const routes: Routes = [
       {
         path: 'admin',
         component: AdminComponent,
+      },
+      {
+        path: 'repo',
+        component: RepoComponent,
       },
       {
         path: 'view',

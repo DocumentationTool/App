@@ -9,7 +9,7 @@ export class ApiRepo {
   constructor(private http: HttpClient) {
   }
 
-  private baseUrl = 'http://localhost:8080/api/repo/repository';
+  private baseUrl = 'http://localhost:8080/api/repo';
 
   //get all existing repos
   getRepos() {

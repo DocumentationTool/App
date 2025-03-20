@@ -1,19 +1,12 @@
 <div class="container">
-  <h2>User Management</h2>
+  <h2>Select a Repository</h2>
 
-  <!-- Users-Liste -->
-  <ul>
-    @for (user of users; track users) {
-      <li>
-        {{ user.name }}
-        <div>Group1</div>
-        <div class="button-group">
-          <button class="edit" (click)="editUser(user)"><i class="ri-edit-box-line"></i></button>
-          <button class="delete" (click)="deleteUser(user)"><i class="ri-delete-bin-line"></i></button>
-        </div>
-      </li>
+  <!-- Repos-List -->
+  <div class="repo-buttons">
+    @for (repos of allRepos; track repos) {
+      <button class="repo-btn" (click)="selectRepo(repos)">
+        {{ repos.id }}
+      </button>
     }
-  </ul>
-
-  <button class="add" (click)="navigationService.createNewUser()"><i class="ri-user-add-line"></i> Add User</button>
+  </div>
 </div>
