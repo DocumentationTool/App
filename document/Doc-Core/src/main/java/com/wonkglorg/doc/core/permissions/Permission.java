@@ -47,6 +47,11 @@ public class Permission<T extends Identifyable> {
         this.path = path;
         this.repoId = repoId;
     }
+    
+    
+    public T id() {
+        return id;
+    }
 
 
     public String getId() {

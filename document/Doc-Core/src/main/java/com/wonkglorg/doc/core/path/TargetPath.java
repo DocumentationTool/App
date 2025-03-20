@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core.path;
 
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * Represents a path to a target, can be either a normal path or an ant path (a path with wildcards)
@@ -78,5 +79,18 @@ public class TargetPath{
 		}
 		
 		return antPath == null ? path.toString() : antPath.toString();
+	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof TargetPath that)){
+			return false;
+		}
+		return Objects.equals(path, that.path) && Objects.equals(antPath, that.antPath);
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(path, antPath);
 	}
 }

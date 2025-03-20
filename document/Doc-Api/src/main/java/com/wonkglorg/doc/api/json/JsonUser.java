@@ -15,7 +15,7 @@ public class JsonUser {
     public JsonUser(UserProfile user) {
         this.userId = user.getId().id();
         user.getRoles().forEach(r -> roles.add(new JsonRole(r.roleID().id(), r.roleName())));
-        user.getPermissions().forEach(p -> permissions.add(new JsonPermission(p)));
+        user.getPermissions().values().forEach(p -> permissions.add(new JsonPermission(p)));
         user.getGroups().forEach(g -> groups.add(g.id()));
 
     }
