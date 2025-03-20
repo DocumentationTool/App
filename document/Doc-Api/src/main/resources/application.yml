@@ -7,6 +7,12 @@ doc:
           path: "/**"
         - origin: "http://localhost:4200"
           path: "/**"
+  git:
+    repositories:
+      - id: "testRepo1"
+        path: test-temp/git/repo1
+      - id: "testRepo2"
+        path: test-temp/git/repo2
 ---
 doc:
   git:
@@ -19,7 +25,7 @@ doc:
 spring:
   config:
     activate:
-      on-profile: '!prod'
+      on-profile: 'dev'
 ---
 doc:
   git:

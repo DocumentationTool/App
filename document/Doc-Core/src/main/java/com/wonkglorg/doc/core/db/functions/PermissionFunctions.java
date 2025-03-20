@@ -64,7 +64,7 @@ public class PermissionFunctions{
 			try(var rs = statement.executeQuery()){
 				List<Permission<GroupId>> permissions = new ArrayList<>();
 				while(rs.next()){
-					permissions.add(new Permission<>(new GroupId(rs.getString("group_id")),
+					permissions.add(new Permission<>(GroupId.of(rs.getString("group_id")),
 							PermissionType.valueOf(rs.getString("permission")),
 							new TargetPath(rs.getString("path")),
 							database.getRepoId()));

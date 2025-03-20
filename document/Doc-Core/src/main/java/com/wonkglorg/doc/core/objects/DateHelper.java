@@ -7,6 +7,9 @@ public class DateHelper {
     public static DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static LocalDateTime parseDateTime(String dateTime) {
+        if (dateTime == null) {
+            return null;
+        }
         return LocalDateTime.parse(dateTime, formatter);
     }
 

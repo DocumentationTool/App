@@ -10,7 +10,7 @@ public class UserId implements Identifyable {
     /**
      * A special id that represents all users
      */
-    public static final UserId ALL_USERS = new UserId("0000-0000-0000-0000");
+    public static final UserId ALL_USERS = new UserId("0000-0000-0000-0000-ALL_USERS");
     private final String id;
 
     private UserId(String id) {
