@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,11 @@ public class UserFunctions{
 	public static boolean addUser(RepositoryDatabase database, UserId userId, String password, String createdBy) throws CoreSqlException {
 		Connection connection = database.getConnection();
 		try(var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")){
-			statement.setString(1, userId.toString());
+			statement.setString(1, userId.id());
 			statement.setString(2, password);
 			statement.setString(3, createdBy);
 			statement.setString(4, createdBy);
+			statement.executeUpdate();
 			return true;
 		} catch(Exception e){
 			String errorResponse = "Failed to add user";
@@ -114,7 +116,7 @@ public class UserFunctions{
 			try(var rs = statement.executeQuery()){
 				List<GroupId> groups = new ArrayList<>();
 				while(rs.next()){
-					groups.add(new GroupId(rs.getString("group_id")));
+					groups.add(GroupId.of(rs.getString("group_id")));
 				}
 				return groups;
 			}
@@ -133,7 +135,7 @@ public class UserFunctions{
 			try(var rs = statement.executeQuery()){
 				while(rs.next()){
 					UserId userId = UserId.of(rs.getString("user_id"));
-					GroupId groupId = new GroupId(rs.getString("group_id"));
+					GroupId groupId = GroupId.of(rs.getString("group_id"));
 					userGroups.computeIfAbsent(userId, k -> new ArrayList<>()).add(groupId);
 					userIds.computeIfAbsent(groupId, k -> new ArrayList<>()).add(userId);
 				}
@@ -151,7 +153,7 @@ public class UserFunctions{
 			try(var rs = statement.executeQuery()){
 				List<Group> groups = new ArrayList<>();
 				while(rs.next()){
-					groups.add(new Group(new GroupId(rs.getString("group_id")),
+					groups.add(new Group(GroupId.of(rs.getString("group_id")),
 							rs.getString("group_name"),
 							rs.getString("created_by"),
 							rs.getString("creation_date"),
@@ -244,8 +246,33 @@ public class UserFunctions{
 		}
 	}
 	
-	public static boolean createGroup(RepositoryDatabase database, GroupId groupId) {
-		throw new RuntimeException("Group creation not implemented yet");
+	/**
+	 * Creates a new group
+	 *
+	 * @param database the database to create the group in
+	 * @param group the group to create
+	 * @return true if the group was created successfully
+	 * @throws CoreSqlException if the group could not be created
+	 */
+	public static boolean createGroup(RepositoryDatabase database, Group group) throws CoreSqlException {
+		Connection connection = database.getConnection();
+		try(var statement = connection.prepareStatement(
+				"INSERT INTO Groups(group_id, group_name, created_by, created_at,last_modified_by, last_modified_at) VALUES(?,?,?,?,?,?)")){
+			statement.setString(1, group.getId().id());
+			statement.setString(2, group.getName());
+			statement.setString(3, group.getCreatedBy());
+			statement.setTimestamp(4, Timestamp.valueOf(group.getCreationDate()));
+			statement.setString(5, group.getModifiedBy());
+			statement.setTimestamp(6, Timestamp.valueOf(group.getLastModified()));
+			statement.executeUpdate();
+			return true;
+		} catch(Exception e){
+			String errorResponse = "Failed to create group '%s'".formatted(group.getId());
+			log.error(errorResponse, e);
+			throw new CoreSqlException(errorResponse, e);
+		} finally{
+			closeConnection(connection);
+		}
 	}
 	
 	public static void deleteGroup(RepositoryDatabase database, GroupId groupId) {
