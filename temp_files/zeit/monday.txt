@@ -13,3 +13,13 @@ Alle Wrapper Klassen haben ein ALL Feld um zu kennzeichnen anstatt null zu nutze
 19.03.2025
 10:40-12:20
 Test Cases Eingebaut + Code Flow + Bug Fixes durh Text gefunden.
+
+20.03.2025
+13:10-15:00
+Added Missing REST endpoints and adjusted rest endpoint parameters for further customisation
+
+18:00-22:00
+Finished REST endpoints and fixed some rest related bugs
+
+22:00-23:00
+Setting up jenkins deployment pipeline, setting up linux server
