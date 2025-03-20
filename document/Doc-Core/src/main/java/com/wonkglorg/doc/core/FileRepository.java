@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Represents a managed repository
  */
-public class FileRepository{
+public class FileRepository implements AutoCloseable{
 	private static final Logger log = LoggerFactory.getLogger(FileRepository.class);
 	
 	/**
@@ -296,5 +296,12 @@ public class FileRepository{
 	
 	public RepoProperty getRepoProperties() {
 		return repoProperties;
+	}
+
+	@Override
+	public void close() throws Exception {
+		gitRepo.getGit().close();
+		dataDB.close();
+
 	}
 }

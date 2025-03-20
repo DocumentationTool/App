@@ -16,7 +16,7 @@ public class RepoId implements Identifyable {
     /**
      * A special id that represents all repos
      */
-    public static RepoId ALL_REPOS = new RepoId("0000-0000-0000-0000");
+    public static RepoId ALL_REPOS = new RepoId("0000-0000-0000-0000-ALL_REPOS");
 
     public static RepoId of(String id) {
         return id == null ? ALL_REPOS : new RepoId(id.strip());

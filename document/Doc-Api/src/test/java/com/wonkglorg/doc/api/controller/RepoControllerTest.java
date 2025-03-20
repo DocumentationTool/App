@@ -14,7 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 
 @SpringBootTest(webEnvironment = WebEnvironment.DEFINED_PORT, properties = "server.port=8080")
-class RepoControllerTest {
+class RepoControllerTest{
     
     @Autowired
     private TestRestTemplate restTemplate;

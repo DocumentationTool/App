@@ -154,15 +154,24 @@ public class GitRepo{
 			createInitialCommit();
 		}
 	}
-	
+
 	private void createInitialCommit() {
-		try{
-			git.commit().setMessage("Initial commit").setAllowEmpty(true) // Allows an empty commit
-			   .call();
-		} catch(GitAPIException e){
+		try {
+			//make sure branch exists
+			if (git.getRepository().findRef("HEAD") == null) {
+				//create a branch (e.g., 'master' or 'main') if it doesn't exist
+				git.branchCreate().setName("master").call();
+				git.checkout().setName("master").call();
+			}
+
+			// Now, we can safely commit
+			git.commit().setMessage("Initial commit").setAllowEmpty(true).call();
+		} catch (GitAPIException e) {
 			log.error("Failed to create initial commit", e);
-		}
-	}
+		} catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 	
 	/**
 	 * Pulls the latest changes from the remote if it exists otherwise does nothing
