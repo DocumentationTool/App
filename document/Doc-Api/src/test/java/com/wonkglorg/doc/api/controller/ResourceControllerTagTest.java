@@ -53,11 +53,11 @@ class ResourceControllerTagTest extends BaseIntegrationTest {
 
 
     private void getTag(String repoId) {
-        RestResponse<?> restResponse = request.getForObject("/api/resource/tag/get?repoId=%s".formatted(repoId), RestResponse.class);
+        RestResponse<?> restResponse = request.postForObject("/api/resource/tag/get?repoId=%s".formatted(repoId), null,RestResponse.class);
         if (restResponse.error() != null) {
             Assertions.fail("Resource insertion marked as no fail, failed with error: '%s'".formatted(restResponse.error()));
         } else {
-            Assertions.assertEquals("Tag '%s' in repo '%s' has name".formatted(repoId), restResponse.message());
+            Assertions.assertNull(restResponse.message());
         }
     }
 

@@ -138,7 +138,6 @@ public class DatabaseFunctions{
 					    affected_userID TEXT,
 					    affected_groupID TEXT,
 					    FOREIGN KEY (user_id) REFERENCES Users(user_id),
-					    FOREIGN KEY (permission_id) REFERENCES Permissions(permission_id),
 					    FOREIGN KEY (affected_userID) REFERENCES Users(user_id),
 					    FOREIGN KEY (affected_groupID) REFERENCES Groups(group_id)
 					)
@@ -212,8 +211,8 @@ public class DatabaseFunctions{
 					WHEN OLD.resource_path != NEW.resource_path
 					BEGIN
 					    -- Update related permissions
-					    UPDATE GroupPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
-					    UPDATE UserPermissions SET path = NEW.resource_path, last_modified_at = datetime('now') WHERE path = OLD.resource_path;
+					    UPDATE GroupPermissions SET path = NEW.resource_path WHERE path = OLD.resource_path;
+					    UPDATE UserPermissions SET path = NEW.resource_path WHERE path = OLD.resource_path;
 					    -- Update related tags
 					    UPDATE ResourceTags SET resource_path = NEW.resource_path WHERE resource_path = OLD.resource_path;
 					    -- Update indexed data

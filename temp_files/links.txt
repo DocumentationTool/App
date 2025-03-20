@@ -1,3 +1,5 @@
 Jenkins:
-
 http://5.75.149.191:8081
+
+Swagger:
+http://5.75.149.191:8080/swagger-ui/index.html

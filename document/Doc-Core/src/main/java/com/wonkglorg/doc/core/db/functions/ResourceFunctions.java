@@ -4,6 +4,7 @@ import com.wonkglorg.doc.core.db.DbHelper;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
+import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
@@ -239,7 +240,7 @@ public class ResourceFunctions {
      *
      * @param resource the resource to add
      */
-    public static void insertResource(RepositoryDatabase database, Resource resource) throws CoreException {
+    public static void insertResource(RepositoryDatabase database, Resource resource) throws CoreException, ClientException {
         Connection connection = database.getConnection();
         try {
             //todo:jmd make it 1 big transaction in case someting goes wrong.
@@ -256,7 +257,7 @@ public class ResourceFunctions {
             }
 
             if (resourceExists) {
-                throw new CoreException("Resource already exists");
+                throw new ClientException("Resource already exists");
             }
 
             String sqlResourceInsert = """

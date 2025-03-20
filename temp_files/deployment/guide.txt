@@ -36,5 +36,21 @@ sudo systemctl enable jenkins
 
 
 
+plugins:
+gradle
+deploy to container
+pipeline
+git
+github
+
+
+
+
+
+gradle additions:
+Add the line
+apply plugin: 'war'
+
+to create a war file when building
 
 
