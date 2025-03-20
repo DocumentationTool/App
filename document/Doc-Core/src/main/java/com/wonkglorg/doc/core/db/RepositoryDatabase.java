@@ -347,7 +347,7 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource> impleme
      * @param request the request to update the resource
      * @return the updated resource
      */
-    public Resource updateResourceData(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
+    public Resource updateResourceData(ResourceUpdateRequest request) throws CoreSqlException {
         log.info("Updating resource '{}' in repo '{}'", request.path(), repoProperties.getId());
         Resource resource = ResourceFunctions.updateResource(this, request);
         resourceCache.put(resource.resourcePath(), resource);

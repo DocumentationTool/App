@@ -1,6 +1,5 @@
 package com.wonkglorg.doc.api.controller;
 
-import ch.qos.logback.core.net.server.Client;
 import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.json.JsonResourceEdit;
@@ -152,8 +151,6 @@ public class ApiResourceController {
             } else {
                 tags = new HashSet<>();
             }
-
-            //todo:jmd if paths start with / they never count as "already existing"
             Resource resource = new Resource(Path.of(path), createdBy, RepoId.of(repoId), category, tags, content);
             resourceService.insertResource(resource);
             return RestResponse.<Void>success("Successfully inserted '%s' Resource!".formatted(path), null).toResponse();
