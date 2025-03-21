@@ -1,6 +1,11 @@
 plugins {
     id 'java'
-    id 'war'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) //toolchain for jenkins
+    }
 }
 
 description = "Defines all common build sources for the project modules."
