@@ -38,12 +38,7 @@ subprojects {
 }
 
 dependencies {
-    implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    implementation("org.springframework.boot:spring-boot-starter-cache")
-    implementation("org.springframework.boot:spring-boot-starter-test")
     implementation project('document:Doc-Api')
     implementation project('document:Doc-Core')
-    //implementation project('document-web')
+    implementation project('document-web')
 }
