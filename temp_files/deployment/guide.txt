@@ -100,3 +100,11 @@ sudo nano /opt/tomcat/webapps/manager/META-INF/context.xml
 </Context>
 
 //todo jenkins causing issues with gradle, update version maybe?
+
+
+add toolchain to buildsrc for jenkins:
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Specify Java version
+    }
+}
