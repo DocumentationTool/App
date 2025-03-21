@@ -1,7 +1,5 @@
 description = "Core Functionality of the Application"
 
-apply plugin: 'war'
-
 repositories {
     maven {
         url = uri("https://releases.groupdocs.com/java/repo/")
