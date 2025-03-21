@@ -100,12 +100,13 @@ class PermissionTest{
 	void userPermTakesPriorityOverGroup() {
 		Set<Permission<UserId>> userPermissions = Set.of(createUserPerm("path\\**", PermissionType.ADMIN));
 		Set<Permission<GroupId>> groupPermissions = Set.of(createGroupPerm("**", PermissionType.VIEW));
-		
-		List<Path> paths = List.of(Path.of("path/file.md"));
+
+		Path key = Path.of("path/file.md");
+		List<Path> paths = List.of(key);
 		
 		var map = filterPathsWithPermissions(userPermissions, groupPermissions, paths);
 		
-		assertEquals(PermissionType.ADMIN, map.get(Path.of("path\\file.md")));
+		assertEquals(PermissionType.ADMIN, map.get(key));
 	}
 	
 	private Permission<UserId> createUserPerm(String path, PermissionType type) {

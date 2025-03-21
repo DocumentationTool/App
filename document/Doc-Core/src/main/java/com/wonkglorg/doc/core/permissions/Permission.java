@@ -117,6 +117,7 @@ public class Permission<T extends Identifyable> {
      * @return the permission type
      */
     public static PermissionType permissionForPath(String path, Map<String, PermissionType> fullPathsUser, TreeMap<String, PermissionType> antPathsUser, Map<String, PermissionType> fullPathsGroup, TreeMap<String, PermissionType> antPathsGroup) {
+        path = TargetPath.normalizePath(path);
         if (fullPathsUser.containsKey(path)) {
             return fullPathsUser.get(path);
         } else if (fullPathsGroup.containsKey(path)) {
