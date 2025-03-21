@@ -4,7 +4,13 @@ plugins {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21) //toolchain for jenkins
+        languageVersion = JavaLanguageVersion.of(17) //toolchain for jenkins
+    }
+}
+
+repositories {
+    maven {
+        url = uri("https://adoptopenjdk.jfrog.io/artifactory/adoptopenjdk")
     }
 }
 
