@@ -20,7 +20,7 @@ dependencies {
     implementation 'org.springframework:spring-core:7.0.0-M2'
 
 // https://mvnrepository.com/artifact/com.groupdocs/groupdocs-parser
-    implementation 'com.groupdocs:groupdocs-parser:23.11'
+   // implementation 'com.groupdocs:groupdocs-parser:23.11'
 
 
     //git
