@@ -2,6 +2,15 @@ description = "Core Functionality of the Application"
 
 apply plugin: 'war'
 
+repositories {
+    maven {
+        url = uri("https://releases.groupdocs.com/java/repo/")
+    }
+    maven {
+        url = uri("https://repository.aspose.com/repo/")
+    }
+}
+
 dependencies {
     //database
     implementation 'com.zaxxer:HikariCP:5.1.0'
@@ -9,6 +18,10 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.12.1'
     //user for ant path matcher
     implementation 'org.springframework:spring-core:7.0.0-M2'
+
+// https://mvnrepository.com/artifact/com.groupdocs/groupdocs-parser
+    implementation 'com.groupdocs:groupdocs-parser:23.11'
+
 
     //git
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'

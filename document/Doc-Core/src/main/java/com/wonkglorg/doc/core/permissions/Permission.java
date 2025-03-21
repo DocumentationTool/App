@@ -1,6 +1,9 @@
 package com.wonkglorg.doc.core.permissions;
 
-import com.wonkglorg.doc.core.objects.*;
+import com.wonkglorg.doc.core.objects.GroupId;
+import com.wonkglorg.doc.core.objects.Identifyable;
+import com.wonkglorg.doc.core.objects.RepoId;
+import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import org.springframework.util.AntPathMatcher;
 
@@ -47,8 +50,8 @@ public class Permission<T extends Identifyable> {
         this.path = path;
         this.repoId = repoId;
     }
-    
-    
+
+
     public T id() {
         return id;
     }
@@ -154,7 +157,7 @@ public class Permission<T extends Identifyable> {
         TreeMap<String, PermissionType> antPathsUser = new TreeMap<>((a, b) -> Integer.compare(b.length(), a.length()));
 
         if (userPermissions == null && groupPermissions == null) {
-            return resourcePaths.stream().collect(Collectors.toMap(path -> path, path -> PermissionType.DENY));
+            return resourcePaths.stream().map(TargetPath::normalizePath).collect(Collectors.toMap(path -> path, path -> PermissionType.DENY));
         }
         // Then collect user permissions (ensuring they overwrite group permissions)
         if (userPermissions != null) {
@@ -168,7 +171,6 @@ public class Permission<T extends Identifyable> {
                 storePermission(permission, antPathsGroup, fullPathsGroup);
             }
         }
-
 
 
         Map<Path, PermissionType> result = new HashMap<>();
@@ -186,9 +188,10 @@ public class Permission<T extends Identifyable> {
 
     /**
      * Checks the access type of a user to a path
+     *
      * @param userPermissions  the permissions of the user (can be null)
      * @param groupPermissions the permissions of the groups the user is in (can be null)
-     * @param path the path
+     * @param path             the path
      * @return the permission type
      */
     public static PermissionType accessType(Set<Permission<UserId>> userPermissions,
