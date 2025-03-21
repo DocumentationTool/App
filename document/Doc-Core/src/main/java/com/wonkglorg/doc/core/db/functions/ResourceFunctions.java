@@ -9,6 +9,7 @@ import com.wonkglorg.doc.core.objects.DateHelper;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
+import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import org.slf4j.Logger;
@@ -40,7 +41,7 @@ public class ResourceFunctions {
     public static void deleteResource(RepositoryDatabase database, Path resourcePath) throws CoreSqlException {
         Connection connection = database.getConnection();
         try (PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")) {
-            statement.setString(1, resourcePath.toString());
+            statement.setString(1, TargetPath.normalizePath(resourcePath.toString()));
             statement.executeUpdate();
         } catch (Exception e) {
             log.error("Failed to delete resource", e);
@@ -65,7 +66,7 @@ public class ResourceFunctions {
             }
 
             for (Resource resource : resources) {
-                var tags = fetchTagsForResources(connection, resource.resourcePath().toString());
+                var tags = fetchTagsForResources(connection,  TargetPath.normalizePath(resource.resourcePath().toString()));
                 resource.setTags(tags.keySet());
             }
             return resources;
@@ -85,7 +86,7 @@ public class ResourceFunctions {
                 JOIN Tags ON ResourceTags.tag_id = Tags.tag_id
                 WHERE resource_path = ?""";
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, path);
+            statement.setString(1,  TargetPath.normalizePath(path));
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 TagId tagId = new TagId(resultSet.getString(1));
