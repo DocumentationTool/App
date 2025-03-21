@@ -4,6 +4,9 @@ plugins {
     id 'java'
 }
 
+apply plugin: 'war'
+
+
 group = 'com.wonkglorg'
 version = '0.0.1'
 

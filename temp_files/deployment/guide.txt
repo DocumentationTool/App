@@ -1,0 +1,101 @@
+Jenkins
+
+Setup:
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+sudo apt-get update
+sudo apt-get install jenkins
+
+
+
+Edit port:
+systemctl edit jenkins
+
+[Service]
+Environment="JENKINS_PORT=8081"
+
+
+
+Install Java:
+sudo apt update
+sudo apt install fontconfig openjdk-17-jre
+java -version
+openjdk version "17.0.13" 2024-10-15
+OpenJDK Runtime Environment (build 17.0.13+11-Debian-2)
+OpenJDK 64-Bit Server VM (build 17.0.13+11-Debian-2, mixed mode, sharing)
+
+install gradle:
+sudo apt update
+sudo apt install gradle -y
+
+
+
+Starting Jenkins on boot:
+sudo systemctl enable jenkins
+
+
+
+plugins:
+gradle
+deploy to container
+pipeline
+git
+github
+
+
+
+link gradle to jenkins:
+sudo nano /etc/default/jenkins
+PATH=$PATH:/usr/local/bin:/opt/gradle/gradle-8.4/bin
+
+
+
+
+
+gradle additions:
+Add the line
+apply plugin: 'war'
+
+to create a war file when building
+
+
+
+
+Tomcat:
+https://www.digitalocean.com/community/tutorials/how-to-install-apache-tomcat-10-on-ubuntu-20-04
+
+
+
+sudo useradd -m -d /opt/tomcat -U -s /bin/false tomcat
+
+wget https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.39/bin/apache-tomcat-10.1.39.tar.gz
+
+sudo tar xzvf apache-tomcat-10*tar.gz -C /opt/tomcat --strip-components=1
+
+
+sudo nano /opt/tomcat/conf/tomcat-users.xml
+
+Paste:
+<role rolename="manager-gui" />
+<user username="manager" password="manager_password" roles="manager-gui" />
+
+<role rolename="admin-gui" />
+<user username="admin" password="admin_password" roles="manager-gui,admin-gui" />
+
+
+sudo nano /opt/tomcat/webapps/manager/META-INF/context.xml
+
+...
+<Context antiResourceLocking="false" privileged="true" >
+  <CookieProcessor className="org.apache.tomcat.util.http.Rfc6265CookieProcessor"
+                   sameSiteCookies="strict" />
+<!--  <Valve className="org.apache.catalina.valves.RemoteAddrValve"
+         allow="127\.\d+\.\d+\.\d+|::1|0:0:0:0:0:0:0:1" /> -->
+  <Manager sessionAttributeValueClassNameFilter="java\.lang\.(?:Boolean|Integer|Long|Number|String)|org\.apache\.catalina\.filters\.Csr>
+</Context>
+
+//todo jenkins causing issues with gradle, update version maybe?

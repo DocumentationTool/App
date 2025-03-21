@@ -13,6 +13,9 @@ import java.util.List;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_REPO;
 
+//todo:jmd check if readonly repos really aren't accesible and block any attrmpzs to do so
+
+//how to properly check for updates on readonly repos when loading?
 /**
  * Rest Controller endpoint for API repository requests
  */

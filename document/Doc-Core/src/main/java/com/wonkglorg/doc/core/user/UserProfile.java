@@ -7,55 +7,61 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
  * The users profile
  */
-public class UserProfile {
-    private final Gson gson = new Gson();
-    private final UserId id;
-    private final String passwordHash;
-    private final Set<Permission<UserId>> permissionNodes;
-    private final Set<Role> roles;
-    private final Set<GroupId> groups = new HashSet<>();
-
-    public UserProfile(UserId id, String passwordHash, Set<Permission<UserId>> permissionNodes, Set<Role> roles) {
-        this.id = id;
-        this.permissionNodes = permissionNodes;
-        this.roles = roles;
-        this.passwordHash = passwordHash;
-    }
-    
-    public List<Resource> getAllowedResources(List<Resource> resources) {
-        return resources;
-    }
-
-    public UserId getId() {
-        return id;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public Set<Permission<UserId>> getPermissions() {
-        return permissionNodes;
-    }
-
-    public Set<GroupId> getGroups() {
-        return groups;
-    }
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    @Override
-    public String toString() {
-        return gson.toJson(this);
-    }
+public class UserProfile{
+	private final Gson gson = new Gson();
+	private final UserId id;
+	private final String passwordHash;
+	private final Map<String, Permission<UserId>> permissions;
+	private final Set<Role> roles = new HashSet<>();
+	private final Set<GroupId> groups = new HashSet<>();
+	
+	public UserProfile(UserId id, String password, Map<String, Permission<UserId>> permissionNodes, Set<Role> roles, Set<GroupId> groups) {
+		this.id = id;
+		this.permissions = permissionNodes;
+		this.roles.addAll(roles);
+		//todo:jmd hash it otherwise people gonna be mad
+		this.passwordHash = password;
+		this.groups.addAll(groups);
+	}
+	
+	public List<Resource> getAllowedResources(List<Resource> resources) {
+		return resources;
+	}
+	
+	public UserId getId() {
+		return id;
+	}
+	
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+	
+	public Map<String, Permission<UserId>> getPermissions() {
+		return permissions;
+	}
+	
+	public Set<Permission<UserId>> getPermissionsAsSet() {
+		return new HashSet<>(permissions.values());
+	}
+	
+	public Set<GroupId> getGroups() {
+		return groups;
+	}
+	
+	public Set<Role> getRoles() {
+		return roles;
+	}
+	
+	@Override
+	public String toString() {
+		return gson.toJson(this);
+	}
 }

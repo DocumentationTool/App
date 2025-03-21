@@ -3,9 +3,9 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.objects.RoleId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.PermissionType;
 import com.wonkglorg.doc.core.permissions.Role;
@@ -33,15 +33,15 @@ public class PermissionFunctions{
 	 * @param userId the user to get permissions for
 	 * @return a list of permissions for the user
 	 */
-	public static Set<Permission<UserId>> getPermissionsForUser(RepositoryDatabase database, UserId userId) throws CoreSqlException {
-		Connection connection = database.getConnection();
-		try(PreparedStatement statement = connection.prepareStatement("SELECT * FROM UserPermissions WHERE user_id = ?")){
+	public static Set<Permission<UserId>> getPermissionsForUser(RepositoryDatabase database, Connection connection, UserId userId)
+			throws CoreSqlException {
+		try(PreparedStatement statement = connection.prepareStatement("SELECT type,path,user_id FROM UserPermissions WHERE user_id = ?")){
 			statement.setString(1, userId.toString());
 			try(var rs = statement.executeQuery()){
 				Set<Permission<UserId>> permissions = new HashSet<>();
 				while(rs.next()){
 					permissions.add(new Permission<>(UserId.of(rs.getString("user_id")),
-							PermissionType.valueOf(rs.getString("permission")),
+							PermissionType.valueOf(rs.getString("type")),
 							new TargetPath(rs.getString("path")),
 							database.getRepoId()));
 				}
@@ -51,21 +51,28 @@ public class PermissionFunctions{
 			String errorResponse = "Failed to get permissions for user";
 			log.error(errorResponse, e);
 			throw new CoreSqlException(errorResponse, e);
-		} finally{
-			closeConnection(connection);
 		}
 		
 	}
 	
 	public static List<Permission<GroupId>> getPermissionsForGroup(RepositoryDatabase database, GroupId groupId) throws CoreSqlException {
 		Connection connection = database.getConnection();
-		try(var statement = connection.prepareStatement("SELECT * FROM GroupPermissions WHERE group_id = ?")){
+		try{
+			return getPermissionsForGroup(database, connection, groupId);
+		} finally{
+			closeConnection(connection);
+		}
+	}
+	
+	public static List<Permission<GroupId>> getPermissionsForGroup(RepositoryDatabase database, Connection connection, GroupId groupId)
+			throws CoreSqlException {
+		try(var statement = connection.prepareStatement("SELECT group_id,type,path FROM GroupPermissions WHERE group_id = ?")){
 			statement.setString(1, groupId.toString());
 			try(var rs = statement.executeQuery()){
 				List<Permission<GroupId>> permissions = new ArrayList<>();
 				while(rs.next()){
 					permissions.add(new Permission<>(GroupId.of(rs.getString("group_id")),
-							PermissionType.valueOf(rs.getString("permission")),
+							PermissionType.valueOf(rs.getString("type")),
 							new TargetPath(rs.getString("path")),
 							database.getRepoId()));
 				}
@@ -76,8 +83,6 @@ public class PermissionFunctions{
 			String errorResponse = "Failed to get permissions for group";
 			log.error(errorResponse, e);
 			throw new CoreSqlException(errorResponse, e);
-		} finally{
-			closeConnection(connection);
 		}
 	}
 	
