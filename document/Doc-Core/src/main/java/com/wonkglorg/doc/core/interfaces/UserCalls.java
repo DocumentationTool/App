@@ -26,6 +26,7 @@ public interface UserCalls{
 	
 	/**
 	 * Removes a user from the database
+	 *
 	 * @param repoId the id of the repository (can be null to remove the user from all repositories)
 	 * @param userId the user to remove
 	 * @return the response
@@ -85,4 +86,11 @@ public interface UserCalls{
 	 */
 	boolean updatePermissionForUser(RepoId repoId, Permission<UserId> permission) throws CoreException, ClientException;
 	
+	/**
+	 * Checks if a user exists in the database
+	 * @param repoId the repo to check
+	 * @param userId the user to check
+	 * @return weather it exists or not
+	 */
+	boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException;
 }

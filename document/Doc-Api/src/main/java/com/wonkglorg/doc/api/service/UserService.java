@@ -48,7 +48,7 @@ public class UserService implements UserCalls{
 		}
 		
 		UserId userId = UserId.of(user);
-		if(!repoService.getRepo(repoId).getDatabase().userExists(userId)){
+		if(!userExists(repoId, userId)){
 			throw new InvalidUserException("User '%s' does not exist".formatted(userId));
 		}
 		
@@ -56,7 +56,7 @@ public class UserService implements UserCalls{
 	}
 	
 	public void validateUserId(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-		if(!repoService.getRepo(repoId).getDatabase().userExists(userId)){
+		if(!repoService.getRepo(repoId).getDatabase().userFunctions().userExists(repoId, userId)){
 			throw new InvalidUserException("User '%s' does not exist in '%s'".formatted(userId, repoId));
 		}
 	}
@@ -70,20 +70,6 @@ public class UserService implements UserCalls{
 	 */
 	public UserId validateUserId(RepoId repoId, String user) throws ClientException {
 		return validateUserId(repoId, user, false);
-	}
-	
-	/**
-	 * Gets all users from a specified group
-	 *
-	 * @param groupId the group to look for
-	 * @return the users in the group
-	 */
-	public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
-		return repoService.getRepo(repoId).getDatabase().getUsersFromGroup(groupId);
-	}
-	
-	public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
-		return repoService.getRepo(repoId).getDatabase().getGroupsFromUser(userId);
 	}
 	
 	//---- User ----
@@ -112,13 +98,6 @@ public class UserService implements UserCalls{
 		return repoService.getRepo(repoId).getDatabase().userFunctions().removeUser(repoId, userId);
 	}
 	
-	/**
-	 * Gets a user by their id
-	 *
-	 * @param repoId the id of the repository
-	 * @param userId the id of the user
-	 * @return the user
-	 */
 	@Override
 	public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().userFunctions().getUsers(repoId, userId);
@@ -176,9 +155,10 @@ public class UserService implements UserCalls{
 		return repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
 	}
 	
-	public boolean userExists(RepoId repoId, UserId userId) throws InvalidRepoException {
-		List<UserProfile> users = repoService.getRepo(repoId).getDatabase().userFunctions().getUsers(repoId, userId);
-		return users != null && !users.isEmpty();
+	@Override
+	public boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
+		var users = repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
+		return users != null;
 	}
 	
 	/**
@@ -188,7 +168,7 @@ public class UserService implements UserCalls{
 	 * @param userId the user id
 	 */
 	public void validateUser(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-		if(!repoService.getRepo(repoId).getDatabase().userExists(userId)){
+		if(!userExists(repoId, userId)){
 			throw new InvalidUserException("User '%s' does not exist".formatted(userId));
 		}
 	}

@@ -12,6 +12,7 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
+import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -36,7 +37,7 @@ public class GroupService implements GroupCalls{
 	@Override
 	public boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException {
 		repoService.validateRepoId(repoId);
-		return repoService.getRepo(repoId).getDatabase().groupExists(groupId);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().groupExists(repoId, groupId);
 	}
 	
 	@Override
@@ -62,6 +63,7 @@ public class GroupService implements GroupCalls{
 		return repoService.getRepo(repoId).getDatabase().userFunctions().removeGroup(repoId, groupId);
 	}
 	
+	@Override
 	public List<Group> getGroups(RepoId repoId, GroupId groupId) throws InvalidRepoException {
 		repoService.validateRepoId(repoId);
 		return repoService.getRepo(repoId).getDatabase().userFunctions().getGroups(repoId, groupId);
@@ -157,5 +159,15 @@ public class GroupService implements GroupCalls{
 		}
 		
 		return repoService.getRepo(repoId).getDatabase().userFunctions().updatePermissionForGroup(repoId, permission);
+	}
+	
+	@Override
+	public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
+		return repoService.getRepo(repoId).getDatabase().userFunctions().getUsersFromGroup(repoId, groupId);
+	}
+	
+	@Override
+	public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
+		return repoService.getRepo(repoId).getDatabase().userFunctions().getGroupsFromUser(repoId, userId);
 	}
 }

@@ -16,7 +16,7 @@ import java.util.stream.Stream;
  * Represents a resource in the database
  */
 public final class Resource{
-	private TargetPath resourcePath;
+	private Path resourcePath;
 	private final LocalDateTime createdAt;
 	private final String createdBy;
 	private final LocalDateTime modifiedAt;
@@ -41,7 +41,7 @@ public final class Resource{
 					String category,
 					String data) {
 		Objects.requireNonNull(resourcePath, "A Resources, path cannot be null");
-		this.resourcePath = TargetPath.of(resourcePath);
+		this.resourcePath = resourcePath;
 		this.createdAt = createdAt;
 		this.createdBy = createdBy;
 		this.modifiedAt = modifiedAt;

@@ -2,7 +2,9 @@ package com.wonkglorg.doc.core.interfaces;
 
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
+import com.wonkglorg.doc.core.exception.ResourceException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
+import com.wonkglorg.doc.core.exception.client.InvalidPathException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidResourceException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
@@ -47,7 +49,7 @@ public interface ResourceCalls{
 	 * @param path The path object
 	 * @return The resource object
 	 */
-	boolean removeResource(RepoId repoId, Path path);
+	boolean removeResource(RepoId repoId, Path path) throws CoreException, InvalidRepoException, InvalidResourceException, InvalidPathException;
 	
 	/**
 	 * Get a resource based on the repoId and path
@@ -67,6 +69,16 @@ public interface ResourceCalls{
 	 * @return true if the resource exists false otherwise
 	 */
 	boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException;
+	
+	/**
+	 * Move a resource from one path to another
+	 * @param repoId The repoId object
+	 * @param oldPath The old path object
+	 * @param newPath The new path object
+	 * @return true if the resource was moved false otherwise
+	 * @throws InvalidRepoException if the repoId is invalid
+	 */
+	boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException;
 	
 	//------------------- Tags -------------------
 	
@@ -130,34 +142,7 @@ public interface ResourceCalls{
 	 * @return A boolean
 	 * @throws InvalidRepoException
 	 */
-	boolean isUserEditing(RepoId id, UserId userId) throws InvalidRepoException;
-	
-	/**
-	 * Check if a resource is being edited
-	 *
-	 * @param id The repoId object
-	 * @param path The path object
-	 * @return true if the resource is being edited
-	 * @throws InvalidResourceException
-	 * @throws InvalidRepoException
-	 */
-	boolean isBeingEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException;
-	
-	/**
-	 * Check if a file is currently being edited
-	 *
-	 * @param path the path to check
-	 * @return the user editing the file or null if no one is editing it
-	 */
-	UserId isBeingEdited(Path path);
-	
-	/**
-	 * Check if a user is currently editing a file
-	 *
-	 * @param userId the user to check
-	 * @return true if they are editing, false otherwise
-	 */
-	boolean isUserEditing(UserId userId);
+	boolean isUserEditing(RepoId id, UserId userId) throws InvalidRepoException, InvalidUserException;
 	
 	/**
 	 * Sets a user as editing a file locking it for others to edit at the same time
@@ -165,7 +150,7 @@ public interface ResourceCalls{
 	 * @param userId the user editing
 	 * @param path the path to the file
 	 */
-	void setCurrentlyEdited(UserId userId, Path path);
+	void setCurrentlyEdited(RepoId repoId, UserId userId, Path path) throws ClientException;
 	
 	/**
 	 * Get the resource being edited by a user
@@ -186,11 +171,4 @@ public interface ResourceCalls{
 	 * @throws InvalidRepoException
 	 */
 	void removeCurrentlyEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException;
-	
-	/**
-	 * Removes a user from editing a file
-	 *
-	 * @param userId the user to remove
-	 */
-	void removeCurrentlyEdited(UserId userId);
 }

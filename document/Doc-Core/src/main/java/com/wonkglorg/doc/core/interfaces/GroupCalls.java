@@ -11,6 +11,7 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
+import com.wonkglorg.doc.core.user.UserProfile;
 
 import java.util.List;
 
@@ -149,4 +150,8 @@ public interface GroupCalls{
 	 * @throws ClientException if the permission is invalid
 	 */
 	boolean updatePermissionForGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
+	
+	List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException;
+	
+	List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException;
 }

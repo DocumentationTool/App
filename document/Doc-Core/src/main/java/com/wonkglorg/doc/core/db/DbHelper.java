@@ -1,7 +1,6 @@
 package com.wonkglorg.doc.core.db;
 
 import com.wonkglorg.doc.core.exception.client.InvalidPathException;
-import com.wonkglorg.doc.core.path.TargetPath;
 
 import java.nio.file.Path;
 
@@ -70,7 +69,7 @@ public class DbHelper{
 	 * @param path the path to check
 	 * @return null if the path is allowed, otherwise a message explaining why it is not allowed
 	 */
-	public static void validatePath(TargetPath path) throws InvalidPathException {
+	public static void validatePath(Path path) throws InvalidPathException {
 		if(path == null){
 			throw new InvalidPathException("The path cannot be null");
 		}
@@ -90,13 +89,11 @@ public class DbHelper{
 			throw new InvalidPathException("Path '%s' cannot contain '%' duo to SQL issues".formatted(pathStr));
 		}
 		
-		
 		if(pathStr.startsWith("/") || pathStr.startsWith("\\")){
 			throw new InvalidPathException("Path '%s' cannot start with a '/'".formatted(pathStr));
 		}
 		
-		
-		if(path.getPath().isAbsolute()){
+		if(path.isAbsolute()){
 			throw new InvalidPathException("Path '%s' cannot be absolute".formatted(pathStr));
 		}
 		

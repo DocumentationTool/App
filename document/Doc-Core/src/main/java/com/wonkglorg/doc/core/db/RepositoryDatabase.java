@@ -5,34 +5,14 @@ import com.wonkglorg.doc.core.db.dbs.SqliteDatabase;
 import com.wonkglorg.doc.core.db.functions.DatabaseFunctions;
 import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
 import com.wonkglorg.doc.core.db.functions.UserFunctions;
-import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
-import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidTagException;
-import com.wonkglorg.doc.core.exception.client.InvalidUserException;
-import com.wonkglorg.doc.core.exception.client.TagExistsException;
-import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.RepoId;
-import com.wonkglorg.doc.core.objects.Resource;
-import com.wonkglorg.doc.core.objects.Tag;
-import com.wonkglorg.doc.core.objects.TagId;
-import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.doc.core.request.ResourceRequest;
-import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
-import com.wonkglorg.doc.core.user.Group;
-import com.wonkglorg.doc.core.user.UserProfile;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.AntPathMatcher;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Represents the database object for a defined repository
@@ -44,11 +24,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	private final UserFunctions userFunctions;
 	private final ResourceFunctions resourceFunctions;
-	
-	/**
-	 * The path matcher for this database
-	 */
-	private final AntPathMatcher pathMatcher = new AntPathMatcher();
 	/**
 	 * The properties of the repository
 	 */
@@ -109,107 +84,6 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	 */
 	public void rebuildFts() throws CoreSqlException {
 		DatabaseFunctions.rebuildFts(this);
-	}
-	
-	/**
-	 * Checks if a user exists in the database
-	 *
-	 * @param userId the user to check
-	 * @return weather it exists or not
-	 */
-	public boolean userExists(UserId userId) {
-		if(userId == null){
-			return false;
-		}
-		return userCache.containsKey(userId);
-	}
-	
-	//todo:jmd fix path issues each path is treated seperatly. not good
-	
-	/**
-	 * Checks if a group exists in the database
-	 *
-	 * @param groupId the group to check
-	 * @return weather it exists or not
-	 */
-	public boolean groupExists(GroupId groupId) {
-		if(groupId == null){
-			return false;
-		}
-		return groupCache.containsKey(groupId);
-	}
-	
-	/**
-	 * Checks if a tag exists in the database
-	 *
-	 * @param tag the tag to check
-	 * @return weather it exists or not
-	 */
-	public boolean tagExists(TagId tag) {
-		if(tag == null){
-			return false;
-		}
-		return tagCache.containsKey(tag);
-	}
-	
-	/**
-	 * Checks if a tag exists in the database
-	 *
-	 * @param tag the tag to check
-	 * @return weather it exists or not
-	 */
-	public boolean tagExists(Tag tag) {
-		if(tag == null){
-			return false;
-		}
-		Tag returnTag = tagCache.get(tag.tagId());
-		return returnTag != null && returnTag.equals(tag);
-	}
-	/**
-	 * Updates the path of a resource in the database
-	 *
-	 * @param oldPath the old path
-	 * @param newPath the new path
-	 */
-	public void updatePath(Path oldPath, Path newPath) throws CoreSqlException {
-		log.info("Moving resource '{}' to '{}' in repo '{}'", oldPath, newPath, repoProperties.getId());
-		ResourceFunctions.updatePath(this, oldPath, newPath);
-		Resource resource = resourceCache.remove(oldPath);
-		resource.setResourcePath(newPath);
-		resourceCache.put(newPath, resource);
-	}
-	
-	/**
-	 * Updates the data of a resource in the database
-	 *
-	 * @param request the request to update the resource
-	 * @return the updated resource
-	 */
-	public Resource updateResourceData(ResourceUpdateRequest request) throws CoreSqlException {
-		log.info("Updating resource '{}' in repo '{}'", request.path(), repoProperties.getId());
-		Resource resource = ResourceFunctions.updateResource(this, request);
-		resourceCache.put(resource.resourcePath(), resource);
-		return resource;
-	}
-
-	
-	public List<UserProfile> getUsersFromGroup(GroupId groupId) {
-		List<UserProfile> profiles = new ArrayList<>();
-		groupUsers.get(groupId).forEach(userId -> profiles.add(userCache.get(userId)));
-		return profiles;
-	}
-	
-	public List<Group> getGroupsFromUser(UserId userId) {
-		List<Group> groups = new ArrayList<>();
-		userGroups.get(userId).forEach(groupId -> groups.add(groupCache.get(groupId)));
-		return groups;
-	}
-	
-	public List<UserProfile> getAllUsers() {
-		log.info("Finding all users in repo '{}'.", repoProperties.getId());
-		List<UserProfile> profiles = new ArrayList<>();
-		profiles.addAll(userCache.values());
-		return profiles;
 	}
 	
 	public RepoId getRepoId() {

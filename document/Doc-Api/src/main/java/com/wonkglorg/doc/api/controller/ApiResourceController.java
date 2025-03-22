@@ -274,7 +274,7 @@ public class ApiResourceController{
 		try{
 			resourceService.setCurrentlyEdited(RepoId.of(repoId), UserId.of(userId), Path.of(path));
 			return RestResponse.<Void>success("Set '%s' as being edited by '%s'".formatted(path, repoId), null).toResponse();
-		} catch(CoreException e){ //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+		} catch(ClientException e){ //core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
 			log.error("Error while setting edited ", e);

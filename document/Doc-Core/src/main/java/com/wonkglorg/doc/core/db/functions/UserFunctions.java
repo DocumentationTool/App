@@ -3,6 +3,7 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
+import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
@@ -297,6 +298,11 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls{
 	}
 	
 	@Override
+	public boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
+		return false;
+	}
+	
+	@Override
 	public boolean groupExists(RepoId repoId, GroupId groupId) {
 		return groupCache.containsKey(groupId);
 	}
@@ -518,6 +524,16 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls{
 		} finally{
 			closeConnection(connection);
 		}
+	}
+	
+	@Override
+	public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
+		return List.of(userGroups.get(userId).stream().map(groupCache::get).toArray(Group[]::new));
+	}
+	
+	@Override
+	public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
+		return List.of(groupUsers.get(groupId).stream().map(userCache::get).toArray(UserProfile[]::new));
 	}
 	
 	/**
