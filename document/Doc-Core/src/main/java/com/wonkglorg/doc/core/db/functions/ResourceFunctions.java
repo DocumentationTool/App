@@ -13,7 +13,7 @@ import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.doc.core.path.TargetPath;
+import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 			}
 			
 			for(Resource resource : resources){
-				var tags = fetchTagsForResources(connection, TargetPath.normalizePath(resource.resourcePath().toString()));
+				var tags = fetchTagsForResources(connection, normalizePath(resource.resourcePath().toString()));
 				resource.setTags(tags.keySet());
 			}
 			return resources;
@@ -116,7 +116,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 				JOIN Tags ON ResourceTags.tag_id = Tags.tag_id
 				WHERE resource_path = ?""";
 		try(PreparedStatement statement = connection.prepareStatement(query)){
-			statement.setString(1, TargetPath.normalizePath(path));
+			statement.setString(1, normalizePath(path));
 			ResultSet resultSet = statement.executeQuery();
 			while(resultSet.next()){
 				TagId tagId = new TagId(resultSet.getString(1));
@@ -233,7 +233,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	 */
 	private Resource getResource(Connection connection, Path path) {
 		try(PreparedStatement statement = connection.prepareStatement("SELECT * FROM Resources WHERE resource_path = ?")){
-			statement.setString(1, path.toString());
+			statement.setString(1, normalizePath(path.toString()));
 			ResultSet resultSet = statement.executeQuery();
 			if(resultSet.next()){
 				var tags = fetchTagsForResources(connection, path.toString());
@@ -257,7 +257,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	private void updateResourceData(Connection connection, Path resourcePath, String data) throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("UPDATE FileData SET data = ? WHERE resource_path = ?")){
 			statement.setString(1, data);
-			statement.setString(2, resourcePath.toString());
+			statement.setString(2, normalizePath(resourcePath.toString()));
 			statement.executeUpdate();
 		} catch(Exception e){
 			String errorResponse = "Failed to update resource data at path %s".formatted(resourcePath);
@@ -276,7 +276,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	 */
 	private void updateResourceTagsSet(Connection connection, Path resourcePath, Set<TagId> tags) throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ?")){
-			statement.setString(1, resourcePath.toString());
+			statement.setString(1, normalizePath(resourcePath.toString()));
 			statement.executeUpdate();
 		} catch(Exception e){
 			String errorResponse = "Failed to update resource tags at path %s".formatted(resourcePath);
@@ -285,7 +285,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 		
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(var tag : tags){
-				statement.setString(1, resourcePath.toString());
+				statement.setString(1, normalizePath(resourcePath.toString()));
 				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
@@ -328,7 +328,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	private void updateResourceTagsRemove(Connection connection, Path resourcePath, Set<TagId> tags) throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM ResourceTags WHERE resource_path = ? AND tag_id = ?")){
 			for(var tag : tags){
-				statement.setString(1, resourcePath.toString());
+				statement.setString(1, normalizePath(resourcePath.toString()));
 				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
@@ -350,7 +350,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	private void updateResourceTagsAdd(Connection connection, Path resourcePath, Set<TagId> tags) throws CoreSqlException {
 		try(PreparedStatement statement = connection.prepareStatement("INSERT INTO ResourceTags(resource_path, tag_id) VALUES(?, ?)")){
 			for(var tag : tags){
-				statement.setString(1, resourcePath.toString());
+				statement.setString(1, normalizePath(resourcePath.toString()));
 				statement.setString(2, tag.id());
 				statement.addBatch();
 			}
@@ -360,7 +360,6 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 			throw new CoreSqlException(errorResponse, e);
 		}
 	}
-	
 	
 	/**
 	 * Batch inserts a list of resources into the database
@@ -513,8 +512,6 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 		}
 	}
 	
-
-	
 	@Override
 	public List<Resource> getResources(ResourceRequest request) throws CoreException {
 		Map<Path, Resource> resources = new HashMap<>(resourceCache);
@@ -639,7 +636,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 		log.info("Removing resource at path '{}' for '{}'", path, repoId);
 		Connection connection = database.getConnection();
 		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")){
-			statement.setString(1, TargetPath.normalizePath(path.toString()));
+			statement.setString(1, normalizePath(path.toString()));
 			statement.executeUpdate();
 			resourceCache.remove(path);
 			log.info("Resource at path '{}' for '{}' removed", path, repoId);

@@ -187,7 +187,6 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls{
 			log.info("User '{}' added to repo '{}'", user.getId(), repoId.id());
 			return true;
 		} catch(Exception e){
-			;
 			throw new CoreSqlException("Failed to add user", e);
 		} finally{
 			closeConnection(connection);

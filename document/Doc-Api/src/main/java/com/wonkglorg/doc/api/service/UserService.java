@@ -10,7 +10,6 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
-import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -156,9 +155,13 @@ public class UserService implements UserCalls{
 	}
 	
 	@Override
-	public boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-		var users = repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
-		return users != null;
+	public boolean userExists(RepoId repoId, UserId userId) throws InvalidRepoException {
+		try{
+			var users = repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
+			return users != null;
+		} catch(InvalidUserException e){
+			return false;
+		}
 	}
 	
 	/**

@@ -77,7 +77,7 @@ public class ApiUserController{
 			
 			userService.addUser(RepoId.of(repoId), new UserProfile(UserId.of(userId), password, new HashMap<>(), Set.of(), groupIdSet));
 			return RestResponse.<Void>success("Added user '%s' to repo '%s".formatted(userId, repoId), null).toResponse();
-		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+		} catch(ClientException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
 			log.error("Error while checking edited state ", e);

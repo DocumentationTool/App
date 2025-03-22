@@ -67,17 +67,11 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 			log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
 		}
 		log.info("Database initialized for repo '{}'", repoProperties.getId());
-		initializeCaches();
+		userFunctions.initialize();
+		resourceFunctions.initialize();
 	}
 	
-	//todo:jmd properly reinitialize the caches
 	
-	/**
-	 * Initializes the caches for the database
-	 */
-	private void initializeCaches() throws CoreSqlException {
-	
-	}
 	
 	/**
 	 * Rebuilds the entire FTS table to remove any unused records
