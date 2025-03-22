@@ -11,11 +11,13 @@ import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidResourceException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
+import com.wonkglorg.doc.core.interfaces.ResourceCalls;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.path.TargetPath;
 import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -27,18 +29,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
 @Service
-public class ResourceService{
+public class ResourceService implements ResourceCalls{
 	
 	private final RepoService repoService;
 	private final UserService userService;
 	private final PermissionService permissionService;
 	
-	public ResourceService(@Lazy RepoService repoService, UserService userService, PermissionService permissionService) {
+	public ResourceService(@Lazy RepoService repoService, @Lazy UserService userService, @Lazy PermissionService permissionService) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.permissionService = permissionService;
@@ -88,7 +89,7 @@ public class ResourceService{
 	 * @param path the path
 	 * @return true if the resource exists
 	 */
-	public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
+	public boolean resourceExists(RepoId repoId, TargetPath path) throws InvalidRepoException {
 		return repoService.getRepo(repoId).getDatabase().resourceExists(path);
 	}
 	
@@ -165,6 +166,7 @@ public class ResourceService{
 	 * @param resource the resource
 	 * @return the response
 	 */
+	@Override
 	public void insertResource(Resource resource) throws ClientException, CoreException {
 		RepoId id = repoService.validateRepoId(resource.repoId().id());
 		resource.setResourcePath(normalizePath(resource.resourcePath()));
@@ -180,6 +182,11 @@ public class ResourceService{
 		repo.addResourceAndCommit(resource);
 	}
 	
+	@Override
+	public boolean removeResource(RepoId repoId, Path path) {
+		return false;
+	}
+	
 	/**
 	 * Updates a resource in the database
 	 *
@@ -187,12 +194,11 @@ public class ResourceService{
 	 * @param path the path
 	 * @return the response
 	 */
-	public boolean removeResource(RepoId repoId, Path path)
+	public boolean removeResource(RepoId repoId, TargetPath path)
 			throws InvalidResourceException, CoreException, InvalidRepoException, InvalidPathException {
 		if(!repoService.isValidRepo(repoId)){
 			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
 		}
-		path = normalizePath(path);
 		
 		DbHelper.validatePath(path);
 		DbHelper.validateFileType(path);
@@ -227,7 +233,7 @@ public class ResourceService{
 	 * * @param pathTo the path to
 	 * @return the response
 	 */
-	public Resource move(UserId userId, RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) throws ClientException, CoreException {
+	public Resource move(UserId userId, TargetPath repoFrom, Path pathFrom, RepoId repoTo, TargetPath pathTo) throws ClientException, CoreException {
 		
 		repoService.validateRepoId(repoFrom);
 		repoService.validateRepoId(repoTo);
@@ -293,6 +299,11 @@ public class ResourceService{
 		return resource;
 	}
 	
+	@Override
+	public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
+		return false;
+	}
+	
 	/**
 	 * Check if a file is currently being edited
 	 *
@@ -300,7 +311,7 @@ public class ResourceService{
 	 * @param path the path to check
 	 * @return the user editing the file or null if not being edited
 	 */
-	public UserId getEditingUser(RepoId repoId, Path path) throws InvalidResourceException, InvalidRepoException {
+	public UserId getEditingUser(RepoId repoId, TargetPath path) throws InvalidResourceException, InvalidRepoException {
 		path = normalizePath(path);
 		repoService.validateRepoId(repoId);
 		validateResource(repoId, path);
@@ -314,7 +325,7 @@ public class ResourceService{
 	 * @param path the path to check
 	 * @return true if it is being edited, false otherwise
 	 */
-	public boolean isBeingEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
+	public boolean isBeingEdited(RepoId id, TargetPath path) throws InvalidResourceException, InvalidRepoException {
 		return getEditingUser(id, normalizePath(path)) != null;
 	}
 	
@@ -325,7 +336,7 @@ public class ResourceService{
 	 * @return true if they are editing, false otherwise
 	 */
 	public boolean isUserEditing(RepoId id, UserId userId) throws InvalidRepoException {
-		return repoService.getRepo(id).getDatabase().isUserEditing(userId);
+		return repoService.getRepo(id).getDatabase().resourceFunctions().isUserEditing(userId);
 	}
 	
 	/**
@@ -334,7 +345,7 @@ public class ResourceService{
 	 * @param userId the user editing
 	 * @param path the path to the file
 	 */
-	public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path)
+	public void setCurrentlyEdited(RepoId repoId, UserId userId, TargetPath path)
 			throws InvalidResourceException, CoreException, InvalidRepoException, InvalidUserException {
 		path = normalizePath(path);
 		repoService.validateRepoId(repoId);
@@ -354,7 +365,7 @@ public class ResourceService{
 	 * @throws InvalidRepoException if the repo does not exist
 	 * @throws InvalidResourceException if the resource does not exist
 	 */
-	private void validateResource(RepoId repoId, Path path) throws InvalidRepoException, InvalidResourceException {
+	private void validateResource(RepoId repoId, TargetPath path) throws InvalidRepoException, InvalidResourceException {
 		repoService.validateRepoId(repoId);
 		path = normalizePath(path);
 		if(!resourceExists(repoId, path)){
@@ -362,7 +373,7 @@ public class ResourceService{
 		}
 	}
 	
-    /**
+	/**
 	 * Removes a user from editing a file
 	 *
 	 * @param userId the user to remove
@@ -378,7 +389,7 @@ public class ResourceService{
 	 *
 	 * @param path the path to the file
 	 */
-	public void removeCurrentlyEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
+	public void removeCurrentlyEdited(RepoId id, TargetPath path) throws InvalidResourceException, InvalidRepoException {
 		repoService.validateRepoId(id);
 		path = normalizePath(path);
 		validateResource(id, path);
@@ -397,7 +408,7 @@ public class ResourceService{
 			throw new ClientException("Tag '%s' already exists in repository '%s'".formatted(tag.tagId(), repoId));
 		}
 		FileRepository repo = repoService.getRepo(repoId);
-		repo.getDatabase().createTag(tag);
+		repo.getDatabase().resourceFunctions().createTag(repoId, tag);
 	}
 	
 	public void removeTag(RepoId repoId, TagId tagId) throws CoreSqlException, InvalidRepoException, InvalidTagException {

@@ -20,6 +20,16 @@ import java.util.List;
 public interface GroupCalls{
 	
 	/**
+	 * Checks if a group exists in a repository.
+	 *
+	 * @param repoId The repository id.
+	 * @param groupId The group id.
+	 * @return True if the group exists, false otherwise.
+	 * @throws InvalidRepoException If the repository does not exist.
+	 */
+	boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException;
+	
+	/**
 	 * Checks if a group exists in a repo
 	 *
 	 * @param repoId the repo to check in
@@ -138,5 +148,5 @@ public interface GroupCalls{
 	 * @throws CoreException if the permission could not be updated
 	 * @throws ClientException if the permission is invalid
 	 */
-	boolean updatePermissionInGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
+	boolean updatePermissionForGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
 }

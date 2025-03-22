@@ -143,7 +143,7 @@ public class ApiUserController{
 																   @Parameter(description = "The new permission type.") @RequestParam("type") PermissionType type) {
 		try{
 			Permission<UserId> permission = new Permission<>(UserId.of(userId), type, TargetPath.of(path), RepoId.of(repoId));
-			userService.updatePermissionInUser(RepoId.of(repoId), permission);
+			userService.updatePermissionForUser(RepoId.of(repoId), permission);
 			return RestResponse.<Void>success("Updated permission '%s' with path '%s' to '%s' in '%s'".formatted(path, type, userId, repoId), null)
 							   .toResponse();
 		} catch(ClientException e){

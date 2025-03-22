@@ -24,6 +24,15 @@ public interface UserCalls{
 	 */
 	boolean addUser(RepoId repoId, UserProfile user) throws ClientException, CoreSqlException;
 	
+	/**
+	 * Removes a user from the database
+	 * @param repoId the id of the repository (can be null to remove the user from all repositories)
+	 * @param userId the user to remove
+	 * @return the response
+	 * @throws CoreSqlException if the user could not be removed
+	 * @throws InvalidRepoException if the repo is invalid
+	 * @throws InvalidUserException if the user is invalid
+	 */
 	boolean removeUser(RepoId repoId, UserId userId) throws CoreSqlException, InvalidRepoException, InvalidUserException;
 	
 	/**
@@ -34,6 +43,17 @@ public interface UserCalls{
 	 * @return a list of users
 	 */
 	List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException;
+	
+	/**
+	 * Gets a user from the database
+	 *
+	 * @param repoId the id of the repository
+	 * @param userId the id of the user
+	 * @return the user
+	 * @throws InvalidRepoException if the repo is invalid
+	 * @throws InvalidUserException if the user is invalid
+	 */
+	UserProfile getUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException;
 	
 	/**
 	 * Adds a permission to a group
@@ -63,6 +83,6 @@ public interface UserCalls{
 	 * @throws CoreException if the permission could not be updated
 	 * @throws ClientException if the permission is invalid
 	 */
-	boolean updatePermissionInUser(RepoId repoId, Permission<UserId> permission) throws CoreException, ClientException;
+	boolean updatePermissionForUser(RepoId repoId, Permission<UserId> permission) throws CoreException, ClientException;
 	
 }

@@ -1,6 +1,5 @@
 package com.wonkglorg.doc.api.service;
 
-import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
@@ -102,7 +101,7 @@ public class UserService implements UserCalls{
 			}
 		}
 		
-		return repoService.getRepo(repoId).getDatabase().addUser(repoId, user);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().addUser(repoId, user);
 		
 	}
 	
@@ -110,7 +109,7 @@ public class UserService implements UserCalls{
 	public boolean removeUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException, CoreSqlException {
 		repoService.validateRepoId(repoId);
 		validateUser(repoId, userId);
-		return repoService.getRepo(repoId).getDatabase().removeUser(repoId, userId);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().removeUser(repoId, userId);
 	}
 	
 	/**
@@ -122,44 +121,46 @@ public class UserService implements UserCalls{
 	 */
 	@Override
 	public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException {
-		return repoService.getRepo(repoId).getDatabase().getUsers(repoId, userId);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().getUsers(repoId, userId);
 	}
 	
 	@Override
-	public boolean addPermissionToUser(RepoId repoId, Permission<UserId> permission) throws CoreException, ClientException {
+	public boolean addPermissionToUser(RepoId repoId, Permission<UserId> permission) throws ClientException {
 		repoService.validateRepoId(repoId);
 		validateUser(repoId, permission.id());
-		if(repoService.getRepo(repoId).getDatabase().userHasPermission(permission.id(), permission.getPath())){
+		if(repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(), permission.getPath())){
 			throw new ClientException("Permission '%s' already exists for '%s' in '%s'".formatted(permission.getPath(), permission.id(), repoId));
 		}
-		return repoService.getRepo(repoId).getDatabase().addPermissionToUser(repoId, permission);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().addPermissionToUser(repoId, permission);
 	}
 	
 	@Override
-	public boolean removePermissionFromUser(RepoId repoId, UserId userId, TargetPath path) throws CoreException, ClientException {
+	public boolean removePermissionFromUser(RepoId repoId, UserId userId, TargetPath path) throws ClientException {
 		repoService.validateRepoId(repoId);
 		validateUser(repoId, userId);
-		if(!repoService.getRepo(repoId).getDatabase().userHasPermission(userId, path)){
+		if(!repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(userId, path)){
 			throw new ClientException("User '%s' does not have permission for path '%s'".formatted(userId, path));
 		}
-		return repoService.getRepo(repoId).getDatabase().removePermissionFromUser(repoId, userId, path);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().removePermissionFromUser(repoId, userId, path);
 	}
 	
 	@Override
-	public boolean updatePermissionInUser(RepoId repoId, Permission<UserId> permission) throws CoreException, ClientException {
+	public boolean updatePermissionForUser(RepoId repoId, Permission<UserId> permission) throws ClientException {
 		repoService.validateRepoId(repoId);
 		validateUser(repoId, permission.id());
 		
-		if(!repoService.getRepo(repoId).getDatabase().userHasPermission(permission.id(), permission.getPath())){
+		if(!repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(), permission.getPath())){
 			throw new ClientException("User '%s' does not have permission for path '%s'".formatted(permission.id(), permission.getPath()));
 		}
 		
-		if(repoService.getRepo(repoId).getDatabase().userHasPermission(permission.id(), permission.getPath(), permission.getPermission())){
+		if(repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(),
+				permission.getPath(),
+				permission.getPermission())){
 			throw new ClientException("User '%s' already has the permission '%s' for path '%s'".formatted(permission.id(),
 					permission.getPermission(),
 					permission.getPath().toString()));
 		}
-		return repoService.getRepo(repoId).getDatabase().updatePermissionInUser(repoId, permission);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().updatePermissionForUser(repoId, permission);
 	}
 	
 	/**
@@ -169,27 +170,15 @@ public class UserService implements UserCalls{
 	 * @param userId the id of the user
 	 * @return the user
 	 */
+	@Override
 	public UserProfile getUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
 		validateUser(repoId, userId);
-		return repoService.getRepo(repoId).getDatabase().getUsers(repoId, userId).get(0);
+		return repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
 	}
 	
 	public boolean userExists(RepoId repoId, UserId userId) throws InvalidRepoException {
-		List<UserProfile> users = repoService.getRepo(repoId).getDatabase().getUsers(repoId, userId);
+		List<UserProfile> users = repoService.getRepo(repoId).getDatabase().userFunctions().getUsers(repoId, userId);
 		return users != null && !users.isEmpty();
-	}
-	
-	/**
-	 * Validates if a user exists
-	 *
-	 * @param repoId the repo id
-	 * @param userId the user id
-	 * @return the user id
-	 */
-	public UserId validateUser(RepoId repoId, String userId) throws InvalidUserException, InvalidRepoException {
-		UserId id = UserId.of(userId);
-		validateUser(repoId, id);
-		return id;
 	}
 	
 	/**

@@ -1,6 +1,5 @@
 package com.wonkglorg.doc.api.controller;
 
-import com.wonkglorg.doc.api.service.FileService;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
