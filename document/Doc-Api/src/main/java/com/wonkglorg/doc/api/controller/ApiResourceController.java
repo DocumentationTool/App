@@ -12,6 +12,7 @@ import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
+import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
 import io.swagger.v3.oas.annotations.Operation;
@@ -165,7 +166,7 @@ public class ApiResourceController{
 			}
 			Resource resource = new Resource(Path.of(path), createdBy, RepoId.of(repoId), category, tags, content);
 			resourceService.insertResource(resource);
-			return RestResponse.<Void>success("Successfully inserted '%s' Resource!".formatted(path), null).toResponse();
+			return RestResponse.<Void>success("Successfully inserted '%s' Resource!".formatted(normalizePath(path)), null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){

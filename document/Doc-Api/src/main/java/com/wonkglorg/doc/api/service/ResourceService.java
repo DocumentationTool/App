@@ -16,6 +16,7 @@ import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
 import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
+import com.wonkglorg.doc.core.path.TargetPath;
 import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
@@ -149,7 +150,7 @@ public class ResourceService implements ResourceCalls{
 		DbHelper.validatePath(path);
 		DbHelper.validateFileType(path);
 		if(resourceExists(id, path)){
-			throw new ClientException("The resource '%s' already exists in repository '%s'".formatted(path, id));
+			throw new ClientException("The resource '%s' already exists in repository '%s'".formatted(normalizePath(path.toString()), id));
 		}
 		FileRepository repo = repoService.getRepo(id);
 		repo.checkTags(resource.getResourceTags());
@@ -173,11 +174,11 @@ public class ResourceService implements ResourceCalls{
 		DbHelper.validateFileType(path);
 		
 		if(!resourceExists(repoId, path)){
-			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
+			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(normalizePath(path.toString()), repoId));
 		}
 		
 		if(isBeingEdited(repoId, path)){
-			throw new ClientException("Resource '%s' in '%s' is currently being edited".formatted(path, repoId));
+			throw new ClientException("Resource '%s' in '%s' is currently being edited".formatted(normalizePath(path.toString()), repoId));
 		}
 		
 		FileRepository repo = repoService.getRepo(repoId);
@@ -187,7 +188,7 @@ public class ResourceService implements ResourceCalls{
 				Files.delete((repo.getRepoProperties().getPath().resolve(path)));
 				return false;
 			} catch(IOException e){
-				throw new CoreException("Failed to delete resource '%s'".formatted(path), e);
+				throw new CoreException("Failed to delete resource '%s'".formatted(normalizePath(path.toString())), e);
 			}
 		}
 		return true;
@@ -265,7 +266,7 @@ public class ResourceService implements ResourceCalls{
 		}
 		
 		if(isBeingEdited(id, path)){
-			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(path, id));
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(normalizePath(path.toString()), id));
 		}
 		
 		repo.checkTags(request.tagsToSet());
