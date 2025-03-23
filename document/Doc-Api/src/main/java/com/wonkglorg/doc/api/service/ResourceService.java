@@ -6,11 +6,11 @@ import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.ResourceException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidPathException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidResourceException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
+import com.wonkglorg.doc.core.interfaces.ResourceCalls;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.Tag;
@@ -27,18 +27,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Component
 @Service
-public class ResourceService{
+public class ResourceService implements ResourceCalls{
 	
 	private final RepoService repoService;
 	private final UserService userService;
 	private final PermissionService permissionService;
 	
-	public ResourceService(@Lazy RepoService repoService, UserService userService, PermissionService permissionService) {
+	public ResourceService(@Lazy RepoService repoService, @Lazy UserService userService, @Lazy PermissionService permissionService) {
 		this.repoService = repoService;
 		this.userService = userService;
 		this.permissionService = permissionService;
@@ -74,22 +73,12 @@ public class ResourceService{
 	 */
 	private List<Resource> getResourcesFromRepo(RepoId repoId, ResourceRequest request)
 			throws InvalidRepoException, InvalidUserException, CoreException {
-		List<Resource> resources = repoService.getRepo(repoId).getDatabase().getResources(request);
+		List<Resource> resources = repoService.getRepo(repoId).getDatabase().resourceFunctions().getResources(request);
+		//filter resources by user permissions
 		if(!request.userId().isAllUsers()){
 			resources = permissionService.filterResources(request.repoId(), request.userId(), resources);
 		}
 		return resources;
-	}
-	
-	/**
-	 * Checks if a resource exists
-	 *
-	 * @param repoId the repo id
-	 * @param path the path
-	 * @return true if the resource exists
-	 */
-	public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
-		return repoService.getRepo(repoId).getDatabase().resourceExists(path);
 	}
 	
 	/**
@@ -101,7 +90,7 @@ public class ResourceService{
 	 */
 	public boolean tagExists(RepoId repoId, TagId tagId) {
 		try{
-			return repoService.getRepo(repoId).getDatabase().tagExists(tagId);
+			return repoService.getRepo(repoId).getDatabase().resourceFunctions().tagExists(repoId, tagId);
 		} catch(InvalidRepoException e){
 			return false;
 		}
@@ -129,19 +118,6 @@ public class ResourceService{
 		}
 	}
 	
-	public List<Tag> getTags(RepoId repoId, List<TagId> ids) throws InvalidTagException, InvalidRepoException {
-		List<Tag> tags = new ArrayList<>();
-		FileRepository repo = repoService.getRepo(repoId);
-		for(TagId id : ids){
-			Tag tag = repo.getDatabase().getTagCache().get(id);
-			if(tag == null){
-				throw new InvalidTagException("Tag '%s' does not exist".formatted(id));
-			}
-			tags.add(tag);
-		}
-		return tags;
-	}
-	
 	/**
 	 * Gets all tags in a repository or all repositories if specified
 	 *
@@ -152,11 +128,11 @@ public class ResourceService{
 		List<Tag> tags = new ArrayList<>();
 		if(repoId.isAllRepos()){
 			for(var repo : repoService.getRepositories().values()){
-				tags.addAll(repo.getDatabase().getTags());
+				tags.addAll(repo.getDatabase().resourceFunctions().getTags(repoId));
 			}
 			return tags;
 		}
-		return repoService.getRepo(repoId).getDatabase().getTags();
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().getTags(repoId);
 	}
 	
 	/**
@@ -165,6 +141,7 @@ public class ResourceService{
 	 * @param resource the resource
 	 * @return the response
 	 */
+	@Override
 	public void insertResource(Resource resource) throws ClientException, CoreException {
 		RepoId id = repoService.validateRepoId(resource.repoId().id());
 		resource.setResourcePath(normalizePath(resource.resourcePath()));
@@ -176,7 +153,7 @@ public class ResourceService{
 		}
 		FileRepository repo = repoService.getRepo(id);
 		repo.checkTags(resource.getResourceTags());
-		repo.getDatabase().insertResource(resource);
+		repo.getDatabase().resourceFunctions().insertResource(resource);
 		repo.addResourceAndCommit(resource);
 	}
 	
@@ -187,26 +164,24 @@ public class ResourceService{
 	 * @param path the path
 	 * @return the response
 	 */
-	public boolean removeResource(RepoId repoId, Path path)
-			throws InvalidResourceException, CoreException, InvalidRepoException, InvalidPathException {
+	public boolean removeResource(RepoId repoId, Path path) throws ClientException, CoreException {
 		if(!repoService.isValidRepo(repoId)){
 			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
 		}
-		path = normalizePath(path);
 		
 		DbHelper.validatePath(path);
 		DbHelper.validateFileType(path);
 		
 		if(!resourceExists(repoId, path)){
-			throw new ResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
+			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
 		}
 		
 		if(isBeingEdited(repoId, path)){
-			throw new CoreException("Resource '%s' in '%s' is currently being edited".formatted(path, repoId));
+			throw new ClientException("Resource '%s' in '%s' is currently being edited".formatted(path, repoId));
 		}
 		
 		FileRepository repo = repoService.getRepo(repoId);
-		repo.getDatabase().removeResource(path);
+		repo.getDatabase().resourceFunctions().removeResource(repoId, path);
 		if(Files.exists(repo.getRepoProperties().getPath().resolve(path))){
 			try{
 				Files.delete((repo.getRepoProperties().getPath().resolve(path)));
@@ -242,6 +217,10 @@ public class ResourceService{
 			throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
 		}
 		
+		if(isBeingEdited(repoFrom, pathFrom)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(pathFrom, repoFrom));
+		}
+		
 		if(resourceExists(repoTo, pathTo)){
 			throw new ResourceException("Resource '%s' already exists in target '%s'".formatted(pathTo, repoTo));
 		}
@@ -254,17 +233,17 @@ public class ResourceService{
 		FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
 		FileRepository fileRepoTo = repoService.getRepo(repoTo);
 		
-		Resource resource = fileRepoFrom.getDatabase().getResources(request).stream().findFirst().orElseThrow();
-		fileRepoTo.getDatabase().insertResource(resource);
+		Resource resource = fileRepoFrom.getDatabase().resourceFunctions().getResources(request).stream().findFirst().orElseThrow();
+		fileRepoTo.getDatabase().resourceFunctions().insertResource(resource);
 		fileRepoTo.addResourceAndCommit(resource);
-		fileRepoFrom.getDatabase().removeResource(resource.resourcePath());
+		fileRepoFrom.getDatabase().resourceFunctions().removeResource(repoFrom, resource.resourcePath());
 		fileRepoFrom.removeResourceAndCommit(userId, pathFrom);
 		
 		ResourceRequest returnRequest = new ResourceRequest();
 		returnRequest.setPath(pathTo.toString());
 		returnRequest.setWithData(true);
 		returnRequest.repoId(repoTo);
-		return fileRepoTo.getDatabase().getResources(returnRequest).stream().findFirst().orElseThrow();
+		return fileRepoTo.getDatabase().resourceFunctions().getResources(returnRequest).stream().findFirst().orElseThrow();
 	}
 	
 	/**
@@ -273,6 +252,7 @@ public class ResourceService{
 	 * @param request the request
 	 * @return the response
 	 */
+	@Override
 	public Resource updateResource(ResourceUpdateRequest request) throws ClientException, CoreSqlException {
 		RepoId id = request.repoId();
 		repoService.validateRepoId(id);
@@ -284,27 +264,51 @@ public class ResourceService{
 			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, id));
 		}
 		
+		if(isBeingEdited(id, path)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(path, id));
+		}
+		
 		repo.checkTags(request.tagsToSet());
 		repo.checkTags(request.tagsToAdd());
 		repo.checkTags(request.tagsToRemove());
 		
-		Resource resource = repo.getDatabase().updateResourceData(request);
+		Resource resource = repo.getDatabase().resourceFunctions().updateResource(request);
 		repo.addResourceAndCommit(resource);
 		return resource;
 	}
 	
-	/**
-	 * Check if a file is currently being edited
-	 *
-	 * @param repoId the repo repoId
-	 * @param path the path to check
-	 * @return the user editing the file or null if not being edited
-	 */
+	@Override
+	public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
+		if(!repoService.isValidRepo(repoId)){
+			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
+		}
+		
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().resourceExists(repoId, path);
+	}
+	
+	@Override
+	public boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException, InvalidResourceException {
+		if(!resourceExists(repoId, oldPath)){
+			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(oldPath, repoId));
+		}
+		
+		if(resourceExists(repoId, newPath)){
+			throw new InvalidResourceException("Resource '%s' already exists in repository '%s'".formatted(newPath, repoId));
+		}
+		
+		if(isBeingEdited(repoId, oldPath)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be moved!".formatted(oldPath, repoId));
+		}
+		
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().moveResource(repoId, oldPath, newPath);
+		
+	}
+	
+	@Override
 	public UserId getEditingUser(RepoId repoId, Path path) throws InvalidResourceException, InvalidRepoException {
-		path = normalizePath(path);
 		repoService.validateRepoId(repoId);
 		validateResource(repoId, path);
-		return repoService.getRepo(repoId).getDatabase().isBeingEdited(path);
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().getEditingUser(repoId, path);
 	}
 	
 	/**
@@ -324,26 +328,27 @@ public class ResourceService{
 	 * @param userId the user to check
 	 * @return true if they are editing, false otherwise
 	 */
-	public boolean isUserEditing(RepoId id, UserId userId) throws InvalidRepoException {
-		return repoService.getRepo(id).getDatabase().isUserEditing(userId);
+	@Override
+	public boolean isUserEditing(RepoId id, UserId userId) throws InvalidRepoException, InvalidUserException {
+		if(userId.isAllUsers()){
+			throw new InvalidUserException("User must be a specific user".formatted(userId));
+		}
+		if(userService.userExists(id, userId)){
+			throw new InvalidUserException("User '%s' does not exist in repository '%s'".formatted(userId, id));
+		}
+		
+		return repoService.getRepo(id).getDatabase().resourceFunctions().isUserEditing(id, userId);
 	}
 	
-	/**
-	 * Sets a user as editing a file locking it for others to edit at the same time
-	 *
-	 * @param userId the user editing
-	 * @param path the path to the file
-	 */
-	public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path)
-			throws InvalidResourceException, CoreException, InvalidRepoException, InvalidUserException {
-		path = normalizePath(path);
+	@Override
+	public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path) throws ClientException {
 		repoService.validateRepoId(repoId);
 		validateResource(repoId, path);
 		userService.validateUserId(repoId, userId);
 		if(isBeingEdited(repoId, path)){
-			throw new CoreException("Resource '%s' in '%s' is already being edited by '%s'".formatted(path, repoId, userId));
+			throw new ClientException("Resource '%s' in '%s' is already being edited by '%s'".formatted(path, repoId, userId));
 		}
-		repoService.getRepo(repoId).getDatabase().setCurrentlyEdited(userId, path);
+		repoService.getRepo(repoId).getDatabase().resourceFunctions().setCurrentlyEdited(repoId, userId, path);
 	}
 	
 	/**
@@ -356,54 +361,48 @@ public class ResourceService{
 	 */
 	private void validateResource(RepoId repoId, Path path) throws InvalidRepoException, InvalidResourceException {
 		repoService.validateRepoId(repoId);
-		path = normalizePath(path);
 		if(!resourceExists(repoId, path)){
 			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
 		}
 	}
 	
-    /**
-	 * Removes a user from editing a file
-	 *
-	 * @param userId the user to remove
-	 */
+	@Override
 	public void removeCurrentlyEdited(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
 		repoService.validateRepoId(repoId);
 		userService.validateUserId(repoId, userId);
-		repoService.getRepo(repoId).getDatabase().removeCurrentlyEdited(userId);
+		
+		if(!isUserEditing(repoId, userId)){
+			throw new InvalidUserException("User '%s' is not currently editing anything".formatted(userId));
+		}
+		repoService.getRepo(repoId).getDatabase().resourceFunctions().removeCurrentlyEdited(repoId, userId);
 	}
 	
-	/**
-	 * Removes a file from being edited
-	 *
-	 * @param path the path to the file
-	 */
+	@Override
 	public void removeCurrentlyEdited(RepoId id, Path path) throws InvalidResourceException, InvalidRepoException {
 		repoService.validateRepoId(id);
 		path = normalizePath(path);
 		validateResource(id, path);
-		repoService.getRepo(id).getDatabase().removeCurrentlyEdited(path);
+		if(!isBeingEdited(id, path)){
+			throw new InvalidResourceException("Resource '%s' in '%s' is not currently being edited".formatted(path, id));
+		}
+		repoService.getRepo(id).getDatabase().resourceFunctions().removeCurrentlyEdited(id, path);
 	}
 	
-	/**
-	 * Creates a new tag in the database
-	 *
-	 * @param repoId the repo id
-	 * @param tag the tag to create
-	 */
+	@Override
 	public void createTag(RepoId repoId, Tag tag) throws ClientException, CoreSqlException {
 		repoService.validateRepoId(repoId);
 		if(tagExists(repoId, tag.tagId())){
 			throw new ClientException("Tag '%s' already exists in repository '%s'".formatted(tag.tagId(), repoId));
 		}
 		FileRepository repo = repoService.getRepo(repoId);
-		repo.getDatabase().createTag(tag);
+		repo.getDatabase().resourceFunctions().createTag(repoId, tag);
 	}
 	
+	@Override
 	public void removeTag(RepoId repoId, TagId tagId) throws CoreSqlException, InvalidRepoException, InvalidTagException {
 		repoService.validateRepoId(repoId);
 		validateTagId(repoId, tagId);
 		FileRepository repo = repoService.getRepo(repoId);
-		repo.getDatabase().removeTag(tagId);
+		repo.getDatabase().resourceFunctions().removeTag(repoId, tagId);
 	}
 }

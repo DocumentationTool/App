@@ -13,7 +13,7 @@ import java.sql.Statement;
  * Holds generic setup and usage Database functions
  */
 @SuppressWarnings("UnusedReturnValue")
-public class DatabaseFunctions{
+public class DatabaseFunctions implements IDBFunctions{
 	private static final Logger log = LoggerFactory.getLogger(DatabaseFunctions.class);
 	
 	private DatabaseFunctions() {
@@ -115,7 +115,8 @@ public class DatabaseFunctions{
 					    group_id TEXT NOT NULL,
 					    path TEXT NOT NULL,
 					    type TEXT NOT NULL,
-					    PRIMARY KEY (group_id, path)
+					    PRIMARY KEY (group_id, path),
+					    FOREIGN KEY (group_id) REFERENCES Groups(group_id)
 					)
 					""");
 			
@@ -124,7 +125,8 @@ public class DatabaseFunctions{
 					    user_id TEXT NOT NULL,
 					    path TEXT NOT NULL,
 					    type TEXT NOT NULL,
-					    PRIMARY KEY (user_id, path)
+					    PRIMARY KEY (user_id, path),
+					    FOREIGN KEY (user_id) REFERENCES Users(user_id)
 					)
 					""");
 			
@@ -271,4 +273,8 @@ public class DatabaseFunctions{
 		}
 	}
 	
+	@Override
+	public void initialize() {
+	
+	}
 }

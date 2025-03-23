@@ -23,7 +23,7 @@ import java.util.Set;
 /**
  * Permission related database functions
  */
-public class PermissionFunctions{
+public class PermissionFunctions implements IDBFunctions{
 	private static final Logger log = LoggerFactory.getLogger(PermissionFunctions.class);
 	
 	/**
@@ -112,5 +112,10 @@ public class PermissionFunctions{
 		} catch(SQLException e){
 			log.error("Error while closing connection", e);
 		}
+	}
+	
+	@Override
+	public void initialize() {
+	
 	}
 }

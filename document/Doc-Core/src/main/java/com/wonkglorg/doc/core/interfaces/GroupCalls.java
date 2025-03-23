@@ -11,6 +11,7 @@ import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
+import com.wonkglorg.doc.core.user.UserProfile;
 
 import java.util.List;
 
@@ -18,6 +19,16 @@ import java.util.List;
  * A common interface referencing all group related calls
  */
 public interface GroupCalls{
+	
+	/**
+	 * Checks if a group exists in a repository.
+	 *
+	 * @param repoId The repository id.
+	 * @param groupId The group id.
+	 * @return True if the group exists, false otherwise.
+	 * @throws InvalidRepoException If the repository does not exist.
+	 */
+	boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException;
 	
 	/**
 	 * Checks if a group exists in a repo
@@ -138,5 +149,9 @@ public interface GroupCalls{
 	 * @throws CoreException if the permission could not be updated
 	 * @throws ClientException if the permission is invalid
 	 */
-	boolean updatePermissionInGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
+	boolean updatePermissionForGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
+	
+	List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException;
+	
+	List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException;
 }

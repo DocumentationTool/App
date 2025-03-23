@@ -159,7 +159,7 @@ public class ApiGroupController{
 																	@Parameter(description = "The path to update the permission for.") @RequestParam("path") String path) {
 		try{
 			Permission<GroupId> permission = new Permission<>(GroupId.of(groupId), type, TargetPath.of(path), RepoId.of(repoId));
-			groupService.updatePermissionInGroup(RepoId.of(repoId), permission);
+			groupService.updatePermissionForGroup(RepoId.of(repoId), permission);
 			return RestResponse.<Void>success("Added permission to group '%s' in repo '%s".formatted(groupId, repoId), null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();

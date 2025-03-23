@@ -77,7 +77,7 @@ public class ApiUserController{
 			
 			userService.addUser(RepoId.of(repoId), new UserProfile(UserId.of(userId), password, new HashMap<>(), Set.of(), groupIdSet));
 			return RestResponse.<Void>success("Added user '%s' to repo '%s".formatted(userId, repoId), null).toResponse();
-		} catch(CoreException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
+		} catch(ClientException e){//core exceptions are stuff only returned to the client, and isn't an actual error that needs fixing by the coder
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
 			log.error("Error while checking edited state ", e);
@@ -143,7 +143,7 @@ public class ApiUserController{
 																   @Parameter(description = "The new permission type.") @RequestParam("type") PermissionType type) {
 		try{
 			Permission<UserId> permission = new Permission<>(UserId.of(userId), type, TargetPath.of(path), RepoId.of(repoId));
-			userService.updatePermissionInUser(RepoId.of(repoId), permission);
+			userService.updatePermissionForUser(RepoId.of(repoId), permission);
 			return RestResponse.<Void>success("Updated permission '%s' with path '%s' to '%s' in '%s'".formatted(path, type, userId, repoId), null)
 							   .toResponse();
 		} catch(ClientException e){
