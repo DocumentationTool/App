@@ -298,7 +298,10 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls{
 	
 	@Override
 	public boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-		return false;
+		if(!userCache.containsKey(userId)){
+			return false;
+		}
+		return userCache.get(userId) != null;
 	}
 	
 	@Override

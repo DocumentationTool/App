@@ -288,7 +288,7 @@ public class FileRepository implements AutoCloseable{
 	
 	private void deleteOldResources(List<Path> deletedResources) throws CoreSqlException {
 		for(Path file : deletedResources){
-			log.error("Deleting resource '{}'", file);
+			log.info("Deleting resource '{}'", file);
 			gitRepo.remove(file);
 		}
 		dataDB.resourceFunctions().batchDelete(deletedResources);

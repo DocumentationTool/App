@@ -549,22 +549,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	public void insertResource(Resource resource) throws ClientException, CoreException {
 		Connection connection = database.getConnection();
 		try{
-			//todo:jmd make it 1 big transaction in case someting goes wrong.
-			
-			int affectedRows = 0;
-			boolean resourceExists = false;
-			
-			try(var statement = connection.prepareStatement("SELECT EXISTS(SELECT 1 FROM Resources WHERE resource_path = ?)")){
-				statement.setString(1, resource.resourcePath().toString());
-				ResultSet resultSet = statement.executeQuery();
-				resourceExists = resultSet.next() && resultSet.getBoolean(1);
-			} catch(Exception e){
-				throw new CoreSqlException("Failed to check if resource exists", e);
-			}
-			
-			if(resourceExists){
-				throw new ClientException("Resource already exists");
-			}
+			connection.setAutoCommit(false);
 			
 			String sqlResourceInsert = """
 					
@@ -579,10 +564,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 				statement.setString(4, DateHelper.fromDateTime(resource.modifiedAt()));
 				statement.setString(5, resource.modifiedBy());
 				statement.setString(6, resource.category());
-				affectedRows = statement.executeUpdate();
-			} catch(Exception e){
-				log.error("Failed to insert resource", e);
-				throw new CoreSqlException("An unexpected error occured while inserting resource!", e);
+				statement.executeUpdate();
 			}
 			
 			if(resource.data() == null){ //no data to insert so we skip the next part
@@ -598,10 +580,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 			try(PreparedStatement statement = connection.prepareStatement(sqlDataInsert)){
 				statement.setString(1, resource.resourcePath().toString());
 				statement.setString(2, resource.data());
-				affectedRows += statement.executeUpdate();
-			} catch(Exception e){
-				log.error("Failed to insert resource data", e);
-				throw new CoreSqlException("An unexpected error occured while inserting resource data!", e);
+				statement.executeUpdate();
 			}
 			
 			Set<TagId> resourceTags = resource.getResourceTags();
@@ -617,16 +596,29 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 						statement.setString(2, tagId.id());
 						statement.addBatch();
 					}
-					affectedRows += Arrays.stream(statement.executeBatch()).sum();
-				} catch(Exception e){
-					log.error("Failed to insert resource tags", e);
-					throw new CoreSqlException("An unexpected error occured while inserting resource tags!", e);
+					statement.executeBatch();
 				}
 				
 			}
+			
+			connection.commit();
+			
 			resourceCache.put(resource.resourcePath(), resource);
 			
+		} catch(Exception e){
+			try{
+				connection.rollback();
+			} catch(SQLException ex){
+				log.error("Failed to rollback transaction", ex);
+			}
+			log.error("Failed to insert resource", e);
+			throw new CoreSqlException("Failed to insert resource", e);
 		} finally{
+			try{
+				connection.setAutoCommit(true);
+			} catch(SQLException e){
+				throw new CoreSqlException("Failed to set auto commit to true", e);
+			}
 			closeConnection(connection);
 		}
 	}
@@ -635,7 +627,7 @@ public class ResourceFunctions implements IDBFunctions, ResourceCalls{
 	public boolean removeResource(RepoId repoId, Path path) throws CoreSqlException {
 		log.info("Removing resource at path '{}' for '{}'", path, repoId);
 		Connection connection = database.getConnection();
-		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM FileData WHERE resource_path = ?")){
+		try(PreparedStatement statement = connection.prepareStatement("DELETE FROM Resources WHERE resource_path = ?")){
 			statement.setString(1, normalizePath(path.toString()));
 			statement.executeUpdate();
 			resourceCache.remove(path);

@@ -49,7 +49,7 @@ public interface ResourceCalls{
 	 * @param path The path object
 	 * @return The resource object
 	 */
-	boolean removeResource(RepoId repoId, Path path) throws CoreException, InvalidRepoException, InvalidResourceException, InvalidPathException;
+	boolean removeResource(RepoId repoId, Path path) throws CoreException, ClientException;
 	
 	/**
 	 * Get a resource based on the repoId and path
@@ -78,7 +78,7 @@ public interface ResourceCalls{
 	 * @return true if the resource was moved false otherwise
 	 * @throws InvalidRepoException if the repoId is invalid
 	 */
-	boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException;
+	boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException, InvalidResourceException;
 	
 	//------------------- Tags -------------------
 	

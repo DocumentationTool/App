@@ -6,7 +6,6 @@ import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.ResourceException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.exception.client.InvalidPathException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidResourceException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
@@ -165,8 +164,7 @@ public class ResourceService implements ResourceCalls{
 	 * @param path the path
 	 * @return the response
 	 */
-	public boolean removeResource(RepoId repoId, Path path)
-			throws InvalidRepoException, CoreException, InvalidResourceException, InvalidPathException {
+	public boolean removeResource(RepoId repoId, Path path) throws ClientException, CoreException {
 		if(!repoService.isValidRepo(repoId)){
 			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
 		}
@@ -175,11 +173,11 @@ public class ResourceService implements ResourceCalls{
 		DbHelper.validateFileType(path);
 		
 		if(!resourceExists(repoId, path)){
-			throw new ResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
+			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, repoId));
 		}
 		
 		if(isBeingEdited(repoId, path)){
-			throw new CoreException("Resource '%s' in '%s' is currently being edited".formatted(path, repoId));
+			throw new ClientException("Resource '%s' in '%s' is currently being edited".formatted(path, repoId));
 		}
 		
 		FileRepository repo = repoService.getRepo(repoId);
@@ -217,6 +215,10 @@ public class ResourceService implements ResourceCalls{
 		
 		if(!resourceExists(repoFrom, pathFrom)){
 			throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
+		}
+		
+		if(isBeingEdited(repoFrom, pathFrom)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(pathFrom, repoFrom));
 		}
 		
 		if(resourceExists(repoTo, pathTo)){
@@ -262,6 +264,10 @@ public class ResourceService implements ResourceCalls{
 			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(path, id));
 		}
 		
+		if(isBeingEdited(id, path)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be updated!".formatted(path, id));
+		}
+		
 		repo.checkTags(request.tagsToSet());
 		repo.checkTags(request.tagsToAdd());
 		repo.checkTags(request.tagsToRemove());
@@ -273,12 +279,29 @@ public class ResourceService implements ResourceCalls{
 	
 	@Override
 	public boolean resourceExists(RepoId repoId, Path path) throws InvalidRepoException {
-		return false;
+		if(!repoService.isValidRepo(repoId)){
+			throw new InvalidRepoException("Repo '%s' does not exist".formatted(repoId));
+		}
+		
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().resourceExists(repoId, path);
 	}
 	
 	@Override
-	public boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException {
-		return false;
+	public boolean moveResource(RepoId repoId, Path oldPath, Path newPath) throws InvalidRepoException, CoreSqlException, InvalidResourceException {
+		if(!resourceExists(repoId, oldPath)){
+			throw new InvalidResourceException("Resource '%s' does not exist in repository '%s'".formatted(oldPath, repoId));
+		}
+		
+		if(resourceExists(repoId, newPath)){
+			throw new InvalidResourceException("Resource '%s' already exists in repository '%s'".formatted(newPath, repoId));
+		}
+		
+		if(isBeingEdited(repoId, oldPath)){
+			throw new CoreSqlException("Resource '%s' in '%s' is currently being edited and cannot be moved!".formatted(oldPath, repoId));
+		}
+		
+		return repoService.getRepo(repoId).getDatabase().resourceFunctions().moveResource(repoId, oldPath, newPath);
+		
 	}
 	
 	@Override
@@ -317,12 +340,6 @@ public class ResourceService implements ResourceCalls{
 		return repoService.getRepo(id).getDatabase().resourceFunctions().isUserEditing(id, userId);
 	}
 	
-	/**
-	 * Sets a user as editing a file locking it for others to edit at the same time
-	 *
-	 * @param userId the user editing
-	 * @param path the path to the file
-	 */
 	@Override
 	public void setCurrentlyEdited(RepoId repoId, UserId userId, Path path) throws ClientException {
 		repoService.validateRepoId(repoId);
@@ -353,6 +370,10 @@ public class ResourceService implements ResourceCalls{
 	public void removeCurrentlyEdited(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
 		repoService.validateRepoId(repoId);
 		userService.validateUserId(repoId, userId);
+		
+		if(!isUserEditing(repoId, userId)){
+			throw new InvalidUserException("User '%s' is not currently editing anything".formatted(userId));
+		}
 		repoService.getRepo(repoId).getDatabase().resourceFunctions().removeCurrentlyEdited(repoId, userId);
 	}
 	
@@ -361,6 +382,9 @@ public class ResourceService implements ResourceCalls{
 		repoService.validateRepoId(id);
 		path = normalizePath(path);
 		validateResource(id, path);
+		if(!isBeingEdited(id, path)){
+			throw new InvalidResourceException("Resource '%s' in '%s' is not currently being edited".formatted(path, id));
+		}
 		repoService.getRepo(id).getDatabase().resourceFunctions().removeCurrentlyEdited(id, path);
 	}
 	
