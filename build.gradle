@@ -17,7 +17,12 @@ java {
 
 //needed to know what to start spring over
 bootWar {
-    mainClass = 'com.wonkglorg.doc.api.DocApiApplication'  // Replace with your main class path
+    mainClass = 'com.wonkglorg.doc.api.DocApiApplication'
+    // Replace with your main class path
+}
+
+war {
+    archiveClassifier = 'plain'
 }
 
 repositories {
