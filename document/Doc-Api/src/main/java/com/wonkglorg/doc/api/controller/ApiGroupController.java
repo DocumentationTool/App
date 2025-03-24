@@ -24,6 +24,9 @@ import java.util.List;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_GROUP;
 
+/**
+ * Controller Endpoint handling all group related endpoints
+ */
 @RestController
 @RequestMapping(API_GROUP)
 public class ApiGroupController {
@@ -35,11 +38,19 @@ public class ApiGroupController {
         this.groupService = groupService;
     }
 
+    /**
+     * Renames a given group
+     *
+     * @param repoId  The repository id to search in
+     * @param groupId The groups id to be rename
+     * @param newName the new name of the group
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Renames a Group", description = "Renames a given group")
     @PostMapping("rename")
-    public ResponseEntity<RestResponse<Void>> renameGroup(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
-                                                          @Parameter(description = "The groupId to rename.") @RequestParam("groupId") String groupId,
-                                                          @Parameter(description = "The new name for the group.") @RequestParam("newName") String newName) {
+    public ResponseEntity<RestResponse<Void>> renameGroup(@Parameter(description = "The repository id to search in.") @RequestParam("repoId") String repoId,
+                                                          @Parameter(description = "The groups id to be rename.") @RequestParam("groupId") String groupId,
+                                                          @Parameter(description = "The new name of the group.") @RequestParam("newName") String newName) {
         try {
             groupService.renameGroup(RepoId.of(repoId), GroupId.of(groupId), newName);
             return RestResponse.<Void>success("Updated group '%s' from repo '%s", null).toResponse();//.formatted(userId, repoId), null).toResponse();
@@ -51,10 +62,17 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * Returns a group or groups if no groupId is given.
+     *
+     * @param repoId  The repoId to search in. If none is given, returns the result for all currently loaded repos.
+     * @param groupId The groupid to search for, if none is given, returns all groups.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Get groups", description = "Returns a group or groups if no groupId is given.")
     @GetMapping("get")
     public ResponseEntity<RestResponse<List<JsonGroup>>> getGroups(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
-                                                                   @Parameter(description = "The groupid to search for, if none is given, returns all groups in the repository.") @RequestParam(value = "groupId", required = false) String groupId) {
+                                                                   @Parameter(description = "The groupid to search for, if none is given, returns all groups.") @RequestParam(value = "groupId", required = false) String groupId) {
         try {
 
             List<Group> users = groupService.getGroups(RepoId.of(repoId), GroupId.of(groupId));
@@ -68,6 +86,11 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * @param repoId
+     * @param groupId
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Get Users from Group", description = "Returns all users in a group.")
     @GetMapping("get/all/users")
     public ResponseEntity<RestResponse<List<JsonUser>>> getAllGroupsForUser(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -84,7 +107,11 @@ public class ApiGroupController {
         }
     }
 
-
+    /**
+     * @param repoId
+     * @param userId
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Get groups from user", description = "Returns all groups a user is in.")
     @GetMapping("get/all/groups")
     public ResponseEntity<RestResponse<List<JsonGroup>>> getAllUsersForGroup(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -101,6 +128,11 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * @param repoId
+     * @param groupId
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a Group", description = "Removes a group from the system.")
     @PostMapping("remove")
     public ResponseEntity<RestResponse<Void>> deleteGroup(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -116,6 +148,12 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * @param repoId
+     * @param groupId
+     * @param groupName
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a new Group", description = "Adds a new Group to the repo.")
     @PostMapping("add")
     public ResponseEntity<RestResponse<Void>> addGroup(@Parameter(description = "The repoId to add the group to.") @RequestParam(value = "repoId") String repoId,
@@ -132,6 +170,12 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * @param repoId
+     * @param userId
+     * @param groupId
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a user to a group", description = "Adds a user to a group in a repo.")
     @PostMapping("user/add")
     public ResponseEntity<RestResponse<Void>> addUserToGroup(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -148,6 +192,12 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * @param repoId
+     * @param userId
+     * @param groupId
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a user from a group", description = "Removes a user from a group in a repo.")
     @PostMapping("user/remove")
     public ResponseEntity<RestResponse<Void>> removeUserFromGroup(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -165,6 +215,14 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * Adds a permission to a group (this will fail if a permission with the same path already exists)
+     * @param repoId the repository the group is in
+     * @param groupId the groups id
+     * @param type the type of permission to give
+     * @param path the path of the permission
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a permission to a group", description = "Adds a permission to a group in a repo.")
     @PostMapping("permission/add")
     public ResponseEntity<RestResponse<Void>> addGroupPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -183,6 +241,15 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * Sets the permission of a group to a specific {@link PermissionType} this action will fail if no permission with the specified path exists yet
+     *
+     * @param repoId  The repository the group is in
+     * @param groupId the groups id
+     * @param type    the type of permission to set
+     * @param path    the path of the permission
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Updates a permission of a group", description = "Updates a permission of a group in a repo.")
     @PostMapping("permission/update")
     public ResponseEntity<RestResponse<Void>> updateGroupPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -201,11 +268,19 @@ public class ApiGroupController {
         }
     }
 
+    /**
+     * Removes a permission from a group
+     *
+     * @param repoId  The repository id of the given group
+     * @param groupId The group id to remove the permission from.
+     * @param path    the path of the permission to remove
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a permission from a group", description = "Removes a permission from a group in a repo.")
     @PostMapping("permission/remove")
-    public ResponseEntity<RestResponse<Void>> removeGroupPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
+    public ResponseEntity<RestResponse<Void>> removeGroupPermission(@Parameter(description = "The repository id of the given group.") @RequestParam("repoId") String repoId,
                                                                     @Parameter(description = "The group id to remove the permission from.") @RequestParam("groupId") String groupId,
-                                                                    @Parameter(description = "The path to remove the permission from.") @RequestParam("path") String path) {
+                                                                    @Parameter(description = "The path of the permission to remove.") @RequestParam("path") String path) {
         try {
             groupService.removePermissionFromGroup(RepoId.of(repoId), GroupId.of(groupId), TargetPath.of(path));
             return RestResponse.<Void>success("Removed permission from group '%s' in repo '%s".formatted(groupId, repoId), null).toResponse();
