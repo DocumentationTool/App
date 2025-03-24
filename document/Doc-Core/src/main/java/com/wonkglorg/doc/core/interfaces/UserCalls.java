@@ -9,6 +9,7 @@ import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
+import com.wonkglorg.doc.core.permissions.Role;
 import com.wonkglorg.doc.core.user.UserProfile;
 
 import java.util.List;
@@ -93,4 +94,21 @@ public interface UserCalls{
 	 * @return weather it exists or not
 	 */
 	boolean userExists(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException;
+
+	/**
+	 * Sets the role of a user in a repo
+	 * @param repoId the repo
+	 * @param userId the user
+	 * @param role the role
+	 */
+    void addRole(RepoId repoId, UserId userId, Role role) throws InvalidRepoException, InvalidUserException;
+
+
+	/**
+	 *Removes the role from a user
+	 * @param repoId the repo
+	 * @param userId the user
+	 * @param role the role
+	 */
+	void removeRole(RepoId repoId, UserId userId, Role role) throws InvalidUserException, InvalidRepoException;
 }

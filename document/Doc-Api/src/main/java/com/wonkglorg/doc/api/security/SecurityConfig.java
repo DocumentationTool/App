@@ -93,7 +93,6 @@ public class SecurityConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 for (var origin : apiProperties.getCrossOrigin()) {
-
                     registry.addMapping(origin.getPath())
                             .allowedMethods(origin.getAllowedMethods().toArray(new String[0]))
                             .allowedHeaders(origin.getAllowedHeaders().toArray(new String[0]))

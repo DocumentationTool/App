@@ -3,7 +3,6 @@ package com.wonkglorg.doc.core.db.functions;
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.objects.RoleId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 import com.wonkglorg.doc.core.permissions.Permission;
@@ -93,7 +92,7 @@ public class PermissionFunctions implements IDBFunctions{
 			try(var rs = statement.executeQuery()){
 				Set<Role> roles = new HashSet<>();
 				while(rs.next()){
-					roles.add(new Role(RoleId.of(rs.getString("role_id")), rs.getString("role")));
+					roles.add(Role.valueOf(rs.getString("role_id")));
 				}
 				return roles;
 			}
