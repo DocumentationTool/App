@@ -21,7 +21,7 @@ dependencies {
     // implementation 'com.groupdocs:groupdocs-parser:23.11'
 
     //hashing
-    implementation 'org.springframework:spring-security-crypto:5.6.0'
+    implementation 'org.springframework:spring-security-crypto:6.4.4'
 
     //git
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'

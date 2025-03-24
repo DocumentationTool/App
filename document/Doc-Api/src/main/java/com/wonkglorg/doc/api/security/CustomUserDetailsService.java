@@ -1,5 +1,6 @@
 package com.wonkglorg.doc.api.security;
 
+import com.wonkglorg.doc.api.service.UserService;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.security.core.GrantedAuthority;
@@ -21,31 +22,37 @@ import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-	private UserAuthenticationManager authManager;
+    private final UserService userService;
+    private UserAuthenticationManager authManager;
 
-	public CustomUserDetailsService(UserAuthenticationManager authManager) {
-		this.authManager = authManager;
-	}
+    public CustomUserDetailsService(UserAuthenticationManager authManager, UserService userService) {
+        this.authManager = authManager;
+        this.userService = userService;
+    }
 
-	@Override
-	public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
-		UserId userId = UserId.of(id);
-		if (DEV_MODE) {
-			return new User(userId.id(), "password_hash",
-					List.of(new SimpleGrantedAuthority("ROLE_USER"),
-					new SimpleGrantedAuthority("ROLE_ADMIN")));
-		}
+    @Override
+    public UserDetails loadUserByUsername(String id) throws UsernameNotFoundException {
+        UserId userId = UserId.of(id);
+        if (DEV_MODE) {
+            return new User(userId.id(), "password_hash",
+                    List.of(new SimpleGrantedAuthority("ROLE_USER"),
+                            new SimpleGrantedAuthority("ROLE_ADMIN")));
+        }
 
 
-		UserProfile user = authManager.loadByUserId(userId)
+        //todo:jmd this won't work how to properly handle that 1 locale cache for users? instead of per repo? otherwise this won't work but probably just leave it
+
+
+        UserProfile user = null; /*userService.getUser(userId)
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+				*/
 
-		List<GrantedAuthority> authorities =
-				user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name()))
-						.collect(Collectors.toList());
+        List<GrantedAuthority> authorities =
+                user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name()))
+                        .collect(Collectors.toList());
 
-		//todo:jmd add back password hash
-		return new User(user.getId().id(), "", authorities);
-	}
+        //todo:jmd add back password hash
+        return new User(user.getId().id(), "", authorities);
+    }
 }
 

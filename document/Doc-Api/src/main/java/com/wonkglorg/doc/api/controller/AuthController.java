@@ -5,6 +5,8 @@ import com.wonkglorg.doc.api.security.JwtUtil;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager.AuthResponse;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager.LoginRequest;
+import com.wonkglorg.doc.core.exception.client.ClientException;
+import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -69,12 +71,16 @@ public class AuthController {
 			@RequestBody LoginRequest request) {
 		log.info("Login POST request received");
 		try{
-			authManager.authenticate(UserId.of(request.userId()), request.password());
-			
+			authManager.authenticate(RepoId.of(request.repoId()),UserId.of(request.userId()), request.password());
 			String token = JwtUtil.generateToken(request.userId());
 			return ResponseEntity.ok(new AuthResponse(token, null));
 		} catch(LoginFailedException e){
 			return new ResponseEntity<>(new AuthResponse(null, e.getMessage()), e.getStatusCode());
+		}catch (ClientException e){
+			return new ResponseEntity<>(new AuthResponse(null, e.getMessage()), HttpStatus.BAD_REQUEST);
+		}catch (Exception e){
+			log.error("Error during login", e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new AuthResponse(null, e.getMessage()));
 		}
 	}
 	//@formatter:on
