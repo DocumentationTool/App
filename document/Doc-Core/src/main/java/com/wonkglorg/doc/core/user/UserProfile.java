@@ -1,12 +1,11 @@
 package com.wonkglorg.doc.core.user;
 
+import com.wonkglorg.doc.core.hash.BCryptUtils;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.permissions.Role;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -21,12 +20,12 @@ public class UserProfile{
 	public UserProfile(UserId id, String password, Set<GroupId> groups, Set<Role> roles) {
 		this.id = id;
 		this.passwordHash = password;
-		this.groups.addAll(groups);
-		this.roles.addAll(roles);
-	}
-	
-	public List<Resource> getAllowedResources(List<Resource> resources) {
-		return resources;
+		if(groups != null){
+			this.groups.addAll(groups);
+		}
+		if(roles != null){
+			this.roles.addAll(roles);
+		}
 	}
 	
 	public UserId getId() {
@@ -44,7 +43,7 @@ public class UserProfile{
 	 * @return true if the password hash matches the given password
 	 */
 	public boolean hashMatches(String password) {
-		return passwordHash.equals(password);
+		return BCryptUtils.verifyPassword(password, passwordHash);
 	}
 	
 	public Set<GroupId> getGroups() {

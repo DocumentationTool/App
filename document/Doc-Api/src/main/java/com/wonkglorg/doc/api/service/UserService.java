@@ -27,11 +27,9 @@ import java.util.Set;
 public class UserService implements UserCalls, GroupCalls{
 	
 	private final UserDatabase userDatabase = new UserDatabase(Path.of("users.db"));
-	private final PermissionService permissionService;
 	private final RepoService repoService;
 	
-	public UserService(@Lazy PermissionService permissionService, @Lazy RepoService repoService) {
-		this.permissionService = permissionService;
+	public UserService(@Lazy RepoService repoService) {
 		this.repoService = repoService;
 	}
 	

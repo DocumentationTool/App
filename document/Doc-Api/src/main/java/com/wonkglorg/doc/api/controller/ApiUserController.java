@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.api.controller;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_USER;
+import com.wonkglorg.doc.api.json.JsonPermission;
 import com.wonkglorg.doc.api.json.JsonUser;
 import com.wonkglorg.doc.api.service.PermissionService;
 import com.wonkglorg.doc.api.service.UserService;
@@ -244,4 +245,27 @@ public class ApiUserController{
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		}
 	}
+	
+	/**
+	 * Gets the permissions for a user
+	 *
+	 * @param repoId The repoId to search in.
+	 * @param userId The users id to get the permissions for.
+	 * @return {@link RestResponse}
+	 */
+	@Operation(summary = "Gets the permissions for a user", description = "Gets the permissions for a user.")
+	@GetMapping("permission/get")
+	public ResponseEntity<RestResponse<List<JsonPermission>>> getPermissions(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
+																			 @Parameter(description = "The users id to get the permissions for.") @RequestParam("userId") String userId) {
+		try{
+			Set<Permission<UserId>> permissions = permissionService.getPermissionsForUser(RepoId.of(repoId), UserId.of(userId));
+			return RestResponse.success("", permissions.stream().map(JsonPermission::new).toList()).toResponse();
+		} catch(ClientException e){
+			return RestResponse.<List<JsonPermission>>error(e.getMessage()).toResponse();
+		} catch(Exception e){
+			log.error("Error while checking edited state ", e);
+			return RestResponse.<List<JsonPermission>>error(e.getMessage()).toResponse();
+		}
+	}
+	
 }

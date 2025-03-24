@@ -2,6 +2,7 @@ package com.wonkglorg.doc.api.controller;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.API_GROUP;
 import com.wonkglorg.doc.api.json.JsonGroup;
+import com.wonkglorg.doc.api.json.JsonPermission;
 import com.wonkglorg.doc.api.json.JsonUser;
 import com.wonkglorg.doc.api.service.PermissionService;
 import com.wonkglorg.doc.api.service.UserService;
@@ -299,6 +300,28 @@ public class ApiGroupController{
 		} catch(Exception e){
 			log.error("Error while checking edited state ", e);
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
+		}
+	}
+	
+	/**
+	 * Get permissions for a group
+	 *
+	 * @param repoId The repoId to search in.
+	 * @param groupId The group id to get the permissions for.
+	 * @return {@link RestResponse}
+	 */
+	@Operation(summary = "Gets the permissions for a group", description = "Gets the permissions for a group.")
+	@GetMapping("permission/get")
+	public ResponseEntity<RestResponse<List<JsonPermission>>> getGroupPermissions(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
+																				  @Parameter(description = "The group id to get the permissions for.") @RequestParam("groupId") String groupId) {
+		try{
+			Set<Permission<GroupId>> permissions = permissionService.getPermissionsForGroup(RepoId.of(repoId), GroupId.of(groupId));
+			return RestResponse.success("", permissions.stream().map(JsonPermission::new).toList()).toResponse();
+		} catch(ClientException e){
+			return RestResponse.<List<JsonPermission>>error(e.getMessage()).toResponse();
+		} catch(Exception e){
+			log.error("Error while checking edited state ", e);
+			return RestResponse.<List<JsonPermission>>error(e.getMessage()).toResponse();
 		}
 	}
 	
