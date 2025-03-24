@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -220,7 +221,7 @@ public class ResourceService implements ResourceCalls {
         pathTo = normalizePath(pathTo);
 
         if (!resourceExists(repoFrom, pathFrom)) {
-            throw new ResourceException("Can't move a non existing resourceToInsert '%s' in '%S'".formatted(pathFrom, repoFrom));
+            throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
         }
 
         if (isBeingEdited(repoFrom, pathFrom)) {
@@ -241,8 +242,10 @@ public class ResourceService implements ResourceCalls {
         FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
         FileRepository fileRepoTo = repoService.getRepo(repoTo);
 
-        Resource resourceToInsert = fileRepoFrom.getDatabase().resourceFunctions().getResources(request).stream().findFirst().orElseThrow();
-        resourceToInsert.setResourcePath(normalizePath(pathTo));
+
+        Resource oldResource = fileRepoFrom.getDatabase().resourceFunctions().getResources(request).stream().findFirst().orElseThrow();
+        Resource resourceToInsert = new Resource(pathTo, oldResource.createdAt(), oldResource.createdBy(), LocalDateTime.now(), userId.id(), repoTo, oldResource.getResourceTags(), oldResource.category(), oldResource.data());
+
         fileRepoTo.getDatabase().resourceFunctions().insertResource(resourceToInsert);
         fileRepoTo.addResourceAndCommit(resourceToInsert);
         fileRepoFrom.getDatabase().resourceFunctions().removeResource(repoFrom, normalizePath(pathFrom));
