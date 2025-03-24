@@ -18,6 +18,9 @@ import java.io.IOException;
 
 import static com.wonkglorg.doc.api.DocApiApplication.DEV_MODE;
 
+/**
+ * Filter that intercepts incoming requests and extracts the JWT token from the Authorization header.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 

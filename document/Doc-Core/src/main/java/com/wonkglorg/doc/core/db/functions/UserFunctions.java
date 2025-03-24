@@ -24,6 +24,8 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 
+import static com.wonkglorg.doc.core.hash.BCryptUtils.hashPassword;
+
 public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls {
     private static final Logger log = LoggerFactory.getLogger(UserFunctions.class);
 
@@ -177,7 +179,7 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls {
             connection.setAutoCommit(false);
             try (var statement = connection.prepareStatement("INSERT INTO Users(user_id, password_hash, created_by, last_modified_by)  VALUES(?,?,?,?)")) {
                 statement.setString(1, user.getId().id());
-                statement.setString(2, user.getPasswordHash());
+                statement.setString(2, hashPassword(user.getPasswordHash()));
                 statement.setString(3, "system");
                 statement.setString(4, "system");
                 statement.executeUpdate();

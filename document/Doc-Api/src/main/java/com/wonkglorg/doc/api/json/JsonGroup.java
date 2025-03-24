@@ -5,6 +5,9 @@ import com.wonkglorg.doc.core.user.Group;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Json representation of a group
+ */
 public class JsonGroup{
 	public final String groupId;
 	public final String name;

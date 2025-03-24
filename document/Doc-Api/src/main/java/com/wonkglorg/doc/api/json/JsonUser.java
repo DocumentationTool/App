@@ -6,6 +6,9 @@ import com.wonkglorg.doc.core.user.UserProfile;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Json representation of a user
+ */
 public class JsonUser {
     public final String userId;
     public final List<Role> roles = new ArrayList<>();

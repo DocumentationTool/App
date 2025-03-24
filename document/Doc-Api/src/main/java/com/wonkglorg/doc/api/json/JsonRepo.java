@@ -5,6 +5,9 @@ import com.wonkglorg.doc.core.RepoProperty;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Json representation of a repository
+ */
 public class JsonRepo {
     public String id;
     public String path;
