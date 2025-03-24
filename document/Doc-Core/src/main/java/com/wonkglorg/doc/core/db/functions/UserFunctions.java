@@ -530,12 +530,20 @@ public class UserFunctions implements IDBFunctions, UserCalls, GroupCalls{
 	
 	@Override
 	public List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException {
-		return List.of(userGroups.get(userId).stream().map(groupCache::get).toArray(Group[]::new));
+		List<GroupId> groupIds = userGroups.get(userId);
+		if(groupIds == null){
+			return new ArrayList<>();
+		}
+		return List.of(groupIds.stream().map(groupCache::get).toArray(Group[]::new));
 	}
 	
 	@Override
 	public List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException {
-		return List.of(groupUsers.get(groupId).stream().map(userCache::get).toArray(UserProfile[]::new));
+		List<UserId> userIds = groupUsers.get(groupId);
+		if(userIds == null){
+			return new ArrayList<>();
+		}
+		return List.of(userIds.stream().map(userCache::get).toArray(UserProfile[]::new));
 	}
 	
 	/**
