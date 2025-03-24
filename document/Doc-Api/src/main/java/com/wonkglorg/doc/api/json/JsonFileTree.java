@@ -7,6 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Json representation of a file tree
+ */
 public class JsonFileTree{
 	private String name;
 	private Map<String, JsonFileTree> children = new HashMap<>();

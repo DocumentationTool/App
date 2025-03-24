@@ -6,14 +6,12 @@ import com.wonkglorg.doc.core.exception.client.InvalidGroupException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.doc.core.path.TargetPath;
-import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * A common interface referencing all group related calls
@@ -28,7 +26,7 @@ public interface GroupCalls{
 	 * @return True if the group exists, false otherwise.
 	 * @throws InvalidRepoException If the repository does not exist.
 	 */
-	boolean groupExists(RepoId repoId, GroupId groupId) throws InvalidRepoException;
+	boolean groupExists(GroupId groupId);
 	
 	/**
 	 * Checks if a group exists in a repo
@@ -38,7 +36,7 @@ public interface GroupCalls{
 	 * @param userId the user to check for
 	 * @return true if the group exists
 	 */
-	boolean userInGroup(RepoId repoId, GroupId groupId, UserId userId) throws InvalidRepoException;
+	boolean userInGroup(GroupId groupId, UserId userId) throws InvalidUserException, InvalidGroupException;
 	
 	/**
 	 * Adds a group to a repo
@@ -50,7 +48,7 @@ public interface GroupCalls{
 	 * @throws CoreException if the group could not be added
 	 * @throws InvalidGroupException if the group is invalid
 	 */
-	boolean addGroup(RepoId repoId, Group group) throws InvalidRepoException, CoreException, InvalidGroupException;
+	boolean addGroup(Group group) throws CoreException, InvalidGroupException;
 	
 	/**
 	 * Removes a group from a repo
@@ -62,16 +60,22 @@ public interface GroupCalls{
 	 * @throws InvalidRepoException if the repo is invalid
 	 * @throws InvalidGroupException if the group is invalid
 	 */
-	boolean removeGroup(RepoId repoId, GroupId groupId) throws CoreException, InvalidRepoException, InvalidGroupException;
+	boolean removeGroup(GroupId groupId) throws CoreException, InvalidGroupException;
 	
 	/**
-	 * Gets all groups in a repo
+	 * Gets all groups
 	 *
-	 * @param repoId the repo to get the groups from
-	 * @param groupId the group to get the groups from
 	 * @return a list of groups
 	 */
-	List<Group> getGroups(RepoId repoId, GroupId groupId) throws InvalidRepoException;
+	List<Group> getGroups();
+	
+	/**
+	 * Gets a group
+	 *
+	 * @param groupId the group to get
+	 * @return the group
+	 */
+	Group getGroup(GroupId groupId) throws InvalidGroupException;
 	
 	/**
 	 * Updates a group
@@ -84,7 +88,7 @@ public interface GroupCalls{
 	 * @throws InvalidRepoException if the repo is invalid
 	 * @throws InvalidGroupException if the group is invalid
 	 */
-	Group renameGroup(RepoId repoId, GroupId groupId, String newName) throws CoreException, InvalidRepoException, InvalidGroupException;
+	Group renameGroup(GroupId groupId, String newName) throws CoreException, InvalidGroupException;
 	
 	/**
 	 * Adds a user to a group
@@ -97,8 +101,7 @@ public interface GroupCalls{
 	 * @throws InvalidRepoException if the repo is invalid
 	 * @throws InvalidGroupException if the group is invalid
 	 */
-	boolean addUserToGroup(RepoId repoId, GroupId groupId, UserId userId)
-			throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException;
+	boolean addUserToGroup(GroupId groupId, UserId userId) throws CoreException, ClientException;
 	
 	/**
 	 * Removes a user from a group
@@ -111,47 +114,9 @@ public interface GroupCalls{
 	 * @throws InvalidRepoException if the repo is invalid
 	 * @throws InvalidGroupException if the group is invalid
 	 */
-	boolean removeUserFromGroup(RepoId repoId, GroupId groupId, UserId userId)
-			throws CoreException, InvalidRepoException, InvalidGroupException, InvalidUserException;
+	boolean removeUserFromGroup(GroupId groupId, UserId userId) throws CoreException, InvalidGroupException, InvalidUserException;
 	
-	/**
-	 * Adds a permission to a group
-	 *
-	 * @param repoId the repo to add the permission to
-	 * @param groupId the group to add the permission to
-	 * @param permission the permission to add
-	 * @return
-	 * @throws CoreException
-	 * @throws InvalidRepoException
-	 * @throws InvalidGroupException
-	 * @throws InvalidUserException
-	 */
-	boolean addPermissionToGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
+	Set<Group> getGroupsFromUser(UserId userId) throws InvalidUserException;
 	
-	/**
-	 * Removes a permission from a group
-	 *
-	 * @param repoId the repo to remove the permission from
-	 * @param groupId the group to remove the permission from
-	 * @param path the path to remove the permission from
-	 * @return true if the permission was removed
-	 */
-	boolean removePermissionFromGroup(RepoId repoId, GroupId groupId, TargetPath path) throws CoreException, ClientException;
-	
-	/**
-	 * Updates a permission in a group
-	 *
-	 * @param repoId the repo to update the permission in
-	 * @param path the path to update the permission for
-	 * @param groupId the group to update the permission for
-	 * @param type the new permission type
-	 * @return true if the permission was updated
-	 * @throws CoreException if the permission could not be updated
-	 * @throws ClientException if the permission is invalid
-	 */
-	boolean updatePermissionForGroup(RepoId repoId, Permission<GroupId> permission) throws CoreException, ClientException;
-	
-	List<Group> getGroupsFromUser(RepoId repoId, UserId userId) throws InvalidRepoException;
-	
-	List<UserProfile> getUsersFromGroup(RepoId repoId, GroupId groupId) throws InvalidRepoException;
+	Set<UserProfile> getUsersFromGroup(GroupId groupId) throws InvalidGroupException;
 }

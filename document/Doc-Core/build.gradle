@@ -17,9 +17,12 @@ dependencies {
     //user for ant path matcher
     implementation 'org.springframework:spring-core:7.0.0-M2'
 
-// https://mvnrepository.com/artifact/com.groupdocs/groupdocs-parser
-   // implementation 'com.groupdocs:groupdocs-parser:23.11'
+    // https://mvnrepository.com/artifact/com.groupdocs/groupdocs-parser
+    // implementation 'com.groupdocs:groupdocs-parser:23.11'
 
+    //hashing
+    // https://mvnrepository.com/artifact/org.springframework.security/spring-security-core
+    implementation 'org.springframework.security:spring-security-core:6.4.4'
 
     //git
     implementation 'org.eclipse.jgit:org.eclipse.jgit:6.6.1.202309021850-r'

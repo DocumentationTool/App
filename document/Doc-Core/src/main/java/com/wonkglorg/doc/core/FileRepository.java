@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
+import com.wonkglorg.doc.core.db.UserDatabase;
 import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.InvalidTagException;
@@ -54,10 +55,12 @@ public class FileRepository implements AutoCloseable{
 	 * Represents the backing database of a repo
 	 */
 	private RepositoryDatabase dataDB;
+	private UserDatabase userDB;
 	private final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 	
-	public FileRepository(RepoProperty repoProperty) {
+	public FileRepository(RepoProperty repoProperty, UserDatabase userDB) {
 		this.repoProperties = repoProperty;
+		this.userDB = userDB;
 	}
 	
 	public RepositoryDatabase getDatabase() {
@@ -82,7 +85,7 @@ public class FileRepository implements AutoCloseable{
 			log.info("No Database in '{}'. Creating new Database.", repoProperties.getDbName());
 		}
 		
-		dataDB = new RepositoryDatabase(repoProperties, gitRepo.getDatabaseRepoPath().resolve(repoProperties.getDbName()));
+		dataDB = new RepositoryDatabase(repoProperties, gitRepo.getDatabaseRepoPath().resolve(repoProperties.getDbName()), this);
 		dataDB.initialize();
 		
 		Set<Path> foundFiles = gitRepo.getFiles(s -> s.toLowerCase().endsWith(".md"), UNTRACKED, MODIFIED, ADDED);
@@ -297,6 +300,10 @@ public class FileRepository implements AutoCloseable{
 	
 	public RepoProperty getRepoProperties() {
 		return repoProperties;
+	}
+	
+	public UserDatabase getUserDB() {
+		return userDB;
 	}
 	
 	@Override

@@ -19,7 +19,7 @@ public class Group{
 	private LocalDateTime creationDate;
 	private String modifiedBy;
 	private LocalDateTime lastModified;
-	private final Map<String, Permission<GroupId>> permissions = new HashMap<>();
+
 	private final Set<UserId> userIds = new HashSet<>();
 	
 	public Group(GroupId id, String name, String createdBy, LocalDateTime creationDate, String modifiedBy, LocalDateTime lastModified) {
@@ -71,10 +71,6 @@ public class Group{
 	
 	public LocalDateTime getLastModified() {
 		return lastModified;
-	}
-	
-	public Map<String, Permission<GroupId>> getPermissions() {
-		return permissions;
 	}
 	
 	public Set<UserId> getUserIds() {
