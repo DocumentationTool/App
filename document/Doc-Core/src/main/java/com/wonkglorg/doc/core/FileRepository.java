@@ -193,9 +193,10 @@ public class FileRepository implements AutoCloseable{
 	 *
 	 * @param resourcePath the path to the resource
 	 */
-	public void removeResourceAndCommit(UserId userId, Path resourcePath) {
+	public void removeResourceAndCommit(UserId userId, Path resourcePath) throws IOException {
 		try{
 			UserBranch branch = gitRepo.createBranch(userId);
+			Files.deleteIfExists(getGitRepo().getRepoPath().resolve(resourcePath));
 			branch.updateFileDeleted(resourcePath);
 			branch.commit("Deleted resource %s".formatted(resourcePath));
 			branch.closeBranch();

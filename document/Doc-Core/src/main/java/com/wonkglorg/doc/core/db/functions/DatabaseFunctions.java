@@ -2,6 +2,8 @@ package com.wonkglorg.doc.core.db.functions;
 
 import com.wonkglorg.doc.core.db.RepositoryDatabase;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
+import com.wonkglorg.doc.core.permissions.PermissionType;
+import com.wonkglorg.doc.core.permissions.Role;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,6 +156,24 @@ public class DatabaseFunctions implements IDBFunctions {
                         ON Resources.resource_path = ResourceTags.resource_path
                       GROUP BY Resources.resource_path;
                     """);
+
+
+            statement.execute("""
+                    INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', 'admin','system');
+                    """);
+            statement.execute("""
+                    INSERT OR IGNORE INTO UserRoles(role_id, user_id) VALUES ('%s', 'admin');
+                    """.formatted(Role.ADMIN));
+            statement.execute("""
+                    INSERT OR IGNORE INTO Groups (group_id, group_name, created_by) VALUES ('admin', 'admin','system');
+                    """);
+            statement.execute("""
+                        INSERT OR IGNORE INTO UserGroups(user_id, group_id) VALUES ('admin', 'admin');
+                    """);
+
+            statement.execute("""
+                    INSERT OR IGNORE INTO UserPermissions(user_id, path,type) VALUES ('adin','**','%s');
+                    """.formatted(PermissionType.ADMIN));
 
             statement.execute("PRAGMA foreign_keys = ON");
         } catch (Exception e) {
