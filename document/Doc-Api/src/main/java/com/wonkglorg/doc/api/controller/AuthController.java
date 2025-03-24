@@ -16,6 +16,9 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.AUTH;
 
+/**
+ * Controller Endpoint handling all authentication related endpoints
+ */
 @RestController
 @RequestMapping(AUTH)
 public class AuthController {
@@ -36,6 +39,11 @@ public class AuthController {
 		log.info("Login GET request received");
 		return new ResponseEntity<>(new AuthResponse(null, "Endpoint for testing purposes only enable DEV_MODE!"), HttpStatus.FORBIDDEN);
 	}
+
+	/**
+	 * Logs out the user.
+	 * @return 404
+	 */
 	@Operation(
 			summary = "User logout",
 			description = "Logs out the user."
@@ -45,6 +53,12 @@ public class AuthController {
 		log.info("Logout request received");
 		return ResponseEntity.notFound().build();
 	}
+
+	/**
+	 * Logs in the user.
+	 * @param request The user's id and password.
+	 * @return 200 with a token if successful, 401 if not.
+	 */
 	@Operation(
 			summary = "User login",
 			description = "Attempts to login a user with the given credentials. Returns a token if successful, otherwise returns a 401."

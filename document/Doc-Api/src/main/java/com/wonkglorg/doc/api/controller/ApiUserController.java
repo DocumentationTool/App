@@ -43,6 +43,13 @@ public class ApiUserController {
         this.userService = userService;
     }
 
+    /**
+     * Get users
+     *
+     * @param repoId The repoId to search in. If none is given, returns the result for all currently loaded repos.
+     * @param userId The userId to search for, if none is given, returns all users in this repository.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Get a user", description = "Returns a user or users if no repository is given. If a repository is given, only returns users for that repository will be returned, if no userId is given returns all users in this repository.")
     @GetMapping("/get")
     public ResponseEntity<RestResponse<List<JsonUser>>> getUsers(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
@@ -61,6 +68,13 @@ public class ApiUserController {
     }
 
 
+    /**
+     * Sets a user's role
+     * @param repoId The repoId to search in.
+     * @param userId The users id to set the role for.
+     * @param role The role to set.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes user Role", description = "Removes a role from a user")
     @PostMapping("/role/remove")
     public ResponseEntity<RestResponse<Void>> removeRole(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -95,6 +109,15 @@ public class ApiUserController {
     }
 
 
+    /**
+     * Adds a new user
+     * @param repoId The repoId to search in. If none is given, returns the result for all currently loaded repos.
+     * @param userId The user's id.
+     * @param password The user's password.
+     * @param role The users Role.
+     * @param groupIds The user's group.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a new user", description = "Adds a new user to the system. If a repository is given, only adds the user to that repository. If none is given, adds the user to all repositories.")
     @PostMapping("/add")
     public ResponseEntity<RestResponse<Void>> addUser(@Parameter(description = "The repoId to search in. If none is given, returns the result for all currently loaded repos.") @RequestParam(value = "repoId") String repoId,
@@ -119,6 +142,12 @@ public class ApiUserController {
         }
     }
 
+    /**
+     * Removes a user
+     * @param repoId The repoId to search in.
+     * @param userId The users id to remove.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a User", description = "Removes a user from the system.")
     @PostMapping("/remove")
     public ResponseEntity<RestResponse<Void>> deleteUser(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -134,6 +163,14 @@ public class ApiUserController {
         }
     }
 
+    /**
+     * Adds a permission to a user
+     * @param repoId The repoId to search in.
+     * @param userId The users id to add the permission to.
+     * @param path The path to add the permission from.
+     * @param type The permission to add.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a permission to a user", description = "Adds a permission to a user.")
     @PostMapping("permission/add")
     public ResponseEntity<RestResponse<Void>> addUserPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -153,6 +190,13 @@ public class ApiUserController {
         }
     }
 
+    /**
+     * Removes a permission from a user
+     * @param repoId The repoId to search in.
+     * @param userId The users id to remove.
+     * @param path The path to remove the permission from.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a permission from a user", description = "Removes a permission from a user.")
     @PostMapping("permission/remove")
     public ResponseEntity<RestResponse<Void>> removeUserPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,
@@ -169,6 +213,14 @@ public class ApiUserController {
         }
     }
 
+    /**
+     * Updates a permission in a user
+     * @param repoId The repoId to search in.
+     * @param userId The users id to update.
+     * @param path The path to update the permission for.
+     * @param type The new permission type.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Updates a permission in a user", description = "Updates a permission in a user.")
     @PostMapping("permission/update")
     public ResponseEntity<RestResponse<Void>> updateUserPermission(@Parameter(description = "The repoId to search in.") @RequestParam("repoId") String repoId,

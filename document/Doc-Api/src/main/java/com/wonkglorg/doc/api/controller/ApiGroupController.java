@@ -87,8 +87,10 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param groupId
+     * Returns all users in a group.
+     *
+     * @param repoId  the repoId to search in
+     * @param groupId the groupId search for
      * @return {@link RestResponse}
      */
     @Operation(summary = "Get Users from Group", description = "Returns all users in a group.")
@@ -108,8 +110,10 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param userId
+     * Returns all groups a user is in.
+     *
+     * @param repoId the repoId to search in
+     * @param userId the userId to return the groups for
      * @return {@link RestResponse}
      */
     @Operation(summary = "Get groups from user", description = "Returns all groups a user is in.")
@@ -129,8 +133,10 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param groupId
+     * Removes a group from the system
+     *
+     * @param repoId  the repository to remove the group from
+     * @param groupId the group id to remove
      * @return {@link RestResponse}
      */
     @Operation(summary = "Removes a Group", description = "Removes a group from the system.")
@@ -149,9 +155,11 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param groupId
-     * @param groupName
+     * Adds a new group to the repository
+     *
+     * @param repoId    the repository to add the group to
+     * @param groupId   the group id
+     * @param groupName the group name
      * @return {@link RestResponse}
      */
     @Operation(summary = "Adds a new Group", description = "Adds a new Group to the repo.")
@@ -171,9 +179,11 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param userId
-     * @param groupId
+     * Adds a user to a group
+     *
+     * @param repoId  the repository the group is in
+     * @param userId  the users id to add
+     * @param groupId the group id to add the user to
      * @return {@link RestResponse}
      */
     @Operation(summary = "Adds a user to a group", description = "Adds a user to a group in a repo.")
@@ -193,9 +203,11 @@ public class ApiGroupController {
     }
 
     /**
-     * @param repoId
-     * @param userId
-     * @param groupId
+     * Removes a user from a group
+     *
+     * @param repoId  the repository the group is in
+     * @param userId  the users id to remove
+     * @param groupId the group id to remove the user from
      * @return {@link RestResponse}
      */
     @Operation(summary = "Removes a user from a group", description = "Removes a user from a group in a repo.")
@@ -217,10 +229,11 @@ public class ApiGroupController {
 
     /**
      * Adds a permission to a group (this will fail if a permission with the same path already exists)
-     * @param repoId the repository the group is in
+     *
+     * @param repoId  the repository the group is in
      * @param groupId the groups id
-     * @param type the type of permission to give
-     * @param path the path of the permission
+     * @param type    the type of permission to give
+     * @param path    the path of the permission
      * @return {@link RestResponse}
      */
     @Operation(summary = "Adds a permission to a group", description = "Adds a permission to a group in a repo.")

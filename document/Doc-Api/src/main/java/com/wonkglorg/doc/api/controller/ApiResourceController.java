@@ -36,6 +36,12 @@ public class ApiResourceController {
         this.resourceService = resourceService;
     }
 
+    /**
+     * Returns resources by the specified request.
+     *
+     * @param request the {@link ResourceRequest} to get resources
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Gets a resource", description = """
             ## Returns resources by the specified request.
             
@@ -75,6 +81,12 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Constructs a file tree out of the given resource request.
+     *
+     * @param request the {@link ResourceRequest} to get resources
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Constructs a file tree", description = """
             ## Constructs a file tree out of the given resource request.
             
@@ -133,6 +145,17 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Adds a resource to the repository.
+     *
+     * @param repoId    the repository id
+     * @param path      the path the resource should be located at
+     * @param createdBy the user who created the resource
+     * @param category  the category of the resource
+     * @param tagIds    the tags of the resource (optional)
+     * @param content   the content of the resource
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a resource", description = """
             ## Body
             The data the file should contain.
@@ -162,6 +185,12 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Updates a resource in the repository.
+     *
+     * @param request {@link ResourceUpdateRequest}
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Updates a resource", description = "Updates a resource in the Repository.")
     @PostMapping("/update")
     public ResponseEntity<RestResponse<Void>> updateResource(@RequestBody ResourceUpdateRequest request) {
@@ -177,6 +206,13 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Removes a resource from the repository.
+     *
+     * @param repo the repository id
+     * @param path the path of the resource
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a resource", description = "Removes a resource from the Repository.")
     @PostMapping("/remove")
     public ResponseEntity<RestResponse<Void>> removeResource(@RequestParam("repoId") String repo, @RequestParam("path") String path) {
@@ -191,6 +227,16 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Moves a resource from one destination to another. if a second repo is not given or is same as the first moves the resource within the same repository
+     *
+     * @param userId   the user id
+     * @param repoFrom the repository id to move from
+     * @param from     the path to move from
+     * @param repoTo   the repository id to move to (optional)
+     * @param to       the path to move to
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Moves a resource", description = "Moves a resource from one destination to another.")
     @PostMapping("/move")
     public ResponseEntity<RestResponse<Void>> moveResource(@RequestParam("userId") String userId,
@@ -213,6 +259,14 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Adds a new Tag to the repository.
+     *
+     * @param repoId  The repoId to add the tag in.
+     * @param tagId   the id of the tag to be added.
+     * @param tagName the name to display for the tag id.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Adds a new Tag", description = "Adds a new Tag to the repository.")
     @PostMapping("tag/add")
     public ResponseEntity<RestResponse<Void>> addTag(@Parameter(description = "The repoId to add the tag in.") @RequestParam("repoId") String repoId,
@@ -229,6 +283,13 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Removes a Tag from the repository.
+     *
+     * @param repoId The repoId to remove the tag from.
+     * @param tagId  The tagId to remove.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a Tag", description = "The tag to remove from the repository.")
     @PostMapping("/tag/remove")
     public ResponseEntity<RestResponse<Void>> removeTag(@Parameter(description = "The repoId to remove the tag from.") @RequestParam("repoId") String repoId,
@@ -244,6 +305,12 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Retrieves all Tags from a specific repository.
+     *
+     * @param repoId The repoId to remove the tag from or null to remove the tag from all repositories.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Retrieves all Tags", description = "Retrieves all tags from a specific repository.")
     @PostMapping("/tag/get")
     public ResponseEntity<RestResponse<Map<String, String>>> getTags(@Parameter(description = "The repoId to remove the tag from or null to remove the tag from all repositories.") @RequestParam(value = "repoId", required = false) String repoId) {
@@ -258,6 +325,14 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Retrieves all Tags from a specific repository.
+     *
+     * @param repoId The repoId to remove the tag from or null to remove the tag from all repositories.
+     * @param path   The path to set as a tag.
+     * @param userId The userId to remove the tag from or null to remove the tag from all users.
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Sets a resource as being edited", description = "Sets a resource as being edited. Needs to be released manually by the user.")
     @PostMapping("/editing/set")
     public ResponseEntity<RestResponse<Void>> setEditing(@RequestParam("repoId") String repoId,
@@ -275,6 +350,13 @@ public class ApiResourceController {
         }
     }
 
+    /**
+     * Checks if a resource is being edited.
+     *
+     * @param repoId the repoId to check if the resource is being edited
+     * @param path   the path to check if it is being edited
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Checks if a resource is being edited", description = "Returns information about a files editing status.")
     @GetMapping("/editing/get")
     public ResponseEntity<RestResponse<JsonResourceEdit>> isBeingEdited(@RequestParam("repoId") String repoId, @RequestParam("path") String path) {
@@ -293,6 +375,14 @@ public class ApiResourceController {
         }
     }
 
+
+    /**
+     * Removes a file as being edited.
+     *
+     * @param repoId the repoId to remove the resource from being edited
+     * @param path   the path to remove from being edited
+     * @return {@link RestResponse}
+     */
     @Operation(summary = "Removes a file as being edited", description = "Frees up a resource from its editing lock allowing anyone to take and edit it again.")
     @PostMapping("/editing/remove")
     public ResponseEntity<RestResponse<Void>> removeEditedState(@RequestParam("repoId") String repoId, @RequestParam("path") String path) {
