@@ -33,18 +33,6 @@ export class EditorComponent implements OnDestroy {
     console.log(`onPreviewDomChanged fired`);
   }
 
-  //@ts-ignore
-  uploadImg(evt) {
-    if (!evt) return;
-    const file = evt.target.files[0];
-    const reader = new FileReader();
-    reader.addEventListener("load", () => {
-      this.resourceService.fileContent.set(this.resourceService.fileContent() + `![](${reader.result})`);
-    }, false);
-
-    if (file) reader.readAsDataURL(file);
-  }
-
   doUpload(files: Array<File>): Promise<Array<UploadResult>> {
     // do upload file by yourself
     return Promise.resolve([{name: 'xxx', url: 'xxx.png', isImg: true}]);

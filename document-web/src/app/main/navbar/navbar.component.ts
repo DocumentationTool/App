@@ -4,6 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {ResourceService} from '../service/resource.service';
 import {Resources} from '../../Model/apiResponseFileTree';
 import {KeyValuePipe, NgClass, NgForOf} from '@angular/common';
+import {AuthService} from '../service/authService';
 
 @Component({
   selector: 'app-navbar',
@@ -18,8 +19,9 @@ import {KeyValuePipe, NgClass, NgForOf} from '@angular/common';
   styleUrl: './navbar.component.css'
 })
 export class NavbarComponent {
-  constructor(public navigationService: NavigationService,
-              public resourceService: ResourceService) {
+  constructor(protected navigationService: NavigationService,
+              protected resourceService: ResourceService,
+              protected authService: AuthService) {
   }
 
   onToggleSidebar() {
@@ -92,11 +94,10 @@ export class NavbarComponent {
   onSearchResource() {
     let inFileSearch: string;
     if (this.checkSearchType()) {
-      //ToDo: User
       inFileSearch = this.searchTerm.slice(1)
-      this.resourceService.getResource(null, inFileSearch, null, null, this.whiteListTags, this.blackListTags);
+      this.resourceService.getResource(null, inFileSearch, null, this.authService.username(), this.whiteListTags, this.blackListTags);
     } else {
-      this.resourceService.getResource(this.searchTerm, null, null, null, this.whiteListTags, this.blackListTags);
+      this.resourceService.getResource(this.searchTerm, null, null, this.authService.username(), this.whiteListTags, this.blackListTags);
     }
     this.isSearchActive = true;
   }

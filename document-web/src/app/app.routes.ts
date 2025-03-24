@@ -1,10 +1,9 @@
-import { Routes } from '@angular/router';
+import {Routes} from '@angular/router';
 import {LoginComponent} from './login/login.component';
 import {MainComponent} from './main/main.component';
 import {AdminComponent} from './main/admin/admin.component';
 import {EditorComponent} from './main/editor/editor.component';
 import {ViewComponent} from './main/view/view.component';
-import {UserManagementComponent} from './main/admin/userManagement/userManagement.component';
 import {NotFoundComponent} from './not-found/not-found.component';
 
 export const routes: Routes = [
@@ -23,10 +22,6 @@ export const routes: Routes = [
       {
         path: 'admin',
         component: AdminComponent,
-      },
-      {
-        path: 'userManagement',
-        component: UserManagementComponent,
       },
       {
         path: 'view',

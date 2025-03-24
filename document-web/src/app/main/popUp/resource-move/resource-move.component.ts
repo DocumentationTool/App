@@ -4,6 +4,7 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {ResourceService} from '../../service/resource.service';
 import {NavigationService} from '../../service/navigation.service';
 import {ApiRepo} from '../../../api/apiRepo';
+import {AuthService} from '../../service/authService';
 
 @Component({
   selector: 'app-resource-move',
@@ -16,7 +17,8 @@ import {ApiRepo} from '../../../api/apiRepo';
 })
 export class ResourceMoveComponent implements OnInit{
   constructor(private dialogRef: MatDialogRef<ResourceMoveComponent>,
-              public resourceService: ResourceService,
+              protected resourceService: ResourceService,
+              private authService: AuthService,
               @Inject(MAT_DIALOG_DATA) public dialogData: { repoId: string, path: string }) {
   }
 
@@ -29,8 +31,7 @@ export class ResourceMoveComponent implements OnInit{
   pathTo: string = "";
 
   moveResource() {
-    //ToDo: user
-    this.resourceService.moveResource("niklas", this.dialogData.repoId,this.dialogData.path,this.repoTo, this.pathTo)
+    this.resourceService.moveResource(this.authService.username(), this.dialogData.repoId,this.dialogData.path,this.repoTo, this.pathTo)
     this.closeDialog();
   }
 

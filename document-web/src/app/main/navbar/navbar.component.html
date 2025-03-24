@@ -62,10 +62,10 @@
     Profile
     @if (isDropdownOpen) {
       <div class="dropdown-menu">
-        <div class="dropdown-item" (click)="this.navigationService.logAdminIn()">
+        <div class="dropdown-item" (click)="this.authService.logAdminIn()">
           Admin
         </div>
-        <div class="dropdown-item" (click)="this.navigationService.logUserIn()">
+        <div class="dropdown-item" (click)="this.authService.logUserIn()">
           User1
         </div>
       </div>

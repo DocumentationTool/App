@@ -9,7 +9,6 @@ import {MatDialog} from '@angular/material/dialog';
 import {ResourceUploadComponent} from '../popUp/resource-upload/resource-upload.component';
 import {ResourceEditTagsComponent} from '../popUp/resource-edit-tags/resource-edit-tags.component';
 import {ResourceMoveComponent} from '../popUp/resource-move/resource-move.component';
-import {Resources} from '../../Model/apiResponseFileTree';
 import {RepoEditTagsComponent} from '../popUp/repo-edit-tags/repo-edit-tags.component';
 import {UserAddComponent} from '../popUp/user-add/user-add.component';
 import {Repos} from '../../Model/apiResponseModelRepos';
@@ -17,6 +16,9 @@ import {UserService} from './userService';
 import {User} from '../../Model/apiResponseUser';
 import {UserEditComponent} from '../popUp/user-edit/user-edit.component';
 import {GroupAddComponent} from '../popUp/group-add/group-add.component';
+import {GroupEditComponent} from '../popUp/group-edit/group-edit.component';
+import {ToastrService} from 'ngx-toastr';
+import {AuthService} from './authService';
 
 @Injectable({
   providedIn: 'root'
@@ -24,35 +26,15 @@ import {GroupAddComponent} from '../popUp/group-add/group-add.component';
 
 export class NavigationService {
   constructor(private router: Router,
-              private apiAuth: ApiAuth,
               private apiResource: ApiResource,
               private resourceService: ResourceService,
               private userService: UserService,
-              private dialog: MatDialog) {
+              private dialog: MatDialog,
+              private authService: AuthService) {
   }
 
   toggle = signal<boolean>(true);
-  isAdmin = signal<boolean>(false);
   mode = signal<string>("editor");
-
-  logAdminIn() {
-    this.isAdmin.set(true);
-  }
-
-  logUserIn() {
-    this.isAdmin.set(false);
-    //ToDo: ausbauen:
-    this.getTestUser();
-  }
-
-  getTestUser() {
-    this.apiAuth.testLogin().subscribe(response => {
-        console.log(response)
-      },
-      (error) => {
-        console.error("Fehler Bei testLogin ", error)
-      });
-  }
 
   toggleSidebar() {
     this.toggle.update(current => !current);
@@ -76,16 +58,15 @@ export class NavigationService {
 
   editedResourceCheck(data: ApiResponseModelResourceBeingEdited) {
     if (!data.content.isBeingEdited) { //Abfrage ob file editiert wird
-      let userId = "Niklas" //ToDo: user id dynamic   -- user anlegen sonst bad request!
       console.log("File Editing")
-      // this.apiResource.setResourceBeingEdited(this.resourceService.selectedFile()?.repoId, this.resourceService.selectedFile()?.path, userId).subscribe(
-      //   data => {
-      //     console.log("data ", data)
-      //   },
-      //   error => {
-      //     console.error(error)
-      //   }
-      // )
+      this.apiResource.setResourceBeingEdited(this.resourceService.selectedFile()?.repoId, this.resourceService.selectedFile()?.path, this.authService.username() ).subscribe(
+        data => {
+          console.log("data ", data)
+        },
+        error => {
+          console.error(error)
+        }
+      )
       this.router.navigate(['/main/editor'])
       this.mode.set("editor")
       this.resourceService.editingFile.set(this.resourceService.selectedFile());
@@ -102,13 +83,16 @@ export class NavigationService {
     this.dialog.open(ResourceCreateNewComponent);
   }
 
-  userManagement(repo: Repos) {
+  selectRepo(repo: Repos) {
     this.userService.selectedRepo.set(repo)
-    this.router.navigate(['/main/userManagement'])
   }
 
-  createNewUser() {
-    this.dialog.open(UserAddComponent);
+  createNewUser(repoId: string | undefined) {
+    this.dialog.open(UserAddComponent,
+      {
+        data: {repoId}
+      }
+    );
   }
 
   createNerGroup(repoId: string | undefined) {
@@ -116,6 +100,14 @@ export class NavigationService {
       {
         data: {repoId}
       });
+  }
+
+  editGroup(repoId: string | undefined, groupId: string) {
+     this.dialog.open(GroupEditComponent,
+       {
+         data: {repoId, groupId}
+       }
+     )
   }
 
   editUser(repoId: string | undefined, user: User) {
@@ -154,8 +146,18 @@ export class NavigationService {
       });
   }
 
+
   isEditorActive(): boolean {
     return this.router.isActive('/main/editor', {
+      paths: 'exact',
+      queryParams: 'ignored',
+      fragment: 'ignored',
+      matrixParams: 'ignored',
+    });
+  }
+
+  isAdminActive() {
+    this.router.isActive('/main/admin', {
       paths: 'exact',
       queryParams: 'ignored',
       fragment: 'ignored',

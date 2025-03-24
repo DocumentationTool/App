@@ -9,7 +9,7 @@
 
         <!---------------------------------------------File Upload----- ----------------------------------------------->
         <div class="upload">
-          <input #fileInput type="file" accept=".md" style="display: none" (change)="onUpload($event)"/>
+          <input #fileInput type="file" accept=".md,.docx" style="display: none" (change)="onUpload($event)"/>
           <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
         </div>
 
@@ -17,7 +17,7 @@
           <i class="ri-add-line ms-md-2" (click)="navigationService.createNewResource()"></i>
         </div>
 
-        @if (this.navigationService.isAdmin()) {
+        @if (this.authService.isAdmin()) {
           <div class="nav-admin">
             <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
                [routerLinkActiveOptions]="{ exact: true }">

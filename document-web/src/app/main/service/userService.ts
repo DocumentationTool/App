@@ -4,6 +4,7 @@ import {ApiUser} from '../../api/apiUser';
 import {ApiResponseFileTree} from '../../Model/apiResponseFileTree';
 import {Repos} from '../../Model/apiResponseModelRepos';
 import {User} from '../../Model/apiResponseUser';
+import {ToastrService} from 'ngx-toastr';
 
 @Injectable({
   providedIn: 'root'
@@ -12,104 +13,80 @@ import {User} from '../../Model/apiResponseUser';
 export class UserService {
   constructor(
     private router: Router,
-    private apiUser: ApiUser) {
+    private apiUser: ApiUser,
+    private toastr: ToastrService) {
   }
 
   selectedRepo = signal<Repos | null>(null);
   allUsersOnRepo = signal<User[] | null>(null)
-  allGroupsOnUser = signal<string[] | null>(null)
 
-  createUser(repoId: string, userId: string, password: string) {
-    this.apiUser.addUser(repoId, userId, password).subscribe(
-      data => {
-        console.log(data)
+  createUser(repoId: string | undefined, userId: string, password: string, groupIds: string[] | null) {
+    this.apiUser.addUser(repoId, userId, password, groupIds).subscribe(
+      _ => {
         this.getUser(repoId, null)
+        this.toastr.success("User Created")
       },
       error => {
-        console.error(error)
-      }
-    )
-  }
-
-  getUser(repoId: string | undefined, UserId: string | null) {
-    console.log(repoId)
-    this.apiUser.getUser(repoId, UserId).subscribe(
-      data => {
-        this.allUsersOnRepo.set(data.content)
-      },
-      error => {
-        console.error(error)
+        this.toastr.error(error.message, "User creation failed: ")
       }
     )
   }
 
   removeUser(repoId: string | undefined, userId: string) {
     this.apiUser.removeUser(repoId, userId).subscribe(
-      data => {
+      _ => {
         this.getUser(repoId, null)
+        this.toastr.success("User removed")
       },
       error => {
-        console.error(error)
+        this.toastr.error(error.message, "User remove failed: ")
       }
     )
   }
 
-  editGroups(repoId: string, tagIdsToAdd: string[], tagNamesToAdd: string[], tagIdsToRemove: string[]) {
-    if (tagIdsToAdd && tagNamesToAdd && tagIdsToAdd.length === tagNamesToAdd.length) {
-      for (let i = 0; i < tagIdsToAdd.length; i++) {
-        this.apiUser.addUserGroup(repoId, tagIdsToAdd[i], tagNamesToAdd[i]).subscribe(
-          data => {
-            console.log(data)
-          },
-          error => {
-            console.error(error)
-          }
-        );
-      }
-    }
-
-    if (tagIdsToRemove) {
-      for (let i = 0; i < tagIdsToRemove.length; i++) {
-        this.apiUser.removeUserGroup(repoId, tagIdsToRemove[i]).subscribe(
-          data => {
-            console.log(data)
-          },
-          error => {
-            console.error(error)
-          }
-        );
-      }
-    }
-  }
-
-  removeUserGroup(repoId: string | undefined, groupId: string) {
-    this.apiUser.removeUserGroup(repoId, groupId).subscribe(
+  getUser(repoId: string | undefined, UserId: string | null) {
+    this.apiUser.getUser(repoId, UserId).subscribe(
       data => {
-        console.log(data)
+        this.allUsersOnRepo.set(data.content)
       },
       error => {
-        console.error(error)
+        this.toastr.error(error.message, "Load user failed: ")
       }
     )
   }
 
-  getUserGroup(repoId: string | undefined, userId: string | null) {
-    this.apiUser.getUserGroup(repoId, userId).subscribe(
-      data => {
-        if (data.content && data.content.length > 0) {
-          // Extrahiere alle groupId-Werte aus der Antwort
-          const allGroupIds: string[] = data.content.map(group => group.groupId);
-
-          this.allGroupsOnUser.set(allGroupIds);
-        } else {
-          console.log("No Groups on User");
-          this.allGroupsOnUser.set([]);
-        }
+  addPermissionToUser(repoId: string, userId: string, permissionType: string, path: string) {
+    this.apiUser.addPermissionToUser(repoId,userId,permissionType,path).subscribe(
+      _ => {
+        this.toastr.success("User permission added")
       },
       error => {
-        console.error("Error fetching user groups:", error);
+        this.toastr.error(error.message, "Add user permission failed: ")
       }
-    );
+    )
+  }
+
+  removePermissionFromUser(repoId: string, userId: string, path: string) {
+    this.apiUser.removePermissionFromUser(repoId,userId,path).subscribe(
+      _ => {
+        this.toastr.success("User permission removed")
+      },
+      error => {
+        this.toastr.error(error.message, "remove user permission failed: ")
+      }
+    )
+  }
+
+  updatePermissionOnUser(repoId: string, userId: string, permissionType: string, path: string) {
+    this.apiUser.updatePermissionOnUser(repoId,userId,permissionType,path).subscribe(
+      _ => {
+        this.toastr.success("User permission updated")
+      },
+      error => {
+        this.toastr.error(error.message, "Update user permission failed: ")
+
+      }
+    )
   }
 }
 

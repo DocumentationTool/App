@@ -1,8 +1,8 @@
 export interface Group {
   groupId: string;
   name: string;
-  permissions: any[]; // Falls später genauer definiert, ersetzen
-  users: any[]; // Falls später genauer definiert, ersetzen
+  permissions: any[];
+  users: any[];
 }
 
 export interface ApiResponseGroup {

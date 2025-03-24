@@ -1,6 +1,7 @@
 import {Injectable} from '@angular/core';
 import {TestLoginResponseModel} from '../Model/TestLoginResponseModel';
 import {HttpClient} from '@angular/common/http';
+import {ApiResponseLogin} from '../Model/apiResponseLogin';
 
 @Injectable({
   providedIn: 'root'
@@ -17,7 +18,7 @@ export class ApiAuth {
 
   login(userId: string, password: string) {
     const params = {userId, password}
-    return this.http.post(this.baseUrl + "/login", {params})
+    return this.http.post<ApiResponseLogin>(this.baseUrl + "/login", params)
   }
 
   logout() {

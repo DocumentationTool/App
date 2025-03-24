@@ -12,19 +12,24 @@ export class ApiUser {
 
   private baseUrl = 'http://localhost:8080/api/user';
 
+  addUser(repoId: string | undefined, userId: string, password: string, groupIds: string[] | null) {
+    let params = new HttpParams()
+    if (repoId) params = params.set('repoId', repoId)
+      .set('userId', userId)
+      .set('password', password)
+    if (groupIds && groupIds.length > 0) {
+      groupIds.forEach(groupId => {
+        params = params.append('tagIds', groupId); // Fügt jede groupId als separaten Parameter hinzu
+      });
+    }
+    return this.http.post(this.baseUrl + "/add", params);
+  }
+
   removeUser(repoId: string | undefined, userId: string) {
     let params = new HttpParams()
     if (repoId) params = params.set('repoId', repoId);
     if (userId) params = params.set('userId', userId);
     return this.http.post(this.baseUrl + "/remove", params);
-  }
-
-  addUser(repoId: string, userId: string, password: string) {
-    const params = new HttpParams()
-      .set('repoId', repoId)
-      .set('userId', userId)
-      .set('password', password)
-    return this.http.post(this.baseUrl + "/add", params);
   }
 
   getUser(repoId: string | undefined, userId: string | null) {
@@ -35,26 +40,30 @@ export class ApiUser {
     return this.http.get<ApiResponseUser>(this.baseUrl + "/get", {params})
   }
 
-  removeUserGroup(repoId: string | undefined, groupId: string) {
-    let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
-    if (groupId) params = params.set('groupId', groupId);
-    return this.http.post(this.baseUrl + "/group/remove", params);
+  addPermissionToUser(repoId: string, userId: string, permissionType: string, path: string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+      .set('permission', permissionType)
+      .set('path', path)
+    return this.http.post(this.baseUrl + "/permission/add", params)
   }
 
-  addUserGroup(repoId: string, groupId: string, groupName: string) {
-    let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
-    if (groupId) params = params.set('groupId', groupId);
-    if (groupName) params = params.set('groupName', groupName);
-    return this.http.post(this.baseUrl + "/group/add", params);
+  removePermissionFromUser(repoId: string, userId: string, path: string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+      .set('path', path)
+    return this.http.post(this.baseUrl + "/permission/remove", params)
   }
 
-  getUserGroup(repoId: string | undefined, userId: string | null) {
-    let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
-    if (userId) params = params.set('userId', userId);
-
-    return this.http.get<ApiResponseGroup>(this.baseUrl + "/group/get", {params})
+  updatePermissionOnUser(repoId: string, userId: string, permissionType: string, path: string) {
+    const params = new HttpParams()
+      .set('repoId', repoId)
+      .set('userId', userId)
+      .set('permissionType', permissionType)
+      .set('path', path)
+    return this.http.post(this.baseUrl + "/permission/update", params)
   }
+
 }

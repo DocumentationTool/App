@@ -3,6 +3,7 @@ import {Router} from '@angular/router';
 import {ApiResource} from '../../api/apiResource';
 import {ApiResponseFileTree, Resources} from '../../Model/apiResponseFileTree';
 import {ApiResponseResource} from '../../Model/apiResponseResource';
+import {ToastrService} from 'ngx-toastr';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,8 @@ import {ApiResponseResource} from '../../Model/apiResponseResource';
 export class ResourceService {
   constructor(
     private router: Router,
-    private apiResource: ApiResource) {
+    private apiResource: ApiResource,
+    private toastr: ToastrService) {
   }
 
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
@@ -51,14 +53,15 @@ export class ResourceService {
             this.router.navigate(['/main/view'])
 
           } else {
-            console.error("Kein Resource-Eintrag gefunden für den Pfad:", file.path);
+            this.toastr.error("Resource not found")
           }
         } else {
-          console.error("Keine Ressourcen gefunden für repoId:", file.repoId);
+          this.toastr.error("Resource not found")
         }
       },
       error => {
         console.error(error);
+        this.toastr.error("Resource not found")
       }
     );
   }
@@ -82,36 +85,41 @@ export class ResourceService {
 
   updateResource() {
     this.apiResource.updateResource(this.editingFile()?.repoId, this.editingFile()?.path, null, null, null, null, null, this.fileContent(), false).subscribe(
-      data => {
-        console.log(data)
+      _ => {
         this.loadFileTree();
         this.fileContentBeforeChanges = this._fileContent();
+        this.toastr.success('Resource saved!')
       },
       error => {
         console.error(error);
+        this.toastr.error(error.error.error, "Save failed: ")
       }
     )
   }
 
   addResource(repoId: string, path: string, createdBy: string, category: string | null, tagIds: string[] | null, data: string) {
     this.apiResource.addResource(repoId, path, createdBy, category, tagIds, data).subscribe(
-      data => {
+      _ => {
         this.loadFileTree();
+        this.toastr.success("Resource added")
       },
       error => {
-        console.error(error.error.error)
+        this.toastr.error(error.error.error, "Resource could not be added: ")
+
       }
     )
   }
 
   editResourceTags(repoId: string, path: string, tagsToAdd: string[], tagsToRemove: string[]) {
-
     this.apiResource.updateResource(repoId, path, null, tagsToAdd, tagsToRemove, null, null, null, false).subscribe(
-      data => {
+      _ => {
         this.loadFileTree();
+        this.toastr.success("Tags updated")
+
       },
       error => {
-        console.error(error);
+        this.toastr.error(error.error.error, "Tag updated failed: ")
+
       }
     )
   }
@@ -120,11 +128,11 @@ export class ResourceService {
     if (tagIdsToAdd && tagNamesToAdd && tagIdsToAdd.length === tagNamesToAdd.length) {
       for (let i = 0; i < tagIdsToAdd.length; i++) {
         this.apiResource.addTag(repoId, tagIdsToAdd[i], tagNamesToAdd[i]).subscribe(
-          data => {
-            console.log(data)
+          _ => {
+            this.toastr.success("Tag added")
           },
           error => {
-            console.error(error)
+            this.toastr.error(error.error.error, "Tag add failed: ")
           }
         );
       }
@@ -133,11 +141,11 @@ export class ResourceService {
     if (tagIdsToRemove) {
       for (let i = 0; i < tagIdsToRemove.length; i++) {
         this.apiResource.removeTag(repoId, tagIdsToRemove[i]).subscribe(
-          data => {
-            console.log(data)
+          _ => {
+            this.toastr.success("Tag removed")
           },
           error => {
-            console.error(error)
+            this.toastr.error(error.error.error, "Tag remove failed: ")
           }
         );
       }
@@ -153,7 +161,7 @@ export class ResourceService {
         }
       },
       error => {
-        console.error(error);
+        this.toastr.error(error.error.error, "Load tags failed: ")
       }
     );
   }
@@ -164,7 +172,7 @@ export class ResourceService {
         this.allTags = Object.entries(data.content).map(([id]) => id);
       },
       error => {
-        console.error(error)
+        this.toastr.error(error.error.error, "Load tags failed: ")
       }
     )
     return this.allTags;
@@ -172,23 +180,23 @@ export class ResourceService {
 
   removeResource(repoId: string, path: string) {
     this.apiResource.removeResource(repoId, path).subscribe(
-      data => {
-        //ToDo: erfolgsnachricht
+      _ => {
+        this.toastr.success("Resource removed!")
         this.loadFileTree();
       },
       error => {
-        console.error(error)
+        this.toastr.error(error.error.error, "Remove resource failed: ")
       }
     )
   }
 
   moveResource(userId: string, repoFrom: string, pathFrom: string, repoTo: string, pathTo: string) {
     this.apiResource.moveResource(userId, repoFrom, pathFrom, repoTo, pathTo).subscribe(
-      data => {
-
+      _ => {
+        this.toastr.success("Resource moved: ")
       },
       error => {
-        console.error(error)
+        this.toastr.error(error.error.error, "Resource move failed: ")
       }
     )
   }
@@ -197,11 +205,11 @@ export class ResourceService {
               whiteListTags: string[], blacklistListTags: string[]) {
     this.apiResource.getResource(searchTerm, path, repoId, userId, whiteListTags, blacklistListTags, false, 1073741824).subscribe(
       data => {
-        console.log(data)
         this.searchResults.set(data);
       },
       error => {
-        console.error(error)
+
+        this.toastr.error(error.error.error, "Search failed: ")
       }
     )
   }
@@ -233,22 +241,18 @@ export class ResourceService {
         }
       },
       error => {
-        console.error(error);
+        this.toastr.error(error.error.error, "Load tags failed: ")
       }
     );
   }
-
-
 
   loadFileTree() {
     this.apiResource.loadFileTree(null, null, null, null, [], [], false, 1073741824).subscribe(
       data => {
         this.fileTree.set(data);
-        console.log(this.fileTree());
-        console.log(this.fileTree()?.content);
       },
       error => {
-        console.error('Error loading file tree:', error);
+        this.toastr.error(error.error.error, "Load fileTree failed: ")
       }
     );
   }

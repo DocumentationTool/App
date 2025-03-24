@@ -4,6 +4,7 @@ import {ResourceService} from '../../service/resource.service';
 import {NavigationService} from '../../service/navigation.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import {ApiRepo} from '../../../api/apiRepo';
+import {AuthService} from '../../service/authService';
 
 
 @Component({
@@ -17,7 +18,7 @@ import {ApiRepo} from '../../../api/apiRepo';
 export class ResourceCreateNewComponent implements OnInit{
   constructor(private dialogRef: MatDialogRef<ResourceCreateNewComponent>,
               public resourceService: ResourceService,
-              private navigationService: NavigationService,
+              private authService: AuthService,
               private apiRepo: ApiRepo) {}
 
   repoId: string = "";
@@ -39,8 +40,7 @@ export class ResourceCreateNewComponent implements OnInit{
   }
 
   uploadResource() {
-    //ToDo: CreatedBy = Username
-    this.resourceService.addResource(this.repoId,this.path + ".md","niklas",this.category,this.tagIds,"# New Resource")
+    this.resourceService.addResource(this.repoId,this.path + ".md",this.authService.username(),this.category,this.tagIds,"# New Resource")
     this.closeDialog();
   }
 
