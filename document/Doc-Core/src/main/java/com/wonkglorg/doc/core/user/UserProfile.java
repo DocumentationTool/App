@@ -1,6 +1,5 @@
 package com.wonkglorg.doc.core.user;
 
-import com.google.gson.Gson;
 import com.wonkglorg.doc.core.objects.GroupId;
 import com.wonkglorg.doc.core.objects.Resource;
 import com.wonkglorg.doc.core.objects.UserId;
@@ -16,20 +15,14 @@ import java.util.Set;
  * The users profile
  */
 public class UserProfile {
-    private final Gson gson = new Gson();
     private final UserId id;
     private final String passwordHash;
-    private final Map<String, Permission<UserId>> permissions;
-    private final Set<Role> roles = new HashSet<>();
-    private final Set<GroupId> groups = new HashSet<>();
+    private final Set<GroupId> groups;
 
-    public UserProfile(UserId id, String password, Map<String, Permission<UserId>> permissionNodes, Set<Role> roles, Set<GroupId> groups) {
+    public UserProfile(UserId id, String password, Map<String, Set<GroupId> groups) {
         this.id = id;
-        this.permissions = permissionNodes;
-        this.roles.addAll(roles);
-        //todo:jmd hash it otherwise people gonna be mad
         this.passwordHash = password;
-        this.groups.addAll(groups);
+        this.groups = new HashSet<>(groups);
     }
 
     public List<Resource> getAllowedResources(List<Resource> resources) {
@@ -70,8 +63,4 @@ public class UserProfile {
         return roles;
     }
 
-    @Override
-    public String toString() {
-        return gson.toJson(this);
-    }
 }
