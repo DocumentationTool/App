@@ -10,6 +10,8 @@ import com.wonkglorg.doc.core.interfaces.ResourceCalls;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
 import com.wonkglorg.doc.core.request.ResourceUpdateRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 @Component
 @Service
 public class ResourceService implements ResourceCalls {
+    private static final Logger log = LoggerFactory.getLogger(ResourceService.class);
 
     private final RepoService repoService;
     private final UserService userService;
@@ -205,7 +208,7 @@ public class ResourceService implements ResourceCalls {
      *                 * @param pathTo the path to
      * @return the response
      */
-    public Resource move(UserId userId, RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) throws ClientException, CoreException {
+    public Resource moveToOtherRepo(UserId userId, RepoId repoFrom, Path pathFrom, RepoId repoTo, Path pathTo) throws ClientException, CoreException, IOException {
 
         repoService.validateRepoId(repoFrom);
         repoService.validateRepoId(repoTo);
@@ -217,7 +220,7 @@ public class ResourceService implements ResourceCalls {
         pathTo = normalizePath(pathTo);
 
         if (!resourceExists(repoFrom, pathFrom)) {
-            throw new ResourceException("Can't move a non existing resource '%s' in '%S'".formatted(pathFrom, repoFrom));
+            throw new ResourceException("Can't move a non existing resourceToInsert '%s' in '%S'".formatted(pathFrom, repoFrom));
         }
 
         if (isBeingEdited(repoFrom, pathFrom)) {
@@ -228,6 +231,8 @@ public class ResourceService implements ResourceCalls {
             throw new ResourceException("Resource '%s' already exists in target '%s'".formatted(pathTo, repoTo));
         }
 
+        log.info("Moving resource '%s' from '%s' to '%s' repo '%s'".formatted(pathFrom, repoFrom, pathTo, repoTo));
+
         ResourceRequest request = new ResourceRequest();
         request.setPath(pathFrom.toString());
         request.setWithData(true);
@@ -236,16 +241,18 @@ public class ResourceService implements ResourceCalls {
         FileRepository fileRepoFrom = repoService.getRepo(repoFrom);
         FileRepository fileRepoTo = repoService.getRepo(repoTo);
 
-        Resource resource = fileRepoFrom.getDatabase().resourceFunctions().getResources(request).stream().findFirst().orElseThrow();
-        fileRepoTo.getDatabase().resourceFunctions().insertResource(resource);
-        fileRepoTo.addResourceAndCommit(resource);
-        fileRepoFrom.getDatabase().resourceFunctions().removeResource(repoFrom, resource.resourcePath());
+        Resource resourceToInsert = fileRepoFrom.getDatabase().resourceFunctions().getResources(request).stream().findFirst().orElseThrow();
+        resourceToInsert.setResourcePath(normalizePath(pathTo));
+        fileRepoTo.getDatabase().resourceFunctions().insertResource(resourceToInsert);
+        fileRepoTo.addResourceAndCommit(resourceToInsert);
+        fileRepoFrom.getDatabase().resourceFunctions().removeResource(repoFrom, normalizePath(pathFrom));
         fileRepoFrom.removeResourceAndCommit(userId, pathFrom);
 
         ResourceRequest returnRequest = new ResourceRequest();
         returnRequest.setPath(pathTo.toString());
         returnRequest.setWithData(true);
         returnRequest.repoId(repoTo);
+        log.info("Resource '%s' in '%s' moved to '%s' in '%s'".formatted(pathFrom, repoFrom, pathTo, repoTo));
         return fileRepoTo.getDatabase().resourceFunctions().getResources(returnRequest).stream().findFirst().orElseThrow();
     }
 
