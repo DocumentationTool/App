@@ -1,12 +1,12 @@
 package com.wonkglorg.doc.api.controller;
 
+import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.AUTH;
 import com.wonkglorg.doc.api.exception.LoginFailedException;
 import com.wonkglorg.doc.api.security.JwtUtil;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager.AuthResponse;
 import com.wonkglorg.doc.api.security.UserAuthenticationManager.LoginRequest;
 import com.wonkglorg.doc.core.exception.client.ClientException;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,24 +14,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import static com.wonkglorg.doc.api.controller.Constants.ControllerPaths.AUTH;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Controller Endpoint handling all authentication related endpoints
  */
 @RestController
 @RequestMapping(AUTH)
-public class AuthController {
-    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    private final UserAuthenticationManager authManager;
-
-    public AuthController(UserAuthenticationManager authManager) {
-        this.authManager = authManager;
-    }
-
-    //@formatter:off
+public class AuthController{
+	private static final Logger log = LoggerFactory.getLogger(AuthController.class);
+	private final UserAuthenticationManager authManager;
+	
+	public AuthController(UserAuthenticationManager authManager) {
+		this.authManager = authManager;
+	}
+	
+	//@formatter:off
 	@Operation(
 			summary = "Test login endpoint",
 			description = "Returns a token when DEV_MODE is enabled, otherwise returns a 403."
@@ -71,7 +73,7 @@ public class AuthController {
 			@RequestBody LoginRequest request) {
 		log.info("Login POST request received");
 		try{
-			authManager.authenticate(RepoId.of(request.repoId()),UserId.of(request.userId()), request.password());
+			authManager.authenticate(UserId.of(request.userId()), request.password());
 			String token = JwtUtil.generateToken(request.userId());
 			return ResponseEntity.ok(new AuthResponse(token, null));
 		} catch(LoginFailedException e){
@@ -84,5 +86,5 @@ public class AuthController {
 		}
 	}
 	//@formatter:on
-
+	
 }

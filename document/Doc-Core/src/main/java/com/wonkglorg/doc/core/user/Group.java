@@ -73,10 +73,6 @@ public class Group{
 		return lastModified;
 	}
 	
-	public Map<String, Permission<GroupId>> getPermissions() {
-		return permissions;
-	}
-	
 	public Set<UserId> getUserIds() {
 		return userIds;
 	}

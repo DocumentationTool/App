@@ -1,10 +1,11 @@
 package com.wonkglorg.doc.core.db;
 
+import com.wonkglorg.doc.core.FileRepository;
 import com.wonkglorg.doc.core.RepoProperty;
 import com.wonkglorg.doc.core.db.dbs.SqliteDatabase;
 import com.wonkglorg.doc.core.db.functions.DatabaseFunctions;
+import com.wonkglorg.doc.core.db.functions.PermissionFunctions;
 import com.wonkglorg.doc.core.db.functions.ResourceFunctions;
-import com.wonkglorg.doc.core.db.functions.UserFunctions;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.objects.RepoId;
 import com.zaxxer.hikari.HikariConfig;
@@ -21,23 +22,24 @@ import java.nio.file.Path;
 public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 	
 	private static final Logger log = LoggerFactory.getLogger(RepositoryDatabase.class);
-	
-	private final UserFunctions userFunctions;
+	private final PermissionFunctions permissionFunctions;
 	private final ResourceFunctions resourceFunctions;
+	private final FileRepository fileRepository;
 	/**
 	 * The properties of the repository
 	 */
 	private final RepoProperty repoProperties;
 	
-	public RepositoryDatabase(RepoProperty repoProperties, Path openInPath) {
+	public RepositoryDatabase(RepoProperty repoProperties, Path openInPath, FileRepository fileRepository) {
 		super(getDataSource(openInPath));
+		this.fileRepository = fileRepository;
 		this.repoProperties = repoProperties;
-		this.userFunctions = new UserFunctions(this);
 		this.resourceFunctions = new ResourceFunctions(this);
+		this.permissionFunctions = new PermissionFunctions(this);
 	}
 	
-	public RepositoryDatabase(RepoProperty repoProperties) {
-		this(repoProperties, repoProperties.getPath().resolve(repoProperties.getDbName()));
+	public RepositoryDatabase(RepoProperty repoProperties, FileRepository fileRepository) {
+		this(repoProperties, repoProperties.getPath().resolve(repoProperties.getDbName()), fileRepository);
 	}
 	
 	/**
@@ -67,11 +69,9 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 			log.error("Error while initializing Database for repo '{}'", repoProperties.getId(), e);
 		}
 		log.info("Database initialized for repo '{}'", repoProperties.getId());
-		userFunctions.initialize();
 		resourceFunctions.initialize();
+		permissionFunctions.initialize();
 	}
-	
-	
 	
 	/**
 	 * Rebuilds the entire FTS table to remove any unused records
@@ -88,11 +88,15 @@ public class RepositoryDatabase extends SqliteDatabase<HikariDataSource>{
 		return repoProperties;
 	}
 	
-	public UserFunctions userFunctions() {
-		return userFunctions;
-	}
-	
 	public ResourceFunctions resourceFunctions() {
 		return resourceFunctions;
+	}
+	
+	public PermissionFunctions permissionFunctions() {
+		return permissionFunctions;
+	}
+	
+	public FileRepository getFileRepository() {
+		return fileRepository;
 	}
 }

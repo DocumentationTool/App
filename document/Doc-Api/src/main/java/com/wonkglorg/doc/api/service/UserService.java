@@ -1,194 +1,207 @@
 package com.wonkglorg.doc.api.service;
 
+import com.wonkglorg.doc.core.db.UserDatabase;
+import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
+import com.wonkglorg.doc.core.exception.client.InvalidGroupException;
 import com.wonkglorg.doc.core.exception.client.InvalidRepoException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
+import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.GroupId;
-import com.wonkglorg.doc.core.objects.RepoId;
 import com.wonkglorg.doc.core.objects.UserId;
-import com.wonkglorg.doc.core.path.TargetPath;
-import com.wonkglorg.doc.core.permissions.Permission;
 import com.wonkglorg.doc.core.permissions.Role;
+import com.wonkglorg.doc.core.user.Group;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 
 @Component
 @Service
-public class UserService implements UserCalls {
-
-    private final RepoService repoService;
-    private final GroupService groupService;
-
-    public UserService(@Lazy RepoService repoService, @Lazy GroupService groupService) {
-        this.repoService = repoService;
-        this.groupService = groupService;
-    }
-
-    /**
-     * Validates if a repo id is valid, if null is given it will return the ALL_REPOS id
-     *
-     * @param repoId    the repo id to validate
-     * @param user      the user id to validate
-     * @param allowNull if null is allowed
-     * @return the user id
-     */
-    public UserId validateUserId(RepoId repoId, String user, boolean allowNull) throws ClientException {
-        if (user == null && allowNull) {
-            return UserId.ALL_USERS;
-        }
-
-        if (user == null) {
-            throw new InvalidUserException("User id is not allowed to be null!");
-        }
-
-        UserId userId = UserId.of(user);
-        if (!userExists(repoId, userId)) {
-            throw new InvalidUserException("User '%s' does not exist".formatted(userId));
-        }
-
-        return userId;
-    }
-
-    public void validateUserId(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-        if (!repoService.getRepo(repoId).getDatabase().userFunctions().userExists(repoId, userId)) {
-            throw new InvalidUserException("User '%s' does not exist in '%s'".formatted(userId, repoId));
-        }
-    }
-
-    /**
-     * Validates if a repo id is valid, if null is given throws an error
-     *
-     * @param repoId the repo id to validate
-     * @param user   the user id to validate
-     * @return the user id
-     */
-    public UserId validateUserId(RepoId repoId, String user) throws ClientException {
-        return validateUserId(repoId, user, false);
-    }
-
-    //---- User ----
-
-    @Override
-    public boolean addUser(RepoId repoId, UserProfile user) throws ClientException, CoreSqlException {
-        repoService.validateRepoId(repoId);
-        if (userExists(repoId, user.getId())) {
-            throw new ClientException("User with id '%s' already exists".formatted(user.getId()));
-        }
-
-        for (GroupId groupId : user.getGroups()) {
-            if (!groupService.groupExists(repoId, groupId)) {
-                throw new ClientException("Group with id '%s' does not exist".formatted(groupId));
-            }
-        }
-
-        return repoService.getRepo(repoId).getDatabase().userFunctions().addUser(repoId, user);
-
-    }
-
-    @Override
-    public boolean removeUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException, CoreSqlException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, userId);
-        return repoService.getRepo(repoId).getDatabase().userFunctions().removeUser(repoId, userId);
-    }
-
-    @Override
-    public List<UserProfile> getUsers(RepoId repoId, UserId userId) throws InvalidRepoException {
-        return repoService.getRepo(repoId).getDatabase().userFunctions().getUsers(repoId, userId);
-    }
-
-    @Override
-    public boolean addPermissionToUser(RepoId repoId, Permission<UserId> permission) throws ClientException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, permission.id());
-        if (repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(), permission.getPath())) {
-            throw new ClientException("Permission '%s' already exists for '%s' in '%s'".formatted(permission.getPath(), permission.id(), repoId));
-        }
-        return repoService.getRepo(repoId).getDatabase().userFunctions().addPermissionToUser(repoId, permission);
-    }
-
-    @Override
-    public boolean removePermissionFromUser(RepoId repoId, UserId userId, TargetPath path) throws ClientException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, userId);
-        if (!repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(userId, path)) {
-            throw new ClientException("User '%s' does not have permission for path '%s'".formatted(userId, path));
-        }
-        return repoService.getRepo(repoId).getDatabase().userFunctions().removePermissionFromUser(repoId, userId, path);
-    }
-
-    @Override
-    public boolean updatePermissionForUser(RepoId repoId, Permission<UserId> permission) throws ClientException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, permission.id());
-
-        if (!repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(), permission.getPath())) {
-            throw new ClientException("User '%s' does not have permission for path '%s'".formatted(permission.id(), permission.getPath()));
-        }
-
-        if (repoService.getRepo(repoId).getDatabase().userFunctions().userHasPermission(permission.id(),
-                permission.getPath(),
-                permission.getPermission())) {
-            throw new ClientException("User '%s' already has the permission '%s' for path '%s'".formatted(permission.id(),
-                    permission.getPermission(),
-                    permission.getPath().toString()));
-        }
-        return repoService.getRepo(repoId).getDatabase().userFunctions().updatePermissionForUser(repoId, permission);
-    }
-
-    /**
-     * Gets a user by their id
-     *
-     * @param repoId the id of the repository
-     * @param userId the id of the user
-     * @return the user
-     */
-    @Override
-    public UserProfile getUser(RepoId repoId, UserId userId) throws InvalidRepoException, InvalidUserException {
-        validateUser(repoId, userId);
-        return repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
-    }
-
-    @Override
-    public boolean userExists(RepoId repoId, UserId userId) throws InvalidRepoException {
-        try {
-            var users = repoService.getRepo(repoId).getDatabase().userFunctions().getUser(repoId, userId);
-            return users != null;
-        } catch (InvalidUserException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public void addRole(RepoId repoId, UserId userId, Role role) throws InvalidRepoException, InvalidUserException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, userId);
-        repoService.getRepo(repoId).getDatabase().userFunctions().addRole(repoId, userId, role);
-    }
-
-    @Override
-    public void removeRole(RepoId repoId, UserId userId, Role role) throws InvalidUserException, InvalidRepoException {
-        repoService.validateRepoId(repoId);
-        validateUser(repoId, userId);
-        repoService.getRepo(repoId).getDatabase().userFunctions().removeRole(repoId, userId, role);
-    }
-
-    /**
-     * Validates if a user exists
-     *
-     * @param repoId the repo id
-     * @param userId the user id
-     */
-    public void validateUser(RepoId repoId, UserId userId) throws InvalidUserException, InvalidRepoException {
-        if (!userExists(repoId, userId)) {
-            throw new InvalidUserException("User '%s' does not exist".formatted(userId));
-        }
-    }
-
+public class UserService implements UserCalls, GroupCalls{
+	
+	private final UserDatabase userDatabase = new UserDatabase(Path.of("users.db"));
+	private final PermissionService permissionService;
+	private final RepoService repoService;
+	
+	public UserService(@Lazy PermissionService permissionService, @Lazy RepoService repoService) {
+		this.permissionService = permissionService;
+		this.repoService = repoService;
+	}
+	
+	//---- User ----
+	
+	@Override
+	public boolean addUser(UserProfile user) throws ClientException, CoreSqlException {
+		if(userExists(user.getId())){
+			throw new ClientException("User with id '%s' already exists".formatted(user.getId()));
+		}
+		
+		for(GroupId groupId : user.getGroups()){
+			if(!groupExists(groupId)){
+				throw new ClientException("Group with id '%s' does not exist".formatted(groupId));
+			}
+		}
+		return userDatabase.addUser(user);
+		
+	}
+	
+	@Override
+	public boolean removeUser(UserId userId) throws InvalidUserException, CoreSqlException {
+		validateUser(userId);
+		
+		//removes all related permissions from any repo referencing this user
+		for(var repo : repoService.getRepositories().values()){
+			repo.getDatabase().permissionFunctions().cleanUpUser(userId);
+		}
+		
+		return userDatabase.removeUser(userId);
+	}
+	
+	@Override
+	public List<UserProfile> getUsers() {
+		return userDatabase.getUsers();
+	}
+	
+	@Override
+	public UserProfile getUser(UserId userId) throws InvalidUserException {
+		return userDatabase.getUser(userId);
+	}
+	
+	@Override
+	public boolean userExists(UserId userId) {
+		try{
+			UserProfile users = userDatabase.getUser(userId);
+			return users != null;
+		} catch(InvalidUserException e){
+			return false;
+		}
+	}
+	
+	/**
+	 * Validates if a user exists
+	 *
+	 * @param userId the user id
+	 */
+	public void validateUser(UserId userId) throws InvalidUserException {
+		if(!userExists(userId)){
+			throw new InvalidUserException("User '%s' does not exist".formatted(userId));
+		}
+	}
+	
+	public void validateGroup(GroupId groupId) throws InvalidGroupException {
+		if(!groupExists(groupId)){
+			throw new InvalidGroupException("Group '%s' does not exist".formatted(groupId));
+		}
+	}
+	
+	@Override
+	public boolean groupExists(GroupId groupId) {
+		return userDatabase.groupExists(groupId);
+	}
+	
+	@Override
+	public boolean userInGroup(GroupId groupId, UserId userId) throws InvalidUserException, InvalidGroupException {
+		validateUser(userId);
+		validateGroup(groupId);
+		return userDatabase.userInGroup(groupId, userId);
+	}
+	
+	@Override
+	public boolean addGroup(Group group) throws CoreException, InvalidGroupException {
+		if(groupExists(group.getId())){
+			throw new InvalidGroupException("Group with id '%s' already exists!".formatted(group.getId()));
+		}
+		return userDatabase.addGroup(group);
+	}
+	
+	@Override
+	public boolean removeGroup(GroupId groupId) throws InvalidGroupException {
+		validateGroup(groupId);
+		
+		for(var repo : repoService.getRepositories().values()){
+			repo.getDatabase().permissionFunctions().cleanUpGroup(groupId);
+		}
+		
+		return userDatabase.removeGroup(groupId);
+	}
+	
+	@Override
+	public List<Group> getGroups() {
+		return userDatabase.getGroups();
+	}
+	
+	@Override
+	public Group getGroup(GroupId groupId) throws InvalidGroupException {
+		validateGroup(groupId);
+		return userDatabase.getGroup(groupId);
+	}
+	
+	@Override
+	public Group renameGroup(GroupId groupId, String newName) throws CoreException, InvalidGroupException {
+		validateGroup(groupId);
+		return userDatabase.renameGroup(groupId, newName);
+	}
+	
+	@Override
+	public boolean addUserToGroup(GroupId groupId, UserId userId) throws CoreException, ClientException {
+		
+		if(!groupExists(groupId)){
+			throw new InvalidGroupException("Group with id '%s' does not exist".formatted(groupId));
+		}
+		validateUser(userId);
+		
+		if(userInGroup(groupId, userId)){
+			throw new ClientException("User with id '%s' is already in group '%s'".formatted(userId, groupId));
+		}
+		
+		return userDatabase.addUserToGroup(groupId, userId);
+	}
+	
+	@Override
+	public boolean removeUserFromGroup(GroupId groupId, UserId userId) throws CoreException, InvalidGroupException, InvalidUserException {
+		validateGroup(groupId);
+		
+		validateUser(userId);
+		
+		if(!userInGroup(groupId, userId)){
+			throw new InvalidUserException("User with id '%s' is not in group '%s'".formatted(userId, groupId));
+		}
+		
+		return userDatabase.removeUserFromGroup(groupId, userId);
+	}
+	
+	@Override
+	public Set<UserProfile> getUsersFromGroup(GroupId groupId) throws InvalidGroupException {
+		validateGroup(groupId);
+		return userDatabase.getUsersFromGroup(groupId);
+	}
+	
+	@Override
+	public Set<Group> getGroupsFromUser(UserId userId) throws InvalidUserException {
+		validateUser(userId);
+		return userDatabase.getGroupsFromUser(userId);
+	}
+	
+	public UserDatabase getUserDatabase() {
+		return userDatabase;
+	}
+	
+	@Override
+	public void addRole(UserId userId, Role role) throws InvalidRepoException, InvalidUserException {
+		validateUser(userId);
+		userDatabase.addRole(userId, role);
+	}
+	
+	@Override
+	public void removeRole(UserId userId, Role role) throws InvalidUserException, InvalidRepoException {
+		validateUser(userId);
+		userDatabase.removeRole(userId, role);
+	}
 }

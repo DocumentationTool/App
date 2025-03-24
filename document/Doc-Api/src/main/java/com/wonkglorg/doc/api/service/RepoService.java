@@ -32,9 +32,11 @@ public class RepoService{
 	private final Map<RepoId, FileRepository> repositories = new HashMap<>();
 	
 	private final RepoProperties properties;
+	private final UserService userService;
 	
-	public RepoService(RepoProperties properties) {
+	public RepoService(RepoProperties properties, UserService userService) {
 		this.properties = properties;
+		this.userService = userService;
 	}
 	
 	public Map<RepoId, FileRepository> getRepositories() {
@@ -47,7 +49,7 @@ public class RepoService{
 		repositories.clear();
 		for(RepoProperty repoProperty : properties.getRepositories()){
 			log.info("Adding Repo '{}'", repoProperty.getId());
-			FileRepository repository = new FileRepository(repoProperty);
+			FileRepository repository = new FileRepository(repoProperty, userService.getUserDatabase());
 			repositories.put(repoProperty.getId(), repository);
 			try{
 				repository.initialize();

@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.api.security;
 
 import com.wonkglorg.doc.api.service.UserService;
+import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.user.UserProfile;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,13 +42,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
 
         //todo:jmd this won't work how to properly handle that 1 locale cache for users? instead of per repo? otherwise this won't work but probably just leave it
-
-
-        UserProfile user = null; /*userService.getUser(userId)
-				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
-				*/
-
-        List<GrantedAuthority> authorities =
+		
+		UserProfile user = null;
+		try{
+			user = userService.getUser(userId);
+		} catch(InvalidUserException e){
+			throw new UsernameNotFoundException("User not found", e);
+		}
+		
+		List<GrantedAuthority> authorities =
                 user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name()))
                         .collect(Collectors.toList());
 
