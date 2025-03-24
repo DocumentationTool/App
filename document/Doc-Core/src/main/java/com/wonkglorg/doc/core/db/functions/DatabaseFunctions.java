@@ -172,7 +172,7 @@ public class DatabaseFunctions implements IDBFunctions {
                     """);
 
             statement.execute("""
-                    INSERT OR IGNORE INTO UserPermissions(user_id, path,type) VALUES ('adin','**','%s');
+                    INSERT OR IGNORE INTO UserPermissions(user_id, path,type) VALUES ('admin','**','%s');
                     """.formatted(PermissionType.ADMIN));
 
             statement.execute("PRAGMA foreign_keys = ON");
