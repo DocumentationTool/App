@@ -4,7 +4,6 @@ import com.wonkglorg.doc.api.json.JsonFileTree;
 import com.wonkglorg.doc.api.json.JsonResource;
 import com.wonkglorg.doc.api.json.JsonResourceEdit;
 import com.wonkglorg.doc.api.service.ResourceService;
-import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.client.ClientException;
 import com.wonkglorg.doc.core.objects.*;
 import com.wonkglorg.doc.core.request.ResourceRequest;
@@ -203,7 +202,7 @@ public class ApiResourceController {
             if (repoTo == null || repoTo.equals(repoFrom)) {
                 resourceService.moveResource(RepoId.of(repoFrom), Path.of(from), Path.of(to));
             } else {
-                resourceService.move(UserId.of(userId), RepoId.of(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
+                resourceService.moveToOtherRepo(UserId.of(userId), RepoId.of(repoFrom), Path.of(from), RepoId.of(repoTo), Path.of(to));
             }
             return RestResponse.<Void>success("Successfully moved '%s' to '%s'".formatted(from, to), null).toResponse();
         } catch (ClientException e) {
