@@ -41,7 +41,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 				.orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
 		List<GrantedAuthority> authorities =
-				user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.roleID().id()))
+				user.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name()))
 						.collect(Collectors.toList());
 
 		//todo:jmd add back password hash
