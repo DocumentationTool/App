@@ -109,7 +109,7 @@ public class FileRepository implements AutoCloseable{
 		request.repoId(repoProperties.getId());
 		request.userId(null);
 		
-		List<Resource> resources = dataDB.getResources(request);
+		List<Resource> resources = dataDB.resourceFunctions().getResources(request);
 		
 		Map<Path, Resource> resourceMap = resources.stream().collect(HashMap::new, (m, r) -> m.put(r.resourcePath(), r), Map::putAll);
 		
@@ -147,7 +147,7 @@ public class FileRepository implements AutoCloseable{
 	}
 	
 	/**
-	 * Checks if a tag exists
+	 * Checks if all tag exist
 	 *
 	 * @param tags the tags to check
 	 * @throws InvalidTagException if the tag does not exist
@@ -157,7 +157,7 @@ public class FileRepository implements AutoCloseable{
 			return;
 		}
 		for(var tag : tags){
-			if(!getDatabase().tagExists(tag)){
+			if(!getDatabase().resourceFunctions().tagExists(repoProperties.getId(), tag)){
 				throw new InvalidTagException("Tag '%s' does not exist in '%s'".formatted(tag, repoProperties.getId()));
 			}
 		}
@@ -230,7 +230,7 @@ public class FileRepository implements AutoCloseable{
 			gitRepo.add(file);
 		}
 		
-		dataDB.batchInsert(resources);
+		dataDB.resourceFunctions().batchInsert(resources);
 	}
 	
 	/**
@@ -272,7 +272,7 @@ public class FileRepository implements AutoCloseable{
 			resources.add(newResource);
 			gitRepo.add(file);
 		}
-		dataDB.batchUpdate(resources);
+		dataDB.resourceFunctions().batchUpdate(resources);
 		return resources.size();
 	}
 	
@@ -288,20 +288,20 @@ public class FileRepository implements AutoCloseable{
 	
 	private void deleteOldResources(List<Path> deletedResources) throws CoreSqlException {
 		for(Path file : deletedResources){
-			log.error("Deleting resource '{}'", file);
+			log.info("Deleting resource '{}'", file);
 			gitRepo.remove(file);
 		}
-		dataDB.batchDelete(deletedResources);
+		dataDB.resourceFunctions().batchDelete(deletedResources);
 	}
 	
 	public RepoProperty getRepoProperties() {
 		return repoProperties;
 	}
-
+	
 	@Override
 	public void close() throws Exception {
 		gitRepo.getGit().close();
 		dataDB.close();
-
+		
 	}
 }

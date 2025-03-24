@@ -24,9 +24,11 @@ import java.util.stream.Collectors;
 public class PermissionService{
 	
 	private final UserService userService;
+	private final GroupService groupService;
 	
-	public PermissionService(@Lazy UserService userService) {
+	public PermissionService(@Lazy UserService userService, GroupService groupService) {
 		this.userService = userService;
+		this.groupService = groupService;
 	}
 	
 	/**
@@ -41,7 +43,7 @@ public class PermissionService{
 	 */
 	public List<Resource> filterResources(RepoId repoId, UserId userId, List<Resource> resources) throws InvalidRepoException, InvalidUserException {
 		UserProfile user = userService.getUser(repoId, userId);
-		List<Group> groupsFromUser = userService.getGroupsFromUser(repoId, userId);
+		List<Group> groupsFromUser = groupService.getGroupsFromUser(repoId, userId);
 		Set<Permission<UserId>> permissions = user.getPermissionsAsSet();
 		Set<Permission<GroupId>> groupPermissions = new HashSet<>();
 		for(Group group : groupsFromUser){

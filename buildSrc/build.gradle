@@ -1,6 +1,11 @@
 plugins {
     id 'java'
-    id 'war'
+}
+
+repositories {
+    maven {
+        url = uri("https://adoptopenjdk.jfrog.io/artifactory/adoptopenjdk")
+    }
 }
 
 description = "Defines all common build sources for the project modules."

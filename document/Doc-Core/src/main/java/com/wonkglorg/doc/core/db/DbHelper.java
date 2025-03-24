@@ -1,6 +1,7 @@
 package com.wonkglorg.doc.core.db;
 
 import com.wonkglorg.doc.core.exception.client.InvalidPathException;
+import static com.wonkglorg.doc.core.path.TargetPath.normalizePath;
 
 import java.nio.file.Path;
 
@@ -77,37 +78,36 @@ public class DbHelper{
 		String pathStr = path.toString();
 		
 		if(pathStr.length() >= 255){
-			throw new InvalidPathException("Path '%s' is too long contained %s characters expected less than 255".formatted(pathStr,
+			throw new InvalidPathException("Path '%s' is too long contained %s characters expected less than 255".formatted(normalizePath(pathStr),
 					pathStr.length()));
 		}
 		
 		if(pathStr.contains("..")){
-			throw new InvalidPathException("Path '%s' cannot contain '..' to escape the current directory".formatted(pathStr));
+			throw new InvalidPathException("Path '%s' cannot contain '..' to escape the current directory".formatted(normalizePath(pathStr)));
 		}
 		
 		if(pathStr.contains("%")){
-			throw new InvalidPathException("Path '%s' cannot contain '%' duo to SQL issues".formatted(pathStr));
+			throw new InvalidPathException("Path '%s' cannot contain '%' duo to SQL issues".formatted(normalizePath(pathStr)));
 		}
 		
-		
 		if(pathStr.startsWith("/") || pathStr.startsWith("\\")){
-			throw new InvalidPathException("Path '%s' cannot start with a '/'".formatted(pathStr));
+			throw new InvalidPathException("Path '%s' cannot start with a '/'".formatted(normalizePath(pathStr)));
 		}
 		
 		if(path.isAbsolute()){
-			throw new InvalidPathException("Path '%s' cannot be absolute".formatted(pathStr));
+			throw new InvalidPathException("Path '%s' cannot be absolute".formatted(normalizePath(pathStr)));
 		}
 		
 		boolean matches = pathStr.matches("^[a-zA-Z0-9_\\\\\\-./*?{}]+$");
 		if(!matches){
 			throw new InvalidPathException("Path '%s' contains invalid characters, only a-z, A-Z, 0-9, _, -, ., /, *, ?, and {} are allowed".formatted(
-					pathStr));
+					normalizePath(pathStr)));
 		}
 	}
 	
 	public static void validateFileType(Path path) throws InvalidPathException {
 		if(!path.toString().endsWith(".md")){
-			throw new InvalidPathException("Path '%s' file type is not allowed, only .md files are allowed".formatted(path.toString()));
+			throw new InvalidPathException("Path '%s' file type is not allowed, only .md files are allowed".formatted(normalizePath(path.toString())));
 		}
 	}
 }

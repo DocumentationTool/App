@@ -2,18 +2,24 @@
 
 plugins {
     id 'java'
+    id 'war'
+    id 'org.springframework.boot' version '3.4.2'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
-
-apply plugin: 'war'
-
+//todo:jmd properly configure war file
 
 group = 'com.wonkglorg'
-version = '0.0.1'
+version = '0.8.9'
 
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+//needed to know what to start spring over
+bootWar {
+    mainClass = 'com.wonkglorg.doc.api.DocApiApplication'  // Replace with your main class path
 }
 
 repositories {
@@ -31,4 +37,10 @@ subprojects {
     dependencies {
 
     }
+}
+
+dependencies {
+    implementation project('document:Doc-Api')
+    implementation project('document:Doc-Core')
+    implementation project('document-web')
 }
