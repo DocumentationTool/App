@@ -7,6 +7,7 @@ ul {
   text-decoration: none;
   color: var(--greenColor);
   cursor: pointer;
+  border-left: 2px solid var(--secondaryTextColor);
 
 }
 
@@ -22,6 +23,7 @@ ul ul:hover {
 }
 
 li {
+  font-size: 10pt;
   position: relative;
   margin: 2px 0px;
   text-decoration: none;
@@ -44,7 +46,7 @@ a {
   text-decoration: none;
   color: var(--greenColor);
   font-weight: bold;
-  font-size: 12pt;
+  font-size: 11pt;
   cursor: pointer;
 }
 

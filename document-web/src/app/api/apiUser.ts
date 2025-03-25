@@ -12,11 +12,12 @@ export class ApiUser {
 
   private baseUrl = 'http://localhost:8080/api/user';
 
-  addUser(repoId: string | undefined, userId: string, password: string, groupIds: string[] | null) {
+  addUser(repoId: string | undefined, userId: string, password: string,role: string, groupIds: string[] | null) {
     let params = new HttpParams()
     if (repoId) params = params.set('repoId', repoId)
       .set('userId', userId)
       .set('password', password)
+      .set('roles', role)
     if (groupIds && groupIds.length > 0) {
       groupIds.forEach(groupId => {
         params = params.append('tagIds', groupId); // Fügt jede groupId als separaten Parameter hinzu

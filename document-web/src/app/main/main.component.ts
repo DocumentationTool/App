@@ -21,11 +21,11 @@ import {NavigationService} from './service/navigation.service';
 })
 export class MainComponent implements OnInit {
 
-  constructor(public fileService: ResourceService,
+  constructor(public resourceService: ResourceService,
               public navigationService: NavigationService) {
 
   }
   ngOnInit(): void {
-    this.fileService.loadFileTree();
+    this.resourceService.loadFileTree();
   }
 }

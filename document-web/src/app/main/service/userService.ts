@@ -20,8 +20,8 @@ export class UserService {
   selectedRepo = signal<Repos | null>(null);
   allUsersOnRepo = signal<User[] | null>(null)
 
-  createUser(repoId: string | undefined, userId: string, password: string, groupIds: string[] | null) {
-    this.apiUser.addUser(repoId, userId, password, groupIds).subscribe(
+  createUser(repoId: string | undefined, userId: string, password: string,role: string, groupIds: string[] | null) {
+    this.apiUser.addUser(repoId, userId, password, role, groupIds).subscribe(
       _ => {
         this.getUser(repoId, null)
         this.toastr.success("User Created")

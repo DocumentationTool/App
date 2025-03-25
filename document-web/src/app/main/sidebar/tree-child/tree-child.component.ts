@@ -18,9 +18,15 @@ export class TreeChildComponent {
   constructor(public resourceService: ResourceService,
               public navigationService: NavigationService) {
   }
+
+  @Input() children: Record<string, ContentGroup> = {};
+  @Input() parentRepoId: string | null = null;
+  @Input() parentPath: string | undefined = '';
+  isOpen: Record<string, boolean> = {};
+
   menuPosition = {x: 0, y: 0};
   selectedResource: Resources | null = null;
-  selectedRepo: string | null = null;
+  selectedPath: string | null = null;
   hoveredResource: any;
   hoveredRepo: any;
 
@@ -32,8 +38,12 @@ export class TreeChildComponent {
 
   openRepoMenu(event: MouseEvent, repoId: string){
     event.stopPropagation();
-    this.selectedRepo = repoId;
+    this.selectedPath = repoId;
     this.menuPosition = {x: this.popUpInWindow(event.clientX -110), y: event.clientY + 10};
+  }
+
+  buildFullPath(childKey: string): string {
+    return this.parentPath ? `${this.parentPath}\\${childKey}` : childKey;
   }
 
   popUpInWindow(posX: number) {
@@ -43,8 +53,6 @@ export class TreeChildComponent {
     return posX
   }
 
-  @Input() children: Record<string, ContentGroup> = {};
-  isOpen: Record<string, boolean> = {};
 
   toggleChildren(repoId: string) {
     this.isOpen[repoId] = !this.isOpen[repoId];
@@ -54,7 +62,7 @@ export class TreeChildComponent {
   @ HostListener('document:click', ['$event'])
   closeMenu(event: Event) {
     this.selectedResource = null;
-    this.selectedRepo = null
+    this.selectedPath = null
   }
 
 

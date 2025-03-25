@@ -130,7 +130,7 @@ export class ApiResource {
     let params = new HttpParams()
     if (repoId) params = params.set('repoId', repoId);
     if (path) params = params.set('path', path);
-    return this.http.post(this.baseUrl + "/editing/remove", {params})
+    return this.http.post(this.baseUrl + "/editing/remove", params)
   }
 
   checksResourceBeingEdited(repoId: string | undefined, path: string | undefined) {

@@ -3,29 +3,89 @@
     <nav class="nav flex-column">
       <ul>
         <!-------------------------------------------FileTree---------------------------------------------------------->
-        <ul>
-          <app-tree-child [children]="resourceService.content?.content ??{}"></app-tree-child>
-        </ul>
+        @for (repo of (resourceService.content?.content ?? {}) | keyvalue; track repo.key) {
+          <!-- repo anzeigen -->
+          <li (mouseover)="hoveredRepo =  repo.key"
+              (mouseleave)="hoveredRepo = null">
 
-        <!---------------------------------------------File Upload----- ----------------------------------------------->
-        <div class="upload">
-          <input #fileInput type="file" accept=".md,.docx" style="display: none" (change)="onUpload($event)"/>
-          <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
-        </div>
-
-        <div class="createNewFile">
-          <i class="ri-add-line ms-md-2" (click)="navigationService.createNewResource()"></i>
-        </div>
-
-        @if (this.authService.isAdmin()) {
-          <div class="nav-admin">
-            <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
-               [routerLinkActiveOptions]="{ exact: true }">
-              Admin
+            <a (click)="toggleRepo(repo.key); $event.preventDefault()">
+              {{ repo.key }}
+              @if (hoveredRepo == repo.key) {
+                <button class="menu-button"
+                        (click)="openRepoMenu($event, repo.key)">
+                  &#x22EE;
+                </button>
+              }
             </a>
-          </div>
+            @if (selectedRepo === repo.key) {
+              <div
+                class="popup-menu"
+                [style.top.px]="menuPosition.y"
+                [style.left.px]="menuPosition.x">
+                <ul>
+                  <li (click)="navigationService.editRepoTags(repo.key)">Edit tags</li>
+                </ul>
+              </div>
+            }
+
+            @if (isOpen[repo.key]) {
+              <ul>
+                <li *ngFor="let resource of repo.value.resources"
+                    (click)="resourceService.onSelectResource(resource)"
+                    (mouseover)="hoveredResource = resource.path + ' ' + resource.repoId"
+                    (mouseleave)="hoveredResource = null"
+                    [ngClass]="{'active': resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId}">
+
+                  @if (resource.permissionType != "DENY") {
+                    {{ resourceService.splitResourcePath(resource.path) }}
+                    @if (resource.permissionType != "VIEW" && (hoveredResource === resource.path + ' ' + resource.repoId || resourceService.selectedFile()?.path === resource.path && resource.repoId === resourceService.selectedFile()?.repoId)) {
+                      <button class="menu-button"
+                              (click)="openResourceMenu($event, resource)">
+                        &#x22EE;
+                      </button>
+                    }
+                    @if (selectedResource === resource && resource.permissionType != "VIEW") {
+                      <div
+                        class="popup-menu"
+                        [style.top.px]="menuPosition.y"
+                        [style.left.px]="menuPosition.x">
+                        <ul>
+                          <li (click)="navigationService.editResourceTags(resource.repoId,resource.path)">Edit tags</li>
+                          <li (click)="navigationService.moveResource(resource.repoId, resource.path)">Move resource
+                          </li>
+                          <li (click)="deleteResource(resource)">Delete resource</li>
+                        </ul>
+                      </div>
+                    }
+                  }
+                </li>
+              </ul>
+              <!-------- Children --------->
+              <app-tree-child [children]="repo.value.children" [parentRepoId]="repo.key"
+                              [parentPath]="">
+              </app-tree-child>
+            }
+          </li>
         }
       </ul>
+      <!---------------------------------------------File Upload----- ----------------------------------------------->
+      <div class="upload">
+        <input #fileInput type="file" accept=".md,.docx" style="display: none" (change)="onUpload($event)"/>
+        <i class="ri-file-upload-line ms-md-2" (click)="fileInput.click()"></i>
+      </div>
+
+      <div class="createNewFile">
+        <i class="ri-add-line ms-md-2" (click)="navigationService.createNewResource()"></i>
+      </div>
+
+      @if (this.authService.username() == "admin") {
+        <div class="nav-admin">
+          <a routerLink="/main/admin" routerLinkActive="active" class="nav-admin"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Admin
+          </a>
+        </div>
+      }
     </nav>
   </div>
 }

@@ -1,0 +1,80 @@
+<div class="upload-dialog">
+  <h2>Edit Group</h2>
+  <form (submit)="updateUser()">
+
+    <label>Add user to group:</label>
+    <input name="userToAdd" type="text" [(ngModel)]="userToAdd" (focus)="openUsersToAddDropdown()"
+           (click)="$event.stopPropagation()" autocomplete="off"/>
+
+    <label>Remove user from group:</label>
+    <input class="remove" name="userToRemove" type="text" (click)="$event.stopPropagation()"
+           [(ngModel)]="userToRemove" (focus)="openUsersToRemoveDropdown()"
+           autocomplete="off"/>
+
+    <hr>
+    <label>Add permission:</label>
+    <input name="addPermission" type="text" [(ngModel)]="permissionToAdd" (focus)="openPermissionToAddDropdown()"
+           (click)="$event.stopPropagation()" autocomplete="off"/>
+
+    <label>Permission path:</label>
+    <input name="addPath" type="text" [(ngModel)]="pathToAdd" (focus)="openPathDropdown()"
+           (click)="$event.stopPropagation()" autocomplete="off"/>
+
+    <label>Remove permission path:</label>
+    <input name="removePermission" type="text" [(ngModel)]="permissionToRemove"
+           (focus)="openPermissionToRemoveDropdown()"
+           (click)="$event.stopPropagation()" autocomplete="off"/>
+    <button type="submit" class="upload-btn">Update</button>
+    <button type="button" class="cancel-btn" (click)="closeDialog()">Cancel</button>
+  </form>
+</div>
+
+@if (isUsersToAddActive && allUsersToAdd.length > 0) {
+  <div class="search-results-addUserId">
+    @for (userId of allUsersToAdd; track userId) {
+      <div class="search-box" (click)="onSelectUsersToAdd(userId)">
+        <span class="repo-id">{{ userId }}</span>
+      </div>
+    }
+  </div>
+}
+
+@if (isUsersToRemoveActive && allUsersToRemove.length > 0) {
+  <div class="search-results-removeUserId">
+    @for (userId of allUsersToRemove; track userId) {
+      <div class="search-box" (click)="onSelectUsersToRemove(userId)">
+        <span class="repo-id">{{ userId }}</span>
+      </div>
+    }
+  </div>
+}
+@if (isPermissionToAddActive && allPermissions.length > 0) {
+  <div class="search-results-addPermission">
+    @for (permission of allPermissions; track permission) {
+      <div class="search-box" (click)="onSelectPermissionToAdd(getPermissionName(permission))">
+        <span class="repo-id">{{ getPermissionName(permission) }}</span>
+      </div>
+    }
+  </div>
+}
+
+@if (isPermissionToRemoveActive && allPermissions.length > 0) {
+  <div class="search-results-removePermission">
+    @for (permission of allPermissionsToRemove; track permission) {
+      <div class="search-box" (click)="onSelectPermissionToRemove(permission)">
+        <span class="repo-id">{{ permission }}</span>
+      </div>
+    }
+  </div>
+}
+
+@if (isPathActive && allPaths.length > 0) {
+  <div class="search-results-addPath">
+    @for (path of allPaths; track path) {
+      <div class="search-box" (click)="onSelectPath(path)">
+        <span class="repo-id">{{ path }}</span>
+      </div>
+    }
+  </div>
+}
+

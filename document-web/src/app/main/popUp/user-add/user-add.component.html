@@ -1,0 +1,61 @@
+<div class="upload-dialog">
+  <h2>Create new User</h2>
+  <form #formRef="ngForm" (ngSubmit)="createNewUser()">
+
+    <label>RepoId:</label>
+    <div class="repo-container" (click)="$event.stopPropagation()">
+      <input name="repoId" type="text" [(ngModel)]="repoId" autocomplete="off" (focus)="onRepos()" required/>
+    </div>
+
+    <label>UserId:</label>
+    <input name="userId" type="text" [(ngModel)]="userId" required autocomplete="off"/>
+
+    <label>Password:</label>
+    <input name="password" type="password" [(ngModel)]="password" required/>
+
+    <label>Repeat password:</label>
+    <input name="repeatPassword" type="password" [(ngModel)]="repeatPassword" required/>
+
+    <label>Role:</label>
+    <input name="role" type="text" (click)="$event.stopPropagation()" autocomplete="off" [(ngModel)]="role"
+           (focus)="onRole()" required/>
+
+    <label>GroupIds:</label>
+    <div class="group-container" (click)="$event.stopPropagation()">
+      <input name="groupId" type="text" [(ngModel)]="groupIds" autocomplete="off" (focus)="onGroups()"/>
+    </div>
+
+    <button type="submit" class="upload-btn" [disabled]="formRef.invalid">Create</button>
+    <button type="button" class="cancel-btn" (click)="closeDialog()">Cancel</button>
+  </form>
+</div>
+
+@if (isReposActive && allRepos.length > 0) {
+  <div class="search-results-repoId">
+    @for (repo of allRepos; track repo) {
+      <div class="search-box" (click)="onSelectRepo(repo)">
+        <span class="repo-id">{{ repo }}</span>
+      </div>
+    }
+  </div>
+}
+
+@if (isRoleActive) {
+  <div class="search-results-role">
+    @for (role of allRoles; track role) {
+      <div class="search-box" (click)="onSelectRole(role)">
+        <span class="repo-id">{{ role }}</span>
+      </div>
+    }
+  </div>
+}
+
+@if (isGroupsActive && allGroups.length > 0) {
+  <div class="search-results-groupId">
+    @for (group of allGroups; track group) {
+      <div class="search-box" (click)="onSelectGroup(group)">
+        <span class="repo-id">{{ group }}</span>
+      </div>
+    }
+  </div>
+}

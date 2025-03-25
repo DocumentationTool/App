@@ -30,7 +30,8 @@ export class NavigationService {
               private resourceService: ResourceService,
               private userService: UserService,
               private dialog: MatDialog,
-              private authService: AuthService) {
+              private authService: AuthService,
+              private toastr: ToastrService) {
   }
 
   toggle = signal<boolean>(true);
@@ -59,19 +60,19 @@ export class NavigationService {
   editedResourceCheck(data: ApiResponseModelResourceBeingEdited) {
     if (!data.content.isBeingEdited) { //Abfrage ob file editiert wird
       console.log("File Editing")
-      this.apiResource.setResourceBeingEdited(this.resourceService.selectedFile()?.repoId, this.resourceService.selectedFile()?.path, this.authService.username() ).subscribe(
+      this.apiResource.setResourceBeingEdited(this.resourceService.selectedFile()?.repoId, this.resourceService.selectedFile()?.path, this.authService.username()).subscribe(
         data => {
           console.log("data ", data)
         },
         error => {
-          console.error(error)
+          console.error(error.error.error)
         }
       )
       this.router.navigate(['/main/editor'])
       this.mode.set("editor")
       this.resourceService.editingFile.set(this.resourceService.selectedFile());
     } else {
-      console.log("file is being edited")
+      this.toastr.error("File is being edited")
     }
   }
 
@@ -103,11 +104,11 @@ export class NavigationService {
   }
 
   editGroup(repoId: string | undefined, groupId: string) {
-     this.dialog.open(GroupEditComponent,
-       {
-         data: {repoId, groupId}
-       }
-     )
+    this.dialog.open(GroupEditComponent,
+      {
+        data: {repoId, groupId}
+      }
+    )
   }
 
   editUser(repoId: string | undefined, user: User) {
@@ -138,8 +139,14 @@ export class NavigationService {
       });
   }
 
+  editUnterRepoTags(repoId: string, path: string) {
+    this.dialog.open(ResourceEditTagsComponent,
+      {
+        data: {repoId, path}
+      });
+  }
+
   moveResource(repoId: string, path: string) {
-    console.log("repo", repoId)
     this.dialog.open(ResourceMoveComponent,
       {
         data: {repoId, path}
@@ -156,8 +163,8 @@ export class NavigationService {
     });
   }
 
-  isAdminActive() {
-    this.router.isActive('/main/admin', {
+  isAdminActive(): boolean {
+    return this.router.isActive('/main/admin', {
       paths: 'exact',
       queryParams: 'ignored',
       fragment: 'ignored',

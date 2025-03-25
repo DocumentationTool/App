@@ -1,0 +1,21 @@
+.container {
+  max-width: 600px;
+  padding: 20px;
+  text-align: center;
+  margin-top: 50px;
+}
+
+.button-back{
+  padding: 10px 20px;
+  font-size: 14px;
+  background-color: var(--greenColor);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.button-back:hover{
+  opacity: 80%;
+}

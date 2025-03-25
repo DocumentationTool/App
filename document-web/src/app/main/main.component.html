@@ -7,6 +7,11 @@
   'main-sidebar': !this.navigationService.isEditorActive() && this.navigationService.toggle(),
   'main': !this.navigationService.isEditorActive() && !this.navigationService.toggle()
 }">
-    <router-outlet></router-outlet>
+    @if (resourceService.selectedFile() || this.navigationService.isAdminActive()) {
+      <router-outlet></router-outlet>
+
+    } @else {
+      Please Select a resource!
+    }
   </div>
 </div>

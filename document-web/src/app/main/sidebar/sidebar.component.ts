@@ -7,6 +7,8 @@ import * as Mammoth from 'mammoth';
 import TurndownService from 'turndown';
 import {ToastrService} from 'ngx-toastr';
 import {AuthService} from '../service/authService';
+import {KeyValuePipe, NgClass, NgForOf} from '@angular/common';
+import {Resources} from '../../Model/apiResponseFileTree';
 
 
 @Component({
@@ -15,6 +17,9 @@ import {AuthService} from '../service/authService';
     RouterLink,
     RouterLinkActive,
     TreeChildComponent,
+    KeyValuePipe,
+    NgForOf,
+    NgClass,
   ],
   templateUrl: './sidebar.component.html',
   standalone: true,
@@ -36,6 +41,44 @@ export class SidebarComponent {
   category: string | null = ""
   tagIds: string[] | null = [];
   data: string = "";
+
+  hoveredRepo: any;
+  selectedRepo: string | null = null;
+  selectedResource: Resources | null = null;
+  hoveredResource: any;
+  menuPosition = {x: 0, y: 0};
+  isOpen: Record<string, boolean> = {};
+
+  openResourceMenu(event: MouseEvent, resource: Resources) {
+    event.stopPropagation();
+    this.selectedResource = resource;
+    this.menuPosition = {x: this.popUpInWindow(event.clientX -110), y: event.clientY + 10};
+  }
+
+  deleteResource(resource: Resources) {
+    if (window.confirm("Do you really want to delete '" + resource.path + "' in Repo: '" + resource.repoId + "'?")) {
+      this.resourceService.removeResource(resource.repoId, resource.path);
+      this.resourceService.loadFileTree();
+    }
+  }
+
+  popUpInWindow(posX: number) {
+    if (posX < 30){
+      return 30
+    }
+    return posX
+  }
+
+
+  openRepoMenu(event: MouseEvent, repoId: string){
+    event.stopPropagation();
+    this.selectedRepo = repoId;
+    this.menuPosition = {x: this.popUpInWindow(event.clientX -110), y: event.clientY + 10};
+  }
+
+  toggleRepo(repoPath: string) {
+    this.isOpen[repoPath] = !this.isOpen[repoPath]; // Öffnen/Schließen der Unter-Repositories
+  }
 
   onUpload(event: any) {
     if (this.resourceService.checkForFileChanges()) {
@@ -112,6 +155,10 @@ export class SidebarComponent {
     this.navigationService.uploadNewResource(this.data, this.path);
   }
 
-
+  @HostListener('document:click', ['$event'])
+  closeMenu(_: Event) {
+    this.selectedRepo = null
+    this.selectedResource = null
+  }
 
 }

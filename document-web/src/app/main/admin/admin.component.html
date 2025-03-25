@@ -1,5 +1,9 @@
 <div class="dropdown">
-  <button class="dropbtn" (click)="toggleRepoDropdown()">Select Repo</button>
+  @if (dropdownOpen) {
+    <button class="dropbtn" (click)="toggleRepoDropdown()"><span class="ri-arrow-down-s-fill"></span>   Select Repo</button>
+  } @else {
+    <button class="dropbtn" (click)="toggleRepoDropdown()"><span class="ri-arrow-right-s-fill"></span>  Select Repo</button>
+  }
   <button class="nav-button" (click)="toggleManagement()" [disabled]="editUserActive">User management</button>
   <button class="nav-button" (click)="toggleManagement()" [disabled]="!editUserActive">Group management</button>
   @if (dropdownOpen) {

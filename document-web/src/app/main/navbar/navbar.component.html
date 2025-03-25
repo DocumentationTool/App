@@ -2,23 +2,23 @@
   <div class="toggle">
     <i class="ri-menu-line" (click)="onToggleSidebar()"></i>
   </div>
-
-  <div class="box">
-    <button (click)="this.navigationService.onEditor()" [disabled]="!this.resourceService.selectedFile()"
-            [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
-      Editor
-    </button>
-
-    @if (this.navigationService.isEditorActive()) {
-      <button (click)="this.navigationService.onPreview()"
-              [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
-        Preview
+  @if (resourceService.selectedFile()?.permissionType && resourceService.selectedFile()?.permissionType != "VIEW"){
+    <div class="box">
+      <button (click)="this.navigationService.onEditor()" [disabled]="!this.resourceService.selectedFile()"
+              [ngClass]="navigationService.mode() === 'editor' && this.navigationService.isEditorActive() ? 'selected' : 'preview'">
+        Editor
       </button>
-    }
-    <button class="ri-save-line" (click)="this.resourceService.updateResource()"
-            [disabled]="!resourceService.checkForFileChanges()"></button>
-  </div>
 
+      @if (this.navigationService.isEditorActive()) {
+        <button (click)="this.navigationService.onPreview()"
+                [ngClass]="navigationService.mode() === 'preview' ? 'selected' : 'preview'">
+          Preview
+        </button>
+      }
+      <button class="ri-save-line" (click)="this.resourceService.updateResource()"
+              [disabled]="!resourceService.checkForFileChanges()"></button>
+    </div>
+  }
   <!------------------------------------------Search Bar------------------------------------------------------------>
   <form class="search">
     <span class="ri-search-line" (click)="onSearchResource()"></span>
@@ -32,9 +32,9 @@
     }
   </form>
   <!------------------------------------------Search results------------------------------------------------------------>
-  @if (isSearchActive && searchResults && !this.isTagFilterActive) {
+  @if (isSearchActive && filteredSearchResults && !this.isTagFilterActive) {
     <div class="search-box">
-      <div *ngFor="let repo of searchResults.content | keyvalue" class="repo-group">
+      <div *ngFor="let repo of filteredSearchResults | keyvalue" class="repo-group">
         <div *ngFor="let resource of repo.value" class="search-results"
              (click)="resourceService.onSelectResource(resource)">
           <span class="file-path">{{ resource.path }}</span>
@@ -42,7 +42,6 @@
         </div>
       </div>
     </div>
-
   }
   <!------------------------------------------Tag Filter------------------------------------------------------------>
   @if (this.isTagFilterActive) {
@@ -62,10 +61,10 @@
     Profile
     @if (isDropdownOpen) {
       <div class="dropdown-menu">
-        <div class="dropdown-item" (click)="this.authService.logAdminIn()">
+        <div class="dropdown-item" (click)="onLogin('admin', '123')">
           Admin
         </div>
-        <div class="dropdown-item" (click)="this.authService.logUserIn()">
+        <div class="dropdown-item" (click)="onLogin('niklas', '123')">
           User1
         </div>
       </div>

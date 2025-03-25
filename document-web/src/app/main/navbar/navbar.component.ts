@@ -102,12 +102,29 @@ export class NavbarComponent {
     this.isSearchActive = true;
   }
 
-  get searchResults() {
-    return this.resourceService.searchResults();
+  get filteredSearchResults(): Record<string, Resources[]> {
+    const results = this.resourceService.searchResults();
+    if (!results || !results.content) return {}; // Immer ein leeres Objekt zurückgeben
+
+    return Object.fromEntries(
+      Object.entries(results.content).map(([key, resources]) => [
+        key,
+        resources.filter(resource => resource.permissionType !== "DENY")
+      ])
+    );
   }
+
+
 
   checkSearchType() {
     return this.searchTerm.startsWith(this.prefix);
+  }
+
+  onLogin(username: string, password: string){
+    this.authService.logIn(username, password);
+    setTimeout(() => {
+      this.resourceService.loadFileTree()
+    }, 1000);
   }
 
   @HostListener('document:click', ['$event'])

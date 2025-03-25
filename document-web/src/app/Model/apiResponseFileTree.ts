@@ -18,6 +18,6 @@ export interface Resources {
   tags: string[];
   lastModifiedBy: string;
   lastModifiedAt: string;
-  isEditable: boolean;
+  permissionType: string;
   data: string;
 }

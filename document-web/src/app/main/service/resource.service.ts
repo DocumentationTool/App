@@ -4,6 +4,7 @@ import {ApiResource} from '../../api/apiResource';
 import {ApiResponseFileTree, Resources} from '../../Model/apiResponseFileTree';
 import {ApiResponseResource} from '../../Model/apiResponseResource';
 import {ToastrService} from 'ngx-toastr';
+import {AuthService} from './authService';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,8 @@ export class ResourceService {
   constructor(
     private router: Router,
     private apiResource: ApiResource,
-    private toastr: ToastrService) {
+    private toastr: ToastrService,
+    private authService: AuthService) {
   }
 
   fileTree = signal<ApiResponseFileTree | null>(null); //Die Repos und Files in einer Struktur
@@ -68,7 +70,14 @@ export class ResourceService {
 
   removeFileEditing() {
     console.log("remove FIle Edit: ", this.editingFile()?.repoId, this.editingFile()?.path)
-    this.apiResource.removesResourceBeingEdited(this.editingFile()?.repoId, this.editingFile()?.path)
+    this.apiResource.removesResourceBeingEdited(this.editingFile()?.repoId, this.editingFile()?.path).subscribe(
+      data =>{
+        console.log(data)
+      },
+      error => {
+        console.error(error.error)
+      }
+    )
   }
 
   checkForFileChanges() {
@@ -247,9 +256,10 @@ export class ResourceService {
   }
 
   loadFileTree() {
-    this.apiResource.loadFileTree(null, null, null, null, [], [], false, 1073741824).subscribe(
+    this.apiResource.loadFileTree(null, null, null, this.authService.username(), [], [], false, 1073741824).subscribe(
       data => {
         this.fileTree.set(data);
+        this.selectedFile.set(null)
       },
       error => {
         this.toastr.error(error.error.error, "Load fileTree failed: ")

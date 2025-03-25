@@ -2,7 +2,6 @@ import {Injectable, signal} from '@angular/core';
 import {ApiGroup} from '../../api/apiGroup';
 import {ToastrService} from 'ngx-toastr';
 import {Permission} from '../../Model/permission';
-import {timeout} from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
