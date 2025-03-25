@@ -110,7 +110,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 
 
             statement.execute("""
-                    INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', %s,'system');
+                    INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', '%s','system');
                     """.formatted(BCryptUtils.hashPassword("admin1")));
             statement.execute("""
                     INSERT OR IGNORE INTO Groups (group_id, group_name, created_by) VALUES ('admin', 'admin','system');
@@ -442,7 +442,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
      * @throws CoreSqlException
      */
     private List<Group> loadAllGroups(Connection connection) throws CoreSqlException {
-        try (var statement = connection.prepareStatement("SELECT * FROM Groups")) {
+        try (var statement = connection.prepareStatement("SELECT group_id,group_name,created_by,created_at FROM Groups")) {
             try (var rs = statement.executeQuery()) {
                 List<Group> groups = new ArrayList<>();
                 while (rs.next()) {
@@ -468,7 +468,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
      * @throws CoreSqlException
      */
     private List<UserProfile> loadAllUsers(Connection connection) throws CoreSqlException {
-        try (var statement = connection.prepareStatement("SELECT * FROM Users")) {
+        try (var statement = connection.prepareStatement("SELECT user_id, password_hash FROM Users")) {
             try (var rs = statement.executeQuery()) {
                 List<UserProfile> users = new ArrayList<>();
                 while (rs.next()) {
@@ -497,7 +497,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
      * @throws CoreSqlException if the roles could not be loaded
      */
     private Set<Role> loadRolesForUser(Connection connection, UserId userId) throws CoreSqlException {
-        try (var statement = connection.prepareStatement("SELECT * FROM UserRoles WHERE user_id = ?")) {
+        try (var statement = connection.prepareStatement("SELECT role_id FROM UserRoles WHERE user_id = ?")) {
             statement.setString(1, userId.toString());
             try (var rs = statement.executeQuery()) {
                 Set<Role> roles = new HashSet<>();
@@ -521,7 +521,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
      * @param userIds    the map of user ids
      */
     private void loadAllUserGroups(Connection connection, Map<UserId, Set<GroupId>> userGroups, Map<GroupId, Set<UserId>> userIds) {
-        try (var statement = connection.prepareStatement("SELECT * FROM UserGroups")) {
+        try (var statement = connection.prepareStatement("SELECT user_id, group_id FROM UserGroups")) {
             try (var rs = statement.executeQuery()) {
                 while (rs.next()) {
                     UserId userId = UserId.of(rs.getString("user_id"));
