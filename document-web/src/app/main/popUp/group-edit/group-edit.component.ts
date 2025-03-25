@@ -22,7 +22,7 @@ export class GroupEditComponent implements OnInit {
               private apiUser: ApiUser,
               private apiGroup: ApiGroup,
               private apiResource: ApiResource,
-              @Inject(MAT_DIALOG_DATA) public dialogData: { repoId: string, groupId: string }) {
+              @Inject(MAT_DIALOG_DATA) public dialogData: {repoId: string, groupId: string }) {
   }
 
   allUsersToAdd: string[] = [];
@@ -43,28 +43,28 @@ export class GroupEditComponent implements OnInit {
   isPathActive = false;
 
   ngOnInit() {
-    this.apiUser.getUser(this.dialogData.repoId, null).subscribe(
+    this.apiUser.getUser(null).subscribe(
       data => {
         if (data && data.content) {
           this.allUsersToAdd = data.content.map(user => user.userId)
         }
       }
     )
-    this.apiGroup.getGroup(this.dialogData.repoId, this.dialogData.groupId).subscribe(
+    this.apiGroup.getGroup(this.dialogData.groupId).subscribe(
       data => {
         if (data && data.content) {
           this.allUsersToRemove = data.content.flatMap(group => group.users);
         }
       }
     )
-    this.apiGroup.getGroup(this.dialogData.repoId, this.dialogData.groupId).subscribe(
+    this.apiGroup.getGroup(this.dialogData.groupId).subscribe(
       data => {
         this.allPermissionsToRemove = data.content.flatMap(user =>
           user.permissions.map(permission => permission.path)
         );
       }
     )
-    this.apiResource.getResource(null, null, this.dialogData.repoId, null, [], [], false, 10000).subscribe(
+    this.apiResource.getResource(null, null, null, null, [], [], false, 10000).subscribe(
       data => {
         if (data && data.content) {
           this.allPaths = Object.values(data.content).flat()
@@ -77,11 +77,11 @@ export class GroupEditComponent implements OnInit {
 
   updateUser() {
     if (this.userToAdd) {
-      this.groupService.addUserToGroup(this.dialogData.repoId, this.userToAdd, this.dialogData.groupId)
+      this.groupService.addUserToGroup(this.userToAdd, this.dialogData.groupId)
     }
 
     if (this.userToRemove) {
-      this.groupService.removeUserFromGroup(this.dialogData.repoId, this.userToRemove, this.dialogData.groupId)
+      this.groupService.removeUserFromGroup(this.userToRemove, this.dialogData.groupId)
     }
 
     if (this.permissionToAdd) {

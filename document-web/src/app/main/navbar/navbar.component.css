@@ -12,6 +12,11 @@
   height: 50px;
 }
 
+img{
+  position: fixed;
+  left: 50px;
+}
+
 .toggle {
   font-size: 25pt;
   color: var(--textColor);

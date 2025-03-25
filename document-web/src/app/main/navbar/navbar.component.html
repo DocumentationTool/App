@@ -2,6 +2,8 @@
   <div class="toggle">
     <i class="ri-menu-line" (click)="onToggleSidebar()"></i>
   </div>
+
+    <img src="assets/logo.ico" height="45px" alt="logo">
   @if (resourceService.selectedFile()?.permissionType && resourceService.selectedFile()?.permissionType != "VIEW"){
     <div class="box">
       <button (click)="this.navigationService.onEditor()" [disabled]="!this.resourceService.selectedFile()"
@@ -61,7 +63,7 @@
     Profile
     @if (isDropdownOpen) {
       <div class="dropdown-menu">
-        <div class="dropdown-item" (click)="onLogin('admin', '123')">
+        <div class="dropdown-item" (click)="onLogin('admin', 'admin1')">
           Admin
         </div>
         <div class="dropdown-item" (click)="onLogin('niklas', '123')">

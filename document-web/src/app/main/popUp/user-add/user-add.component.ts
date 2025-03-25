@@ -21,8 +21,7 @@ export class UserAddComponent implements OnInit {
               private userService: UserService,
               private apiRepo: ApiRepo,
               private apiGroup: ApiGroup,
-              private toastr: ToastrService,
-              @Inject(MAT_DIALOG_DATA) public dialogData: { repoId: string }) {
+              private toastr: ToastrService) {
   }
 
   repoId: string | undefined = "";
@@ -47,19 +46,18 @@ export class UserAddComponent implements OnInit {
         }
       }
     )
-    this.apiGroup.getGroup(this.dialogData.repoId, null).subscribe(
+    this.apiGroup.getGroup(null).subscribe(
       data => {
         if (data && data.content) {
           this.allGroups = data.content.map(group => group.groupId)
         }
       }
     )
-    this.repoId = this.dialogData.repoId;
   }
 
   createNewUser() {
     if (this.password === this.repeatPassword) {
-      this.userService.createUser(this.repoId, this.userId, this.password,this.role, this.splitGroups(this.groupIds))
+      this.userService.createUser(this.userId, this.password,this.role, this.splitGroups(this.groupIds))
       this.closeDialog();
     } else {
       this.toastr.error("password dont match")

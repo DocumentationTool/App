@@ -5,6 +5,7 @@ import {NavigationService} from '../../service/navigation.service';
 import { MatDialogRef } from '@angular/material/dialog';
 import {ApiRepo} from '../../../api/apiRepo';
 import {AuthService} from '../../service/authService';
+import {ToastrService} from 'ngx-toastr';
 
 
 @Component({
@@ -35,7 +36,7 @@ export class ResourceCreateNewComponent implements OnInit{
         if (data && data.content) {
           this.allRepos = data.content.map(repo => repo.id);
         }
-        console.log("Repos:", this.allRepos);      }
+      }
     )
   }
 

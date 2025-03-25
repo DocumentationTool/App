@@ -12,47 +12,41 @@ export class ApiGroup{
   private baseUrl = 'http://localhost:8080/api/group';
 
 
-  addGroup(repoId: string | undefined, groupId: string, groupName:string) {
+  addGroup(groupId: string, groupName:string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (groupId) params = params.set('groupId', groupId);
     if (groupName) params = params.set('groupName', groupName);
     return this.http.post(this.baseUrl + "/add", params);
   }
 
-  removeGroup(repoId: string | undefined, groupId: string) {
+  removeGroup(groupId: string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (groupId) params = params.set('groupId', groupId);
     return this.http.post(this.baseUrl + "/remove", params);
   }
 
-  renameGroup(repoId: string | undefined, groupId: string, newName:string) {
+  renameGroup(groupId: string, newName:string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (groupId) params = params.set('groupId', groupId);
     if (newName) params = params.set('newName', newName);
     return this.http.post(this.baseUrl + "/rename", params);
   }
 
-  getGroup(repoId: string | undefined, groupId: string | null) {
+  getGroup(groupId: string | null) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (groupId) params = params.set('groupId', groupId);
     return this.http.get<ApiResponseGroup>(this.baseUrl + "/get", {params})
   }
 
-  addUserToGroup(repoId: string | undefined, userId:string, groupId: string) {
+  addUserToGroup( userId:string, groupId: string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (userId) params = params.set('userId', userId);
     if (groupId) params = params.set('groupId', groupId);
     return this.http.post(this.baseUrl + "/user/add", params);
   }
 
-  removeUserFromGroup(repoId: string | undefined, userId:string, groupId: string) {
+  removeUserFromGroup(userId:string, groupId: string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (userId) params = params.set('userId', userId);
     if (groupId) params = params.set('groupId', groupId);
     return this.http.post(this.baseUrl + "/user/remove", params);

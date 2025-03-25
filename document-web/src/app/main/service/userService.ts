@@ -20,10 +20,10 @@ export class UserService {
   selectedRepo = signal<Repos | null>(null);
   allUsersOnRepo = signal<User[] | null>(null)
 
-  createUser(repoId: string | undefined, userId: string, password: string,role: string, groupIds: string[] | null) {
-    this.apiUser.addUser(repoId, userId, password, role, groupIds).subscribe(
+  createUser(userId: string, password: string,role: string, groupIds: string[] | null) {
+    this.apiUser.addUser(userId, password, role, groupIds).subscribe(
       _ => {
-        this.getUser(repoId, null)
+        this.getUser(null)
         this.toastr.success("User Created")
       },
       error => {
@@ -32,10 +32,10 @@ export class UserService {
     )
   }
 
-  removeUser(repoId: string | undefined, userId: string) {
-    this.apiUser.removeUser(repoId, userId).subscribe(
+  removeUser(userId: string) {
+    this.apiUser.removeUser(userId).subscribe(
       _ => {
-        this.getUser(repoId, null)
+        this.getUser(null)
         this.toastr.success("User removed")
       },
       error => {
@@ -44,8 +44,8 @@ export class UserService {
     )
   }
 
-  getUser(repoId: string | undefined, UserId: string | null) {
-    this.apiUser.getUser(repoId, UserId).subscribe(
+  getUser(UserId: string | null) {
+    this.apiUser.getUser(UserId).subscribe(
       data => {
         this.allUsersOnRepo.set(data.content)
       },

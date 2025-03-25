@@ -88,25 +88,18 @@ export class NavigationService {
     this.userService.selectedRepo.set(repo)
   }
 
-  createNewUser(repoId: string | undefined) {
-    this.dialog.open(UserAddComponent,
-      {
-        data: {repoId}
-      }
-    );
+  createNewUser() {
+    this.dialog.open(UserAddComponent);
   }
 
-  createNerGroup(repoId: string | undefined) {
-    this.dialog.open(GroupAddComponent,
-      {
-        data: {repoId}
-      });
+  createNerGroup() {
+    this.dialog.open(GroupAddComponent);
   }
 
-  editGroup(repoId: string | undefined, groupId: string) {
+  editGroup(groupId: string) {
     this.dialog.open(GroupEditComponent,
       {
-        data: {repoId, groupId}
+        data: {groupId}
       }
     )
   }

@@ -97,14 +97,14 @@ export class ApiResource {
   }
 
   getResource(searchTerm: string | null, path: string | null, repoId: string | null, userId: string | null,
-              whiteListTags: string[], blacklistListTags: string[], withData: boolean, returnLimit: number) {
+              whitelistTags: string[], blacklistTags: string[], withData: boolean, returnLimit: number) {
     const payload = {
       "searchTerm": searchTerm,
       "path": path,
       "repoId": repoId,
       "userId": userId,
-      "whiteListTags": whiteListTags,
-      "blacklistListTags": blacklistListTags,
+      "whitelistTags": whitelistTags,
+      "blacklistTags": blacklistTags,
       "withData": withData,
       "returnLimit": returnLimit
     }

@@ -56,21 +56,21 @@ export class UserEditComponent implements OnInit {
       this.isFormEmpty();
     });
 
-    this.apiGroup.getGroup(this.dialogData.repoId, null).subscribe(
+    this.apiGroup.getGroup(null).subscribe(
       data => {
         if (data && data.content) {
           this.allGroupsToAdd = data.content.map(group => group.groupId)
         }
       }
     )
-    this.apiUser.getUser(this.dialogData.repoId, this.dialogData.user.userId).subscribe(
+    this.apiUser.getUser(this.dialogData.user.userId).subscribe(
       data => {
         if (data && data.content) {
           this.allGroupsToRemove = data.content.flatMap(group => group.groups)
         }
       }
     )
-    this.apiUser.getUser(this.dialogData.repoId, this.dialogData.user.userId).subscribe(
+    this.apiUser.getUser(this.dialogData.user.userId).subscribe(
       data => {
         this.allPermissionsToRemove = data.content.flatMap(user =>
           user.permissions.map(permission => permission.path)
@@ -93,11 +93,11 @@ export class UserEditComponent implements OnInit {
     const formValue = this.editUserForm.value;
 
     if (formValue.groupsToAdd) {
-      this.groupService.addUserToGroup(this.dialogData.repoId, this.dialogData.user.userId, formValue.groupsToAdd)
+      this.groupService.addUserToGroup(this.dialogData.user.userId, formValue.groupsToAdd)
     }
 
     if (formValue.groupsToRemove) {
-      this.groupService.removeUserFromGroup(this.dialogData.repoId, this.dialogData.user.userId, formValue.groupsToRemove)
+      this.groupService.removeUserFromGroup(this.dialogData.user.userId, formValue.groupsToRemove)
     }
 
     if (formValue.permissionToAdd) {

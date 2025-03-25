@@ -12,9 +12,8 @@ export class ApiUser {
 
   private baseUrl = 'http://localhost:8080/api/user';
 
-  addUser(repoId: string | undefined, userId: string, password: string,role: string, groupIds: string[] | null) {
+  addUser(userId: string, password: string,role: string, groupIds: string[] | null) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId)
       .set('userId', userId)
       .set('password', password)
       .set('roles', role)
@@ -26,16 +25,14 @@ export class ApiUser {
     return this.http.post(this.baseUrl + "/add", params);
   }
 
-  removeUser(repoId: string | undefined, userId: string) {
+  removeUser(userId: string) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (userId) params = params.set('userId', userId);
     return this.http.post(this.baseUrl + "/remove", params);
   }
 
-  getUser(repoId: string | undefined, userId: string | null) {
+  getUser(userId: string | null) {
     let params = new HttpParams()
-    if (repoId) params = params.set('repoId', repoId);
     if (userId) params = params.set('userId', userId);
 
     return this.http.get<ApiResponseUser>(this.baseUrl + "/get", {params})

@@ -14,8 +14,7 @@ import {GroupService} from '../../service/groupService';
 export class GroupAddComponent implements OnInit {
 
   constructor(private dialogRef: MatDialogRef<GroupAddComponent>,
-              public groupService: GroupService,
-              @Inject(MAT_DIALOG_DATA) public dialogData: { repoId: string }) {
+              public groupService: GroupService){
   }
 
   groupIdToAdd: string = "";
@@ -24,15 +23,15 @@ export class GroupAddComponent implements OnInit {
   repoIdsToRemoveWindow = false;
 
   ngOnInit() {
-    this.groupService.getGroup(this.dialogData.repoId, null);
+    this.groupService.getGroup(null);
   }
 
   onEditGroup() {
     if (this.groupIdToAdd) {
-      this.groupService.addGroup(this.dialogData.repoId, this.groupIdToAdd, this.groupNameToAdd);
+      this.groupService.addGroup(this.groupIdToAdd, this.groupNameToAdd);
     }
     if (this.groupIdToRemove) {
-      this.groupService.removeGroup(this.dialogData.repoId, this.groupIdToRemove)
+      this.groupService.removeGroup(this.groupIdToRemove)
     }
     this.closeDialog();
   }

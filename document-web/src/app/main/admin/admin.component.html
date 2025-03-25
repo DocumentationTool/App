@@ -1,75 +1,56 @@
 <div class="dropdown">
-  @if (dropdownOpen) {
-    <button class="dropbtn" (click)="toggleRepoDropdown()"><span class="ri-arrow-down-s-fill"></span>   Select Repo</button>
-  } @else {
-    <button class="dropbtn" (click)="toggleRepoDropdown()"><span class="ri-arrow-right-s-fill"></span>  Select Repo</button>
-  }
   <button class="nav-button" (click)="toggleManagement()" [disabled]="editUserActive">User management</button>
   <button class="nav-button" (click)="toggleManagement()" [disabled]="!editUserActive">Group management</button>
-  @if (dropdownOpen) {
-    <div class="dropdown-content">
-      @for (repos of allRepos; track repos) {
-        <button class="repo-btn" (click)="selectRepo(repos)">
-          {{ repos.id }}
-        </button>
-      }
-    </div>
-  }
 </div>
-@if (this.userService.selectedRepo()) {
-  @if (editUserActive) {
-    <div class="container">
-      <h2>User Management {{ userService.selectedRepo()?.id }}</h2>
-      <br>
-      <!-- Users-Liste -->
-      <ul>
-        @for (user of userService.allUsersOnRepo(); track user.userId) {
-          <li>
-            {{ user.userId }}
-            <div class="button-group">
-              <button class="edit" (click)="editUser(userService.selectedRepo()?.id,user)"><i
-                class="ri-edit-box-line"></i>
-              </button>
-              <button class="delete" (click)="removeUser(userService.selectedRepo()?.id,user.userId)"><i
-                class="ri-delete-bin-line"></i></button>
-            </div>
-          </li>
-        }
-      </ul>
-      <br>
-      <button class="add" (click)="navigationService.createNewUser(userService.selectedRepo()?.id)"><i
-        class="ri-user-add-line"></i> Add User
-      </button>
-    </div>
-
-  }
-  @if (!editUserActive) {
-    <div class="container">
-      <h2>Group Management {{ userService.selectedRepo()?.id }}</h2>
-      <br>
-      <!-- Group-Liste -->
-      <ul>
-        @for (group of groupService.allGroupsOnRepo(); track group) {
-          <li>
-            {{ group }}
-            <div class="button-group">
-              <button class="edit" (click)="editGroup(userService.selectedRepo()?.id,group)"><i
-                class="ri-edit-box-line"></i>
-              </button>
-              <button class="delete" (click)="removeGroup(userService.selectedRepo()?.id,group)"><i
-                class="ri-delete-bin-line"></i></button>
-            </div>
-          </li>
-        }
-      </ul>
-      <br>
-      <button class="add" (click)="navigationService.createNerGroup(userService.selectedRepo()?.id)"><i
-        class="ri-group-line"></i> Add Group
-      </button>
-    </div>
-  }
-} @else {
+@if (editUserActive) {
   <div class="container">
-    <h3>Please select a repo</h3>
+    <h2>User Management</h2>
+    <br>
+    <!-- Users-Liste -->
+    <ul>
+      @for (user of userService.allUsersOnRepo(); track user.userId) {
+        <li>
+          {{ user.userId }}
+          <div class="button-group">
+            <button class="edit" (click)="editUser(userService.selectedRepo()?.id,user)"><i
+              class="ri-edit-box-line"></i>
+            </button>
+            <button class="delete" (click)="removeUser(user.userId)"><i
+              class="ri-delete-bin-line"></i></button>
+          </div>
+        </li>
+      }
+    </ul>
+    <br>
+    <button class="add" (click)="navigationService.createNewUser()"><i
+      class="ri-user-add-line"></i> Add User
+    </button>
+  </div>
+
+}
+@if (!editUserActive) {
+  <div class="container">
+    <h2>Group Management</h2>
+    <br>
+    <!-- Group-Liste -->
+    <ul>
+      @for (group of groupService.allGroupsOnRepo(); track group) {
+        <li>
+          {{ group }}
+          <div class="button-group">
+            <button class="edit" (click)="editGroup(group)"><i
+              class="ri-edit-box-line"></i>
+            </button>
+            <button class="delete" (click)="removeGroup(group)"><i
+              class="ri-delete-bin-line"></i></button>
+          </div>
+        </li>
+      }
+    </ul>
+    <br>
+    <button class="add" (click)="navigationService.createNerGroup()"><i
+      class="ri-group-line"></i> Add Group
+    </button>
   </div>
 }
+

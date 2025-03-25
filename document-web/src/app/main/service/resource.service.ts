@@ -114,7 +114,6 @@ export class ResourceService {
       },
       error => {
         this.toastr.error(error.error.error, "Resource could not be added: ")
-
       }
     )
   }

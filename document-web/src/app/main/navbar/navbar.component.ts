@@ -114,8 +114,6 @@ export class NavbarComponent {
     );
   }
 
-
-
   checkSearchType() {
     return this.searchTerm.startsWith(this.prefix);
   }

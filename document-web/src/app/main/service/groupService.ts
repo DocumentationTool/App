@@ -14,8 +14,8 @@ export class GroupService {
 
   allGroupsOnRepo = signal<string[] | null>(null)
 
-  addGroup(repoId: string | undefined, groupId: string, groupName: string) {
-    this.apiGroup.addGroup(repoId, groupId, groupName).subscribe(
+  addGroup(groupId: string, groupName: string) {
+    this.apiGroup.addGroup(groupId, groupName).subscribe(
       _ => {
         this.toastr.success('Group added')
       },
@@ -24,12 +24,12 @@ export class GroupService {
       }
     )
     setTimeout(() => {
-      this.getGroup(repoId, null)
+      this.getGroup(null)
     }, 2000);
   }
 
-  removeGroup(repoId: string | undefined, groupId: string) {
-    this.apiGroup.removeGroup(repoId, groupId).subscribe(
+  removeGroup(groupId: string) {
+    this.apiGroup.removeGroup(groupId).subscribe(
       _ => {
         this.toastr.success('Group removed')
       },
@@ -38,12 +38,12 @@ export class GroupService {
       }
     )
     setTimeout(() => {
-      this.getGroup(repoId, null)
+      this.getGroup(null)
     }, 2000);
   }
 
-  renameGroup(repoId: string | undefined, groupId: string, newName: string) {
-    this.apiGroup.renameGroup(repoId, groupId, newName).subscribe(
+  renameGroup(groupId: string, newName: string) {
+    this.apiGroup.renameGroup(groupId, newName).subscribe(
       _ => {
         this.toastr.success('Group renamed')
       },
@@ -53,8 +53,8 @@ export class GroupService {
     )
   }
 
-  getGroup(repoId: string | undefined, groupId: string | null) {
-    this.apiGroup.getGroup(repoId, groupId).subscribe(
+  getGroup(groupId: string | null) {
+    this.apiGroup.getGroup(groupId).subscribe(
       data => {
         if (data.content && data.content.length > 0) {
           const allGroupIds: string[] = data.content.map(group => group.groupId);
@@ -70,8 +70,8 @@ export class GroupService {
     )
   }
 
-  addUserToGroup(repoId: string | undefined, userId: string, groupId: string) {
-    this.apiGroup.addUserToGroup(repoId, userId, groupId).subscribe(
+  addUserToGroup(userId: string, groupId: string) {
+    this.apiGroup.addUserToGroup(userId, groupId).subscribe(
       _ => {
         this.toastr.success('User added to group')
       },
@@ -81,8 +81,8 @@ export class GroupService {
     )
   }
 
-  removeUserFromGroup(repoId: string | undefined, userId: string, groupId: string) {
-    this.apiGroup.removeUserFromGroup(repoId, userId, groupId).subscribe(
+  removeUserFromGroup(userId: string, groupId: string) {
+    this.apiGroup.removeUserFromGroup(userId, groupId).subscribe(
       _ => {
         this.toastr.success('User removed from group')
       },
