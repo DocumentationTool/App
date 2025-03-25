@@ -5,6 +5,8 @@ import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import static com.wonkglorg.doc.core.hash.BCryptUtils.hashPassword;
+
+import com.wonkglorg.doc.core.hash.BCryptUtils;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.DateHelper;
@@ -112,8 +114,8 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 
 			
 			statement.execute("""
-					INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', 'admin','system');
-					""");
+					INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', %s,'system');
+					""".formatted(BCryptUtils.hashPassword("admin1")));
 			statement.execute("""
 					INSERT OR IGNORE INTO Groups (group_id, group_name, created_by) VALUES ('admin', 'admin','system');
 					""");
