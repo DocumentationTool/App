@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Pull Latest Changes') {
             steps {
-                git 'https://github.com/DocumentationTool/App'
+                git 'https://github.com/DocumentationTool/Backend'
             }
         }
 
