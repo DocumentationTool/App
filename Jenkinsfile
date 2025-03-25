@@ -8,13 +8,15 @@ pipeline {
             }
         }
 
-        stage('Build Backend') {
-            steps {
-                script {
-                    sh './gradlew build'
-                }
-            }
-        }
+		stage('Build Backend') {
+		    steps {
+		        script {
+		            sh 'chmod +x ./gradlew'
+		            sh './gradlew build'
+		        }
+		    }
+		}
+
 
         stage('Move WAR to Staging Folder') {
             steps {
