@@ -116,9 +116,6 @@ public class DatabaseFunctions implements IDBFunctions{
 			
 			//admin account gets all permissions by default
 			statement.execute("""
-					INSERT OR IGNORE INTO UserRoles(role_id, user_id) VALUES ('%s', 'admin');
-					""".formatted(Role.ADMIN));
-			statement.execute("""
 					INSERT OR IGNORE INTO UserPermissions(user_id, path,type) VALUES ('admin','**','%s');
 					""".formatted(PermissionType.ADMIN));
 			
