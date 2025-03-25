@@ -5,6 +5,8 @@ import com.wonkglorg.doc.core.exception.CoreException;
 import com.wonkglorg.doc.core.exception.CoreSqlException;
 import com.wonkglorg.doc.core.exception.client.InvalidUserException;
 import static com.wonkglorg.doc.core.hash.BCryptUtils.hashPassword;
+
+import com.wonkglorg.doc.core.hash.BCryptUtils;
 import com.wonkglorg.doc.core.interfaces.GroupCalls;
 import com.wonkglorg.doc.core.interfaces.UserCalls;
 import com.wonkglorg.doc.core.objects.DateHelper;
@@ -63,22 +65,18 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 					    user_id TEXT PRIMARY KEY NOT NULL,
 					    password_hash TEXT NOT NULL,
 					    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					    created_by TEXT,
-					    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					    last_modified_by TEXT
+					    created_by TEXT
 					)
 					""");
 			
 			statement.execute("""
-					CREATE TABLE IF NOT EXISTS Groups (
-					    group_id TEXT PRIMARY KEY NOT NULL,
-					    group_name TEXT NOT NULL,
-					    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					    created_by TEXT,
-					    last_modified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-					    last_modified_by TEXT
-					)
-					""");
+                    CREATE TABLE IF NOT EXISTS Groups (
+                        group_id TEXT PRIMARY KEY NOT NULL,
+                        group_name TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        created_by TEXT
+                    )
+                    """);
 			
 			statement.execute("""
 					CREATE TABLE IF NOT EXISTS UserGroups (
@@ -97,10 +95,27 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 					    PRIMARY KEY (role_id, user_id)
 					)
 					""");
+
+
+			statement.execute("""
+					CREATE TABLE IF NOT EXISTS AuditLog (
+					    log_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+					    user_id TEXT,
+					    action TEXT NOT NULL,
+					    message TEXT NULL,
+					    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+					    affected_userID TEXT NULL ,
+					    affected_groupID TEXT NULL ,
+					    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+					    FOREIGN KEY (affected_userID) REFERENCES Users(user_id),
+					    FOREIGN KEY (affected_groupID) REFERENCES Groups(group_id)
+					)
+					""");
+
 			
 			statement.execute("""
-					INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', 'admin','system');
-					""");
+					INSERT OR IGNORE INTO  Users (user_id, password_hash,created_by) VALUES ('admin', %s,'system');
+					""".formatted(BCryptUtils.hashPassword("admin1")));
 			statement.execute("""
 					INSERT OR IGNORE INTO Groups (group_id, group_name, created_by) VALUES ('admin', 'admin','system');
 					""");
@@ -111,7 +126,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 			statement.execute("""
 					INSERT OR IGNORE INTO UserRoles(role_id, user_id) VALUES ('%s', 'admin');
 					""".formatted(Role.ADMIN.name()));
-			
+
 			statement.execute("""
 					CREATE TRIGGER IF NOT EXISTS delete_user_cleanup
 					AFTER DELETE ON Users
@@ -125,14 +140,13 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 			
 			
 			statement.execute("""
-							CREATE TRIGGER IF NOT EXISTS delete_group_cleanup
-							AFTER DELETE ON Groups
-							FOR EACH ROW
-							BEGIN
-							   -- Delete related permissions
-							    DELETE FROM UserGroups WHERE group_id = OLD.group_id;
-							END;
-					""");
+                    CREATE TRIGGER IF NOT EXISTS delete_group_cleanup
+                    AFTER DELETE ON Groups
+                    FOR EACH ROW
+                    BEGIN
+                        DELETE FROM UserGroups WHERE group_id = OLD.group_id;
+                    END;
+                    """);
 			
 			loadAllUserGroups(connection, userGroups, groupUsers);
 			loadAllUsers(connection).forEach(user -> userCache.put(user.getId(), user));
@@ -442,10 +456,7 @@ public class UserDatabase extends SqliteDatabase<HikariDataSource> implements Us
 					groups.add(new Group(GroupId.of(rs.getString("group_id")),
 							rs.getString("group_name"),
 							rs.getString("created_by"),
-							rs.getString("created_at"),
-							rs.getString("last_modified_by"),
-							rs.getString("last_modified_at")
-					
+							rs.getString("created_at")
 					));
 				}
 				return groups;

@@ -59,7 +59,7 @@ public class ApiGroupController{
 														  @Parameter(description = "The new name of the group.") @RequestParam("newName") String newName) {
 		try{
 			userService.renameGroup(GroupId.of(groupId), newName);
-			return RestResponse.<Void>success("Updated group '%s' from repo '%s", null).toResponse();//.formatted(userId, repoId), null).toResponse();
+			return RestResponse.<Void>success("Updated group '%s' from repo '%s", null).toResponse();
 		} catch(ClientException e){
 			return RestResponse.<Void>error(e.getMessage()).toResponse();
 		} catch(Exception e){
