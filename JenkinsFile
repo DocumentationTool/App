@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Pull Latest Changes') {
             steps {
-                git 'https://your-repository-url.git'
+                git 'https://github.com/DocumentationTool/App'
             }
         }
 
@@ -19,7 +19,7 @@ pipeline {
         stage('Move WAR to Staging Folder') {
             steps {
                 script {
-                    sh 'mv build/libs/your-backend.war /path/to/staging/folder/'
+                    sh 'mv **/build/libs/*-plain.war /path/to/staging/folder/'
                 }
             }
         }

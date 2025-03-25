@@ -5,9 +5,7 @@ import com.wonkglorg.doc.core.objects.TagId;
 import com.wonkglorg.doc.core.objects.UserId;
 import com.wonkglorg.doc.core.path.TargetPath;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,7 +33,7 @@ public class ResourceRequest{
 	/**
 	 * The tags to search by
 	 */
-	private Set<TagId> whiteListTags = new HashSet<>();
+	private Set<TagId> whitelistTags = new HashSet<>();
 	/**
 	 * The tags to exclude from the search
 	 */
@@ -63,7 +61,7 @@ public class ResourceRequest{
 	}
 	
 	public Set<TagId> whiteListTags() {
-		return whiteListTags;
+		return whitelistTags;
 	}
 	
 	public Set<TagId> blacklistTags() {
@@ -87,7 +85,7 @@ public class ResourceRequest{
 	}
 	
 	public void whiteListTags(Set<TagId> whiteListTags) {
-		this.whiteListTags = whiteListTags;
+		this.whitelistTags = whiteListTags;
 	}
 	
 	public void blacklistTags(Set<TagId> blacklistTags) {
@@ -130,12 +128,12 @@ public class ResourceRequest{
 		this.userId = UserId.of(userId);
 	}
 	
-	public Set<String> getWhiteListTags() {
-		return whiteListTags.stream().toList().stream().map(TagId::id).collect(Collectors.toSet());
+	public Set<String> getWhitelistTags() {
+		return whitelistTags.stream().toList().stream().map(TagId::id).collect(Collectors.toSet());
 	}
 	
-	public void setWhiteListTags(Set<String> whiteListTags) {
-		this.whiteListTags = whiteListTags.stream().map(TagId::of).collect(Collectors.toSet());
+	public void setWhitelistTags(Set<String> whitelistTags) {
+		this.whitelistTags = whitelistTags.stream().map(TagId::of).collect(Collectors.toSet());
 	}
 	
 	public Set<String> getBlacklistTags() {
@@ -168,12 +166,12 @@ public class ResourceRequest{
 			return false;
 		}
 		return withData == that.withData && returnLimit == that.returnLimit && Objects.equals(searchTerm, that.searchTerm) && Objects.equals(path,
-				that.path) && Objects.equals(repoId, that.repoId) && Objects.equals(userId, that.userId) && Objects.equals(whiteListTags,
-				that.whiteListTags) && Objects.equals(blacklistTags, that.blacklistTags);
+				that.path) && Objects.equals(repoId, that.repoId) && Objects.equals(userId, that.userId) && Objects.equals(whitelistTags,
+				that.whitelistTags) && Objects.equals(blacklistTags, that.blacklistTags);
 	}
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(searchTerm, path, repoId, userId, whiteListTags, blacklistTags, withData, returnLimit);
+		return Objects.hash(searchTerm, path, repoId, userId, whitelistTags, blacklistTags, withData, returnLimit);
 	}
 }
