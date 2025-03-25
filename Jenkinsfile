@@ -21,7 +21,7 @@ pipeline {
         stage('Move WAR to Staging Folder') {
             steps {
                 script {
-                    sh 'mv **/build/libs/*-plain.war /path/to/staging/folder/'
+                    sh 'mv **/build/libs/*-plain.war /opt/staging'
                 }
             }
         }
@@ -29,7 +29,7 @@ pipeline {
         stage('Shutdown Tomcat') {
             steps {
                 script {
-                    sh '/path/to/tomcat/bin/shutdown.sh'
+                    sh '/opt/tomcat/bin/shutdown.sh'
                 }
             }
         }
@@ -37,7 +37,7 @@ pipeline {
         stage('Deploy WAR to Tomcat') {
             steps {
                 script {
-                    sh 'mv /path/to/staging/folder/your-backend.war /path/to/tomcat/webapps/'
+                    sh 'mv /opt/staging/*.war /opt/tomcat/webapps'
                 }
             }
         }
@@ -45,7 +45,7 @@ pipeline {
         stage('Start Tomcat') {
             steps {
                 script {
-                    sh '/path/to/tomcat/bin/startup.sh'
+                    sh '/opt/tomcat/bin/startup.sh'
                 }
             }
         }
